@@ -1,3 +1,5 @@
+package posmicanomaly.LibjsrteRoguelikeExample.Component;
+
 import posmicanomaly.libjsrte.Console.Symbol;
 import posmicanomaly.libjsrte.Util.ColorTools;
 

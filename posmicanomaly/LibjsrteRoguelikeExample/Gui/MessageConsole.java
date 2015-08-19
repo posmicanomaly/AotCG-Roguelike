@@ -1,3 +1,5 @@
+package posmicanomaly.LibjsrteRoguelikeExample.Gui;
+
 import posmicanomaly.libjsrte.Console.Console;
 
 import java.util.ArrayList;

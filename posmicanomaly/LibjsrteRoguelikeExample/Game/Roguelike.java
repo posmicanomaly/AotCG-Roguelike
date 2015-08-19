@@ -1,3 +1,10 @@
+package posmicanomaly.LibjsrteRoguelikeExample.Game;
+
+import posmicanomaly.LibjsrteRoguelikeExample.Component.Actor;
+import posmicanomaly.LibjsrteRoguelikeExample.Component.Map;
+import posmicanomaly.LibjsrteRoguelikeExample.Component.Tile;
+import posmicanomaly.LibjsrteRoguelikeExample.Gui.MessageConsole;
+import posmicanomaly.LibjsrteRoguelikeExample.Gui.RightSidePanel;
 import posmicanomaly.libjsrte.Console.Console;
 import posmicanomaly.libjsrte.Util.ColorTools;
 import posmicanomaly.libjsrte.Window;

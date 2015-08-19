@@ -1,3 +1,5 @@
+package posmicanomaly.LibjsrteRoguelikeExample.Component;
+
 import java.awt.*;
 
 /**
