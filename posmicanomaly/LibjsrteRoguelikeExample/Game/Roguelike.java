@@ -193,7 +193,8 @@ public class Roguelike {
 
         if(showInventory) {
             inventorySideConsole.updateConsole();
-            inventorySideConsole.copyBufferTo(rootConsole, 1, 1);
+            // Bug: If i set this to anything but 0, 0, colors aren't correct
+            inventorySideConsole.copyBufferTo(rootConsole, 0, 0);
         }
 
         this.window.refresh();
