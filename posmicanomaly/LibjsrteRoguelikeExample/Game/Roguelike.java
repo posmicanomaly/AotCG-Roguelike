@@ -3,8 +3,10 @@ package posmicanomaly.LibjsrteRoguelikeExample.Game;
 import posmicanomaly.LibjsrteRoguelikeExample.Component.Actor;
 import posmicanomaly.LibjsrteRoguelikeExample.Component.Map;
 import posmicanomaly.LibjsrteRoguelikeExample.Component.Tile;
+import posmicanomaly.LibjsrteRoguelikeExample.Gui.EnhancedConsole;
+import posmicanomaly.LibjsrteRoguelikeExample.Gui.GameInformationConsole;
+import posmicanomaly.LibjsrteRoguelikeExample.Gui.InventorySideConsole;
 import posmicanomaly.LibjsrteRoguelikeExample.Gui.MessageConsole;
-import posmicanomaly.LibjsrteRoguelikeExample.Gui.RightSidePanel;
 import posmicanomaly.libjsrte.Console.Console;
 import posmicanomaly.libjsrte.Util.ColorTools;
 import posmicanomaly.libjsrte.Window;
@@ -18,7 +20,8 @@ public class Roguelike {
     Window window;
     private Console mapConsole;
     private MessageConsole messageConsole;
-    private RightSidePanel rightSidePanel;
+    private EnhancedConsole gameInformationConsole;
+    private EnhancedConsole inventorySideConsole;
     private Console menuWindow;
 
     public enum Direction {UP, DOWN, LEFT, RIGHT};
@@ -31,9 +34,10 @@ public class Roguelike {
     int mapWidth;
     int mapDepth = 10;
 
-    int rightSidePanelHeight = windowHeight;
-    int rightSidePanelWidth = 16;
+    int gameInformationConsoleHeight = windowHeight;
+    int gameInformationConsoleWidth = 16;
     boolean showMenu;
+    boolean showInventory;
     Map map;
 
     private Actor player;
@@ -44,9 +48,9 @@ public class Roguelike {
         this.window = new Window(this.windowHeight, this.windowWidth);
         this.window.getMainPanel().getRootConsole().setBorder(true);
 
-        this.messageWidth = this.windowWidth - rightSidePanelWidth;
+        this.messageWidth = this.windowWidth - gameInformationConsoleWidth;
 
-        this.mapWidth = this.windowWidth - 2 - rightSidePanelWidth;
+        this.mapWidth = this.windowWidth - 2 - gameInformationConsoleWidth;
         this.mapHeight = this.windowHeight - 1 - this.messageHeight;
 
 
@@ -54,12 +58,16 @@ public class Roguelike {
         this.mapConsole = new Console(this.mapHeight, this.mapWidth);
 
         initMessageConsole();
-        rightSidePanel = new RightSidePanel(rightSidePanelHeight, rightSidePanelWidth);
-        rightSidePanel.setBorder(true);
+        gameInformationConsole = new GameInformationConsole(gameInformationConsoleHeight, gameInformationConsoleWidth);
+        gameInformationConsole.setBorder(true);
+
+        inventorySideConsole = new InventorySideConsole(mapHeight, 20);
+        inventorySideConsole.setBorder(true);
 
         this.menuWindow = new Console(25, 25);
         this.menuWindow.setBorder(true);
         this.showMenu = false;
+        showInventory = false;
         this.map = new Map(mapHeight, mapWidth, mapDepth);
 
         this.copyMapToBuffer(this.mapConsole);
@@ -99,6 +107,16 @@ public class Roguelike {
                         } else {
                             this.showMenu = true;
                         }
+                        break;
+                    case KeyEvent.VK_I:
+                        if(showInventory) {
+                            showInventory = false;
+                        } else {
+                            showInventory = true;
+                        }
+                        break;
+                    default:
+                        break;
                 }
 
                 this.lastKeyEvent = this.window.getLastKeyEvent();
@@ -166,11 +184,16 @@ public class Roguelike {
 
 
         this.messageConsole.copyBufferTo(rootConsole, this.mapHeight + 1, 0);
-        rightSidePanel.updateConsole();
-        rightSidePanel.copyBufferTo(rootConsole, 0, mapWidth + 2);
+        gameInformationConsole.updateConsole();
+        gameInformationConsole.copyBufferTo(rootConsole, 0, mapWidth + 2);
 
         if (this.showMenu) {
             this.menuWindow.copyBufferTo(rootConsole, this.window.HEIGHT / 2 - 12, this.window.WIDTH / 2 - 12);
+        }
+
+        if(showInventory) {
+            inventorySideConsole.updateConsole();
+            inventorySideConsole.copyBufferTo(rootConsole, 1, 1);
         }
 
         this.window.refresh();
