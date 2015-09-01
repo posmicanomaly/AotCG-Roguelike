@@ -1,6 +1,7 @@
 package posmicanomaly.LibjsrteRoguelikeExample.Game;
 
 import posmicanomaly.LibjsrteRoguelikeExample.Component.Actor;
+import posmicanomaly.LibjsrteRoguelikeExample.Component.LevelFactory;
 import posmicanomaly.LibjsrteRoguelikeExample.Component.Map;
 import posmicanomaly.LibjsrteRoguelikeExample.Component.Tile;
 import posmicanomaly.LibjsrteRoguelikeExample.Gui.EnhancedConsole;
@@ -11,7 +12,9 @@ import posmicanomaly.libjsrte.Console.Console;
 import posmicanomaly.libjsrte.Util.ColorTools;
 import posmicanomaly.libjsrte.Window;
 
+import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
 
 /**
  * Created by Jesse Pospisil on 8/17/2015.
@@ -26,8 +29,8 @@ public class Roguelike {
 
     public enum Direction {UP, DOWN, LEFT, RIGHT};
 
-    int windowHeight = 9 * 6;
-    int windowWidth = 16 * 7;
+    int windowHeight = 9 * 7;
+    int windowWidth = 16 * 9;
     int messageHeight = 10;
     int messageWidth;
     int mapHeight;
@@ -55,28 +58,7 @@ public class Roguelike {
 
 
 
-        this.mapConsole = new Console(this.mapHeight, this.mapWidth);
-
-        initMessageConsole();
-        gameInformationConsole = new GameInformationConsole(gameInformationConsoleHeight, gameInformationConsoleWidth);
-        gameInformationConsole.setBorder(true);
-
-        inventorySideConsole = new InventorySideConsole(mapHeight, 20);
-        inventorySideConsole.setBorder(true);
-
-        this.menuWindow = new Console(25, 25);
-        this.menuWindow.setBorder(true);
-        this.showMenu = false;
-        showInventory = false;
-        this.map = new Map(mapHeight, mapWidth, mapDepth);
-
-        this.copyMapToBuffer(this.mapConsole);
-
-        Tile startingTile = map.getCurrentLevel().getTile(map.getCurrentLevel().getHeight() / 2, map.getCurrentLevel().getWidth() / 2);
-        player = new Actor('@', ColorTools.getRandomColor(), startingTile);
-
-        this.window.getMainPanel().setRender(true);
-        this.lastKeyEvent = this.window.getLastKeyEvent();
+        initGame();
 
         while (true) {
             try {
@@ -85,22 +67,51 @@ public class Roguelike {
                 var2.printStackTrace();
             }
 
-            // Randomize the player's color just for fun
-            player.setColor(ColorTools.getRandomColor());
             if (!this.window.getLastKeyEvent().equals(this.lastKeyEvent)) {
+                boolean recalculateFOV = false;
                 switch (this.window.getLastKeyEvent().getKeyCode()) {
+                    /*
+                    Player Movement Input
+                     */
                     case KeyEvent.VK_LEFT:
                         moveActor(Direction.LEFT);
+                        recalculateFOV = true;
                         break;
                     case KeyEvent.VK_UP:
                         moveActor(Direction.UP);
+                        recalculateFOV = true;
                         break;
                     case KeyEvent.VK_RIGHT:
                         moveActor(Direction.RIGHT);
+                        recalculateFOV = true;
                         break;
                     case KeyEvent.VK_DOWN:
                         moveActor(Direction.DOWN);
+                        recalculateFOV = true;
                         break;
+
+                    /*
+                    DEBUG Input
+                     */
+                    case KeyEvent.VK_F:
+                        LevelFactory.DEBUG_FLOOD_FILL(map.getCurrentLevel().getTileArray());
+                        //copyMapToBuffer();
+                        break;
+                    case KeyEvent.VK_P:
+                        LevelFactory.DEBUG_PROCESS_MAP(map.getCurrentLevel().getTileArray());
+                        //copyMapToBuffer();
+                        break;
+                    case KeyEvent.VK_R:
+                        initGame();
+                        break;
+                    case KeyEvent.VK_V:
+                        map.getCurrentLevel().toggleAllTilesVisible(true);
+                        //copyMapToBuffer();
+                        break;
+
+                    /*
+                    Menu Toggle Input
+                     */
                     case KeyEvent.VK_M:
                         if (this.showMenu) {
                             this.showMenu = false;
@@ -118,10 +129,24 @@ public class Roguelike {
                     default:
                         break;
                 }
-
+                if(recalculateFOV) {
+                    //
+                    calculateVision();
+                }
                 this.lastKeyEvent = this.window.getLastKeyEvent();
             }
             this.drawGame(this.window.getMainPanel().getRootConsole());
+        }
+    }
+
+    private void calculateVision() {
+        map.getCurrentLevel().toggleAllTilesVisible(false);
+        int y = player.getTile().getY();
+        int x = player.getTile().getX();
+
+        for(Tile t : FieldOfVision.calculateSimpleFOVVisibleTiles(y, x, map.getCurrentLevel())) {
+            t.setVisible(true);
+            t.setExplored(true);
         }
     }
 
@@ -152,14 +177,18 @@ public class Roguelike {
             nextTile = map.getCurrentLevel().getTile(y, x);
             if(nextTile == null) {
                 messageConsole.addMessage("Tile is null");
+            } else if(nextTile.isBlocked()) {
+                messageConsole.addMessage("You bumped into a wall");
             } else {
                 player.setTile(nextTile);
-                messageConsole.addMessage("Moved");
+                nextTile.setVisible(true);
+                // This removed the player from the previous tile
                 refreshTile(playerTile);
-                messageConsole.addMessage("Tile refreshed");
             }
+
         }
     }
+
 
     /**
      * refreshTile
@@ -169,13 +198,22 @@ public class Roguelike {
      * @param tile
      */
     private void refreshTile(Tile tile) {
-        mapConsole.setChar(tile.getY(), tile.getX(), tile.getSymbol());
-        mapConsole.setColor(tile.getY(), tile.getX(), tile.getColor());
+        if(tile.isVisible()) {
+            mapConsole.setChar(tile.getY(), tile.getX(), tile.getSymbol());
+            mapConsole.setColor(tile.getY(), tile.getX(), tile.getColor());
+        } else if(tile.isExplored()) {
+            mapConsole.setChar(tile.getY(), tile.getX(), tile.getSymbol());
+            mapConsole.setColor(tile.getY(), tile.getX(), tile.getColor().darker());
+        } else {
+            mapConsole.setChar(tile.getY(), tile.getX(), ' ');
+        }
     }
 
     private void drawGame(Console rootConsole) {
         rootConsole.clear();
 
+        // Refresh the map buffer
+        copyMapToBuffer();
         // Copy player to the map
         Tile playerTile = player.getTile();
         mapConsole.setChar(playerTile.getY(), playerTile.getX(), player.getSymbol());
@@ -193,8 +231,7 @@ public class Roguelike {
 
         if(showInventory) {
             inventorySideConsole.updateConsole();
-            // Bug: If i set this to anything but 0, 0, colors aren't correct
-            inventorySideConsole.copyBufferTo(rootConsole, 0, 0);
+            inventorySideConsole.copyBufferTo(rootConsole, 1, 1);
         }
 
         this.window.refresh();
@@ -209,11 +246,37 @@ public class Roguelike {
 //        this.messageConsole.writeString("KeyEvent: " + this.lastKeyEvent.getKeyCode(), 2, 1);
     }
 
-    private void copyMapToBuffer(Console target) {
-        for (int y = 0; y < map.getHeight(); ++y) {
-            for (int x = 0; x < map.getWidth(); ++x) {
-                target.setChar(y, x, map.getCurrentLevel().getSymbol(y, x));
-                target.setColor(y, x, map.getCurrentLevel().getColor(y, x));
+    private void initGame() {
+        this.mapConsole = new Console(this.mapHeight, this.mapWidth);
+
+        initMessageConsole();
+        gameInformationConsole = new GameInformationConsole(gameInformationConsoleHeight, gameInformationConsoleWidth);
+        gameInformationConsole.setBorder(true);
+
+        inventorySideConsole = new InventorySideConsole(mapHeight, 20);
+        inventorySideConsole.setBorder(true);
+
+        this.menuWindow = new Console(25, 25);
+        this.menuWindow.setBorder(true);
+        this.showMenu = false;
+        showInventory = false;
+        this.map = new Map(mapHeight, mapWidth, mapDepth);
+
+
+
+        Tile startingTile = map.getCurrentLevel().getTile(map.getCurrentLevel().getHeight() / 2, map.getCurrentLevel().getWidth() / 2);
+        player = new Actor('@', ColorTools.getRandomColor(), startingTile);
+        calculateVision();
+        this.copyMapToBuffer();
+
+        this.window.getMainPanel().setRender(true);
+        this.lastKeyEvent = this.window.getLastKeyEvent();
+    }
+    private void copyMapToBuffer() {
+        for (int y = 0; y < map.getCurrentLevel().getHeight(); ++y) {
+            for (int x = 0; x < map.getCurrentLevel().getWidth(); ++x) {
+                Tile t = map.getCurrentLevel().getTile(y, x);
+                refreshTile(t);
             }
         }
 
