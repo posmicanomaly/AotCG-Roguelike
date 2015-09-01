@@ -67,6 +67,7 @@ public abstract class LevelFactory {
                 char symbol;
                 boolean isBlocked;
                 Color color;
+                Color backgroundColor;
 
                 if (!ignoreBuild) {
                 /*
@@ -82,6 +83,7 @@ public abstract class LevelFactory {
                 Process regular types
                  */
                 boolean transparent = true;
+                backgroundColor = Color.black;
                 switch (t.getType()) {
                     case FLOOR:
                         symbol = Symbol.MIDDLE_DOT;
@@ -107,8 +109,9 @@ public abstract class LevelFactory {
                         break;
                     case WATER:
                         symbol = Symbol.ALMOST_EQUAL_TO;
-                        isBlocked = true;
-                        color = Color.blue;
+                        isBlocked = false;
+                        color = Color.black;
+                        backgroundColor = Color.blue.darker();
                         break;
                     default:
                         symbol = '?';
@@ -120,6 +123,7 @@ public abstract class LevelFactory {
                 t.setSymbol(symbol);
                 t.setBlocked(isBlocked);
                 t.setColor(color);
+                t.setBackgroundColor(backgroundColor);
                 t.setTransparent(transparent);
             }
         }
@@ -416,6 +420,15 @@ public abstract class LevelFactory {
         }
 
         System.out.println("Level took " + levelCreationTries + " tries");
+        processMap(result);
+        for(int i = 0; i < height * width / 16; i++) {
+            Random rng = new Random();
+            int y = rng.nextInt(height);
+            int x = rng.nextInt(width);
+            if(result[y][x].getType() == Tile.Type.FLOOR) {
+                result[y][x].setType(Tile.Type.WATER);
+            }
+        }
         processMap(result);
         return result;
     }

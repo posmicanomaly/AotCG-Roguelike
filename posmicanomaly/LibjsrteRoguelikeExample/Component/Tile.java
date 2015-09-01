@@ -85,6 +85,16 @@ public class Tile {
     private char symbol;
     private Color color;
 
+    public Color getBackgroundColor() {
+        return backgroundColor;
+    }
+
+    public void setBackgroundColor(Color backgroundColor) {
+        this.backgroundColor = backgroundColor;
+    }
+
+    private Color backgroundColor;
+
     public boolean isBlocked() {
         return blocked;
     }
@@ -100,6 +110,7 @@ public class Tile {
         this.x = x;
         this.symbol = '?';
         this.color = Color.GREEN;
+        this.backgroundColor = Color.black;
         this.blocked = false;
         this.type = Type.DEFAULT;
 

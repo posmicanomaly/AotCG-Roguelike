@@ -204,11 +204,15 @@ public class Roguelike {
         if(tile.isVisible()) {
             mapConsole.setChar(tile.getY(), tile.getX(), tile.getSymbol());
             mapConsole.setColor(tile.getY(), tile.getX(), tile.getColor());
+            mapConsole.setBgColor(tile.getY(), tile.getX(), tile.getBackgroundColor());
         } else if(tile.isExplored()) {
             mapConsole.setChar(tile.getY(), tile.getX(), tile.getSymbol());
             mapConsole.setColor(tile.getY(), tile.getX(), tile.getColor().darker());
+            mapConsole.setBgColor(tile.getY(), tile.getX(), tile.getBackgroundColor().darker());
         } else {
             mapConsole.setChar(tile.getY(), tile.getX(), ' ');
+            mapConsole.setColor(tile.getY(), tile.getX(), Color.black);
+            mapConsole.setBgColor(tile.getY(), tile.getX(), Color.black);
         }
     }
 
