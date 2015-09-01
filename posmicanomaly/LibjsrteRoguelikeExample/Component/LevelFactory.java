@@ -10,7 +10,8 @@ import java.util.Random;
  */
 public abstract class LevelFactory {
     static final int MAX_ROOM_SIZE = 11;
-    static final int MIN_ROOM_SIZE = 5;
+    static final int MIN_ROOM_SIZE = 3;
+
     private static Tile[][] makeBlankMap(int height, int width) {
         Tile[][] result = new Tile[height][width];
         for (int y = 0; y < height; y++) {
@@ -45,6 +46,7 @@ public abstract class LevelFactory {
     /**
      * Wrapper for processMap
      * sets ignoreBuild to false
+     *
      * @param level level to process
      */
     private static void processMap(Tile[][] level) {
@@ -54,7 +56,8 @@ public abstract class LevelFactory {
     /**
      * Loops through all tiles in supplied level and determines the tile specific information based on the type
      * If ignoreBuild is set to true, it will convert the building types back to their regular types first
-     * @param level level to process
+     *
+     * @param level       level to process
      * @param ignoreBuild ignore building types(debug)
      */
     private static void processMap(Tile[][] level, boolean ignoreBuild) {
@@ -65,7 +68,7 @@ public abstract class LevelFactory {
                 boolean isBlocked;
                 Color color;
 
-                if(!ignoreBuild) {
+                if (!ignoreBuild) {
                 /*
                 Convert any building types
                  */
@@ -148,8 +151,6 @@ public abstract class LevelFactory {
             }
         }
 
-        System.out.println("Water: " + water);
-
         /*
         Flood the level
          */
@@ -187,7 +188,8 @@ public abstract class LevelFactory {
 
     /**
      * Spread BUILD_FLOOD to nearby tiles
-     * @param tile tile of Type.BUILD_FLOOD
+     *
+     * @param tile  tile of Type.BUILD_FLOOD
      * @param level level to use as a reference
      * @return
      */
@@ -239,6 +241,17 @@ public abstract class LevelFactory {
         return canSpread;
     }
 
+    /**
+     * Checks if a room at y, x, with width and height as specified, in level, can be placed without overlapping
+     * another floor tile
+     *
+     * @param yStart
+     * @param xStart
+     * @param width
+     * @param height
+     * @param level
+     * @return
+     */
     private static boolean canPlaceRoom(int yStart, int xStart, int width, int height, Tile[][] level) {
         if (yStart == 0 || xStart == 0) {
             return false;
@@ -268,6 +281,15 @@ public abstract class LevelFactory {
         return true;
     }
 
+    /**
+     * Places a room at y, x, with width and height, in level
+     * Sets type to floor
+     * @param yStart
+     * @param xStart
+     * @param width
+     * @param height
+     * @param level
+     */
     private static void placeRoom(int yStart, int xStart, int width, int height, Tile[][] level) {
         for (int y = yStart; y < yStart + height; y++) {
             for (int x = xStart; x < xStart + width; x++) {
@@ -276,41 +298,74 @@ public abstract class LevelFactory {
         }
     }
 
+    /**
+     * Checks if a level is completely flooded, by returning false if any floor is present
+     * @param level
+     * @return
+     */
     private static boolean isFlooded(Tile[][] level) {
-        for(int y = 0; y < level.length; y++) {
-            for(int x = 0; x < level[0].length; x++) {
+        for (int y = 0; y < level.length; y++) {
+            for (int x = 0; x < level[0].length; x++) {
                 Tile t = level[y][x];
-                if(t.getType() == Tile.Type.FLOOR) {
+                if (t.getType() == Tile.Type.FLOOR) {
                     return false;
                 }
             }
         }
         return true;
     }
+
+    /**
+     * Returns a Tile[][] of "defaultLevel"
+     * defaultLevel is rooms between MIN_ROOM_SIZE and MAX_ROOM_SIZE being placed in non overlapping fashion using random coordinates.
+     * The walls are then checked if they're "thin", and then replaced with a floor if they are.
+     * "Thin" meaning two floor tiles are adjacent horizontally or vertically
+     * Then the map is flooded with BUILD_FLOOD to check that all rooms are accessible.
+     * If it is, then the Tile[][] is returned
+     * If it is not, the process repeats until it is.
+     * @param height height of map
+     * @param width width of map
+     * @return
+     */
     public static Tile[][] makeDefaultLevel(int height, int width) {
         Tile[][] result = null;
         boolean playableMap = false;
 
         int levelCreationTries = 0;
-        while(!playableMap) {
+        // While map is not playable(rooms not accessible)
+        while (!playableMap) {
             levelCreationTries++;
+            // Make a blank map filled with walls
             result = makeBlankMap(height, width);
             Random rng = new Random();
+            // Number of rooms to try and place
             final int NUMBER_OF_ROOMS = height * width;
+
             for (int r = 0; r < NUMBER_OF_ROOMS; r++) {
+                // Random coordinates
                 int y = rng.nextInt(height);
                 int x = rng.nextInt(width);
+
+                // Random dimensions
                 int roomHeight = rng.nextInt((MAX_ROOM_SIZE - MIN_ROOM_SIZE) + 1) + MIN_ROOM_SIZE;
-                int roomWidth = rng.nextInt(9) + 3;
+                int roomWidth = rng.nextInt((MAX_ROOM_SIZE - MIN_ROOM_SIZE) + 1) + MIN_ROOM_SIZE;
+
+                // Check and place if possible
                 if (canPlaceRoom(y, x, roomHeight, roomWidth, result)) {
                     placeRoom(y, x, roomHeight, roomWidth, result);
                 }
             }
 
+            /*
+            Check for thin walls
+             */
             for (int y = 0; y < height; y++) {
                 for (int x = 0; x < width; x++) {
                     Tile t = result[y][x];
+
+                    // If tile is a WALL
                     if (t.getType().equals(Tile.Type.WALL)) {
+                        // Get the surrounding tiles
                         Tile tLeft = null;
                         Tile tRight = null;
                         Tile tUp = null;
@@ -326,26 +381,36 @@ public abstract class LevelFactory {
 
                         boolean verticalDivide = false;
                         boolean horizontalDivide = false;
+
+                        // Check vertical divide
                         if (tUp != null && tDown != null) {
                             if (tUp.getType() == Tile.Type.FLOOR && tDown.getType() == Tile.Type.FLOOR) {
                                 verticalDivide = true;
                             }
                         }
+
+                        // Check horizontal divide
                         if (tLeft != null && tRight != null) {
                             if (tLeft.getType() == Tile.Type.FLOOR && tRight.getType() == Tile.Type.FLOOR) {
                                 horizontalDivide = true;
                             }
                         }
 
+                        // If either are true
                         if (horizontalDivide || verticalDivide) {
+                            // Set it as a PATH (DEBUG)
                             t.setType(Tile.Type.PATH);
                         }
                     }
                 }
             }
+            // Process the map to set tile properties
             processMap(result);
+            // FloodFill the map
             floodFill(result);
-            if(isFlooded(result)) {
+
+            // If the entire map is flooded, map is playable
+            if (isFlooded(result)) {
                 playableMap = true;
             }
         }
