@@ -14,6 +14,7 @@ import posmicanomaly.libjsrte.Window;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 /**
@@ -48,7 +49,7 @@ public class Roguelike {
 
     public Roguelike() {
 
-        this.window = new Window(this.windowHeight, this.windowWidth);
+        this.window = new Window(this.windowHeight, this.windowWidth, "Roguelike Example");
         this.window.getMainPanel().getRootConsole().setBorder(true);
 
         this.messageWidth = this.windowWidth - gameInformationConsoleWidth;
@@ -144,7 +145,9 @@ public class Roguelike {
         int y = player.getTile().getY();
         int x = player.getTile().getX();
 
-        for(Tile t : FieldOfVision.calculateSimpleFOVVisibleTiles(y, x, map.getCurrentLevel())) {
+        ArrayList<Tile> fieldOfVisionTiles = FieldOfVision.calculateRayCastingFOVVisibleTiles(y, x, map.getCurrentLevel());
+
+        for(Tile t : fieldOfVisionTiles) {
             t.setVisible(true);
             t.setExplored(true);
         }
