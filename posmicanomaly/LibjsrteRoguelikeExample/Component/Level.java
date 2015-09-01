@@ -4,6 +4,7 @@ import posmicanomaly.libjsrte.Console.Symbol;
 import posmicanomaly.libjsrte.Util.ColorTools;
 
 import java.awt.*;
+import java.util.ArrayList;
 
 /**
  * Created by Jesse Pospisil on 8/17/2015.
@@ -16,27 +17,81 @@ public class Level {
     public Level(int height, int width) {
         this.height = height;
         this.width = width;
-        this.tileArray = makeMap(height, width);
+        init();
     }
 
-    private Tile[][] makeMap(int height, int width) {
-        Tile[][] result = new Tile[height][width];
+    public ArrayList<Tile> getNearbyTiles(int y, int x) {
+        ArrayList<Tile> result = new ArrayList<Tile>();
+        if(!inBounds(y, x)) {
+            return null;
+        }
+        Tile tLeft = getTile(y, x - 1);
+        Tile tRight = getTile(y, x + 1);
+        Tile tUp = getTile(y - 1, x);
+        Tile tDown = getTile(y + 1, x);
 
-        for (int y = 0; y < height; ++y) {
-            for (int x = 0; x < width; ++x) {
-                char symbol = Symbol.MIDDLE_DOT;
-                if (y == 0 || y == height - 1) {
-                    symbol = '#';
-                }
+        Tile tNW = getTile(y -1, x - 1);
+        Tile tNE = getTile(y - 1, x + 1);
+        Tile tSW = getTile(y + 1, x - 1);
+        Tile tSE = getTile(y + 1, x + 1);
 
-                if (x == 0 || x == width - 1) {
-                    symbol = '#';
-                }
-                result[y][x] = new Tile(y, x, symbol, ColorTools.getRandomColor());
-            }
+        if(tLeft != null) {
+            result.add(tLeft);
+        }
+        if(tRight != null) {
+            result.add(tRight);
+        }
+        if(tUp != null) {
+            result.add(tUp);
+        }
+        if(tDown != null) {
+            result.add(tDown);
+        }
+
+        if(tNW != null) {
+            result.add(tNW);
+        }
+
+        if(tNE != null) {
+            result.add(tNE);
+        }
+
+        if(tSW != null) {
+            result.add(tSW);
+        }
+
+        if(tSE != null) {
+            result.add(tSE);
         }
 
         return result;
+    }
+
+    /*
+    DEBUG FUNCTIONS
+     */
+
+    public void DEBUG_INIT() {
+        init();
+    }
+
+    /*
+
+     */
+
+    public void toggleAllTilesVisible(boolean visible) {
+        for(int y = 0; y < height; y++) {
+            for(int x = 0; x < width; x++) {
+                Tile t = tileArray[y][x];
+                t.setVisible(visible);
+            }
+        }
+    }
+    private void init() {
+        this.tileArray = makeMap(height, width);
+    }
+    private Tile[][] makeMap(int height, int width) {
+        return LevelFactory.makeDefaultLevel(height, width);
     }
 
     public int getHeight() {
@@ -63,6 +118,14 @@ public class Level {
         if (inBounds(y, x))
             return tileArray[y][x];
         return null;
+    }
+
+    /**
+     * Debug function
+     * @return
+     */
+    public Tile[][] getTileArray() {
+        return tileArray;
     }
 
     public boolean inBounds(int y, int x) {
