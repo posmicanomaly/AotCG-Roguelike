@@ -1,8 +1,6 @@
-package posmicanomaly.LibjsrteRoguelikeExample.Gui;
+package posmicanomaly.AotCG.Gui;
 
 import posmicanomaly.libjsrte.Console.Console;
-
-import java.awt.*;
 
 /**
  * Created by Jesse Pospisil on 8/17/2015.

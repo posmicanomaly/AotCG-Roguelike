@@ -1,7 +1,7 @@
-package posmicanomaly.LibjsrteRoguelikeExample.Game;
+package posmicanomaly.AotCG.Game;
 
-import posmicanomaly.LibjsrteRoguelikeExample.Component.Level;
-import posmicanomaly.LibjsrteRoguelikeExample.Component.Tile;
+import posmicanomaly.AotCG.Component.Level;
+import posmicanomaly.AotCG.Component.Tile;
 
 import java.util.ArrayList;
 

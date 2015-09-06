@@ -1,20 +1,19 @@
-package posmicanomaly.LibjsrteRoguelikeExample.Game;
+package posmicanomaly.AotCG.Game;
 
-import posmicanomaly.LibjsrteRoguelikeExample.Component.Actor;
-import posmicanomaly.LibjsrteRoguelikeExample.Component.LevelFactory;
-import posmicanomaly.LibjsrteRoguelikeExample.Component.Map;
-import posmicanomaly.LibjsrteRoguelikeExample.Component.Tile;
-import posmicanomaly.LibjsrteRoguelikeExample.Gui.EnhancedConsole;
-import posmicanomaly.LibjsrteRoguelikeExample.Gui.GameInformationConsole;
-import posmicanomaly.LibjsrteRoguelikeExample.Gui.InventorySideConsole;
-import posmicanomaly.LibjsrteRoguelikeExample.Gui.MessageConsole;
+import posmicanomaly.AotCG.Component.Actor;
+import posmicanomaly.AotCG.Component.LevelFactory;
+import posmicanomaly.AotCG.Component.Map;
+import posmicanomaly.AotCG.Component.Tile;
+import posmicanomaly.AotCG.Gui.EnhancedConsole;
+import posmicanomaly.AotCG.Gui.GameInformationConsole;
+import posmicanomaly.AotCG.Gui.InventorySideConsole;
+import posmicanomaly.AotCG.Gui.MessageConsole;
 import posmicanomaly.libjsrte.Console.Console;
 import posmicanomaly.libjsrte.Util.ColorTools;
 import posmicanomaly.libjsrte.Window;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 /**

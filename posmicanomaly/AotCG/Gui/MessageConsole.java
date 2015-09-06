@@ -1,4 +1,4 @@
-package posmicanomaly.LibjsrteRoguelikeExample.Gui;
+package posmicanomaly.AotCG.Gui;
 
 import posmicanomaly.libjsrte.Console.Console;
 

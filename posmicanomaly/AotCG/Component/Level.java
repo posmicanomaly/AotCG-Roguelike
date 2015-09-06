@@ -1,7 +1,4 @@
-package posmicanomaly.LibjsrteRoguelikeExample.Component;
-
-import posmicanomaly.libjsrte.Console.Symbol;
-import posmicanomaly.libjsrte.Util.ColorTools;
+package posmicanomaly.AotCG.Component;
 
 import java.awt.*;
 import java.util.ArrayList;

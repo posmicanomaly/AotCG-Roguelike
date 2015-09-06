@@ -1,4 +1,4 @@
-package posmicanomaly.LibjsrteRoguelikeExample.Component;
+package posmicanomaly.AotCG.Component;
 
 import posmicanomaly.libjsrte.Console.Symbol;
 
