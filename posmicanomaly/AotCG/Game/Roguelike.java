@@ -4,10 +4,11 @@ import posmicanomaly.AotCG.Component.Actor;
 import posmicanomaly.AotCG.Component.LevelFactory;
 import posmicanomaly.AotCG.Component.Map;
 import posmicanomaly.AotCG.Component.Tile;
-import posmicanomaly.AotCG.Gui.EnhancedConsole;
-import posmicanomaly.AotCG.Gui.GameInformationConsole;
-import posmicanomaly.AotCG.Gui.InventorySideConsole;
-import posmicanomaly.AotCG.Gui.MessageConsole;
+import posmicanomaly.AotCG.Gui.Component.EnhancedConsole;
+import posmicanomaly.AotCG.Gui.Component.GameInformationConsole;
+import posmicanomaly.AotCG.Gui.Component.InventorySideConsole;
+import posmicanomaly.AotCG.Gui.Component.MessageConsole;
+import posmicanomaly.AotCG.Gui.Gui;
 import posmicanomaly.libjsrte.Console.Console;
 import posmicanomaly.libjsrte.Util.ColorTools;
 import posmicanomaly.libjsrte.Window;
@@ -22,12 +23,17 @@ import java.util.ArrayList;
 public class Roguelike {
     Window window;
     private Console mapConsole;
+
+    private Gui gui;
+
     private MessageConsole messageConsole;
     private EnhancedConsole gameInformationConsole;
     private EnhancedConsole inventorySideConsole;
     private Console menuWindow;
 
     public enum Direction {UP, DOWN, LEFT, RIGHT};
+
+    int fontSize = 18;
 
     int windowHeight = 9 * 7;
     int windowWidth = 16 * 9;
@@ -48,7 +54,7 @@ public class Roguelike {
 
     public Roguelike() {
 
-        this.window = new Window(this.windowHeight, this.windowWidth, "Roguelike Example");
+        this.window = new Window(this.windowHeight, this.windowWidth, "Roguelike Example", fontSize);
         this.window.getMainPanel().getRootConsole().setBorder(true);
 
         this.messageWidth = this.windowWidth - gameInformationConsoleWidth;
@@ -56,6 +62,7 @@ public class Roguelike {
         this.mapWidth = this.windowWidth - 2 - gameInformationConsoleWidth;
         this.mapHeight = this.windowHeight - 1 - this.messageHeight;
 
+        this.gui = new Gui();
 
 
         initGame();
@@ -206,8 +213,8 @@ public class Roguelike {
             mapConsole.setBgColor(tile.getY(), tile.getX(), tile.getBackgroundColor());
         } else if(tile.isExplored()) {
             mapConsole.setChar(tile.getY(), tile.getX(), tile.getSymbol());
-            mapConsole.setColor(tile.getY(), tile.getX(), tile.getColor().darker());
-            mapConsole.setBgColor(tile.getY(), tile.getX(), tile.getBackgroundColor().darker());
+            mapConsole.setColor(tile.getY(), tile.getX(), tile.getColor().darker().darker());
+            mapConsole.setBgColor(tile.getY(), tile.getX(), tile.getBackgroundColor().darker().darker());
         } else {
             mapConsole.setChar(tile.getY(), tile.getX(), ' ');
             mapConsole.setColor(tile.getY(), tile.getX(), Color.black);
@@ -255,8 +262,15 @@ public class Roguelike {
     private void initGame() {
         this.mapConsole = new Console(this.mapHeight, this.mapWidth);
 
+        this.map = new Map(mapHeight, mapWidth, mapDepth);
+
+        Tile startingTile = map.getCurrentLevel().getTile(map.getCurrentLevel().getHeight() / 2, map.getCurrentLevel().getWidth() / 2);
+        player = new Actor('@', ColorTools.getRandomColor(), startingTile);
+        calculateVision();
+        this.copyMapToBuffer();
+
         initMessageConsole();
-        gameInformationConsole = new GameInformationConsole(gameInformationConsoleHeight, gameInformationConsoleWidth);
+        gameInformationConsole = new GameInformationConsole(gameInformationConsoleHeight, gameInformationConsoleWidth, player);
         gameInformationConsole.setBorder(true);
 
         inventorySideConsole = new InventorySideConsole(mapHeight, 20);
@@ -266,14 +280,6 @@ public class Roguelike {
         this.menuWindow.setBorder(true);
         this.showMenu = false;
         showInventory = false;
-        this.map = new Map(mapHeight, mapWidth, mapDepth);
-
-
-
-        Tile startingTile = map.getCurrentLevel().getTile(map.getCurrentLevel().getHeight() / 2, map.getCurrentLevel().getWidth() / 2);
-        player = new Actor('@', ColorTools.getRandomColor(), startingTile);
-        calculateVision();
-        this.copyMapToBuffer();
 
         this.window.getMainPanel().setRender(true);
         this.lastKeyEvent = this.window.getLastKeyEvent();

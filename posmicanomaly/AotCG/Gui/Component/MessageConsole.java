@@ -1,4 +1,4 @@
-package posmicanomaly.AotCG.Gui;
+package posmicanomaly.AotCG.Gui.Component;
 
 import posmicanomaly.libjsrte.Console.Console;
 

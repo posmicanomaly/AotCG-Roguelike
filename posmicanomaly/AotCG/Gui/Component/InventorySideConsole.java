@@ -1,4 +1,4 @@
-package posmicanomaly.AotCG.Gui;
+package posmicanomaly.AotCG.Gui.Component;
 
 import java.awt.*;
 import java.util.ArrayList;

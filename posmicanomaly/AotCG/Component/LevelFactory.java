@@ -88,12 +88,14 @@ public abstract class LevelFactory {
                     case FLOOR:
                         symbol = Symbol.MIDDLE_DOT;
                         isBlocked = false;
-                        color = Color.gray;
+                        color = Colors.FLOOR;
+                        backgroundColor = Colors.FLOOR_BG;
                         break;
                     case WALL:
                         symbol = '#';
                         isBlocked = true;
-                        color = Color.white;
+                        color = Colors.WALL;
+                        backgroundColor = Colors.WALL_BG;
                         //
                         transparent = false;
                         break;
@@ -110,8 +112,8 @@ public abstract class LevelFactory {
                     case WATER:
                         symbol = Symbol.ALMOST_EQUAL_TO;
                         isBlocked = false;
-                        color = Color.black;
-                        backgroundColor = Color.blue.darker();
+                        color = Colors.WATER;
+                        backgroundColor = Colors.WATER_BG;
                         break;
                     default:
                         symbol = '?';

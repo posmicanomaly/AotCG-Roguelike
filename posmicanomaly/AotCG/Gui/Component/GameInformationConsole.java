@@ -1,4 +1,6 @@
-package posmicanomaly.AotCG.Gui;
+package posmicanomaly.AotCG.Gui.Component;
+
+import posmicanomaly.AotCG.Component.Actor;
 
 import java.util.ArrayList;
 
@@ -6,15 +8,17 @@ import java.util.ArrayList;
  * Created by Jesse Pospisil on 8/19/2015.
  */
 public class GameInformationConsole extends EnhancedConsole {
-    public GameInformationConsole(int yBufferWidth, int xBufferWidth) {
+    Actor player;
+    public GameInformationConsole(int yBufferWidth, int xBufferWidth, Actor player) {
         super(yBufferWidth, xBufferWidth);
+        this.player = player;
     }
 
     @Override
     public void updateConsole() {
         ArrayList<String> placeHolder = new ArrayList<String>();
-        placeHolder.add("Player");
-        placeHolder.add("HP: 10/10");
+        placeHolder.add(player.getName());
+        placeHolder.add("HP: " + player.getCurrentHp() + "/" + player.getMaxHp());
         placeHolder.add("Well");
         placeHolder.add("Turn: 23993");
         int row = 1;
