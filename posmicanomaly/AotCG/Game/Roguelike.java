@@ -32,7 +32,7 @@ public class Roguelike {
     private Console menuWindow;
     private Console titleConsole;
 
-    public enum Direction {UP, DOWN, LEFT, RIGHT}
+    public enum Direction {UP, DOWN, LEFT, RIGHT, NW, NE, SW, SE}
     public enum State {TITLE, PLAYING}
 
     private State currentState;
@@ -89,20 +89,40 @@ public class Roguelike {
                     /*
                     Player Movement Input
                      */
-                        case KeyEvent.VK_LEFT:
-                            moveActor(Direction.LEFT);
-                            recalculateFOV = true;
-                            break;
+                        case KeyEvent.VK_W:
                         case KeyEvent.VK_UP:
                             moveActor(Direction.UP);
                             recalculateFOV = true;
                             break;
+                        case KeyEvent.VK_S:
+                        case KeyEvent.VK_DOWN:
+                            moveActor(Direction.DOWN);
+                            recalculateFOV = true;
+                            break;
+                        case KeyEvent.VK_A:
+                        case KeyEvent.VK_LEFT:
+                            moveActor(Direction.LEFT);
+                            recalculateFOV = true;
+                            break;
+                        case KeyEvent.VK_D:
                         case KeyEvent.VK_RIGHT:
                             moveActor(Direction.RIGHT);
                             recalculateFOV = true;
                             break;
-                        case KeyEvent.VK_DOWN:
-                            moveActor(Direction.DOWN);
+                        case KeyEvent.VK_Q:
+                            moveActor(Direction.NW);
+                            recalculateFOV = true;
+                            break;
+                        case KeyEvent.VK_E:
+                            moveActor(Direction.NE);
+                            recalculateFOV = true;
+                            break;
+                        case KeyEvent.VK_Z:
+                            moveActor(Direction.SW);
+                            recalculateFOV = true;
+                            break;
+                        case KeyEvent.VK_C:
+                            moveActor(Direction.SE);
                             recalculateFOV = true;
                             break;
 
@@ -193,6 +213,22 @@ public class Roguelike {
                 break;
             case RIGHT:
                 x++;
+                break;
+            case NW:
+                x--;
+                y--;
+                break;
+            case NE:
+                x++;
+                y--;
+                break;
+            case SW:
+                x--;
+                y++;
+                break;
+            case SE:
+                x++;
+                y++;
                 break;
             default:
                 move = false;
