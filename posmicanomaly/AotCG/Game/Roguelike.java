@@ -111,23 +111,22 @@ public class Roguelike {
                      */
                         case KeyEvent.VK_F:
                             LevelFactory.DEBUG_FLOOD_FILL(map.getCurrentLevel().getTileArray());
-                            //copyMapToBuffer();
-                            break;
-                        case KeyEvent.VK_P:
                             LevelFactory.DEBUG_PROCESS_MAP(map.getCurrentLevel().getTileArray());
-                            //copyMapToBuffer();
+                            messageConsole.addMessage("Level flood filled");
                             break;
                         case KeyEvent.VK_R:
                             initGame();
                             break;
                         case KeyEvent.VK_V:
                             map.getCurrentLevel().toggleAllTilesVisible(true);
-                            //copyMapToBuffer();
+                            messageConsole.addMessage("All tiles visible");
                             break;
                         case KeyEvent.VK_B:
                             if (window.getMainPanel().isDrawBackgroundGlyphs()) {
+                                messageConsole.addMessage("Background glyphs off");
                                 window.getMainPanel().setDrawBackgroundGlyphs(false);
                             } else {
+                                messageConsole.addMessage("Background glyphs on");
                                 window.getMainPanel().setDrawBackgroundGlyphs(true);
                             }
                             break;
