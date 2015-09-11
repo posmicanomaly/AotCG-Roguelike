@@ -115,6 +115,13 @@ public class Roguelike {
                         map.getCurrentLevel().toggleAllTilesVisible(true);
                         //copyMapToBuffer();
                         break;
+                    case KeyEvent.VK_B:
+                        if(window.getMainPanel().isDrawBackgroundGlyphs()) {
+                            window.getMainPanel().setDrawBackgroundGlyphs(false);
+                        } else {
+                            window.getMainPanel().setDrawBackgroundGlyphs(true);
+                        }
+                        break;
 
                     /*
                     Menu Toggle Input
