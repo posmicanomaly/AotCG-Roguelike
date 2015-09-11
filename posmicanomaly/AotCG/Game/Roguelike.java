@@ -33,10 +33,10 @@ public class Roguelike {
 
     public enum Direction {UP, DOWN, LEFT, RIGHT};
 
-    int fontSize = 18;
+    int fontSize = 16;
 
-    int windowHeight = 9 * 7;
-    int windowWidth = 16 * 9;
+    int windowHeight = 9 * 6;
+    int windowWidth = 16 * 7;
     int messageHeight = 10;
     int messageWidth;
     int mapHeight;
