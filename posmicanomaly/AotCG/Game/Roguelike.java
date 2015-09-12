@@ -1,9 +1,6 @@
 package posmicanomaly.AotCG.Game;
 
-import posmicanomaly.AotCG.Component.Actor;
-import posmicanomaly.AotCG.Component.LevelFactory;
-import posmicanomaly.AotCG.Component.Map;
-import posmicanomaly.AotCG.Component.Tile;
+import posmicanomaly.AotCG.Component.*;
 import posmicanomaly.AotCG.Gui.Component.EnhancedConsole;
 import posmicanomaly.AotCG.Gui.Component.GameInformationConsole;
 import posmicanomaly.AotCG.Gui.Component.InventorySideConsole;
@@ -16,6 +13,7 @@ import posmicanomaly.libjsrte.Window;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
+import java.util.Random;
 
 /**
  * Created by Jesse Pospisil on 8/17/2015.
@@ -40,7 +38,7 @@ public class Roguelike {
     int fontSize = 16;
 
     int windowHeight = 9 * 6;
-    int windowWidth = 16 * 7;
+    int windowWidth = 16 * 8;
     int messageHeight = 10;
     int messageWidth;
     int mapHeight;
@@ -187,7 +185,7 @@ public class Roguelike {
         int y = player.getTile().getY();
         int x = player.getTile().getX();
 
-        ArrayList<Tile> fieldOfVisionTiles = FieldOfVision.calculateRayCastingFOVVisibleTiles(y, x, map.getCurrentLevel());
+        ArrayList<Tile> fieldOfVisionTiles = FieldOfVision.calculateRayCastingFOVVisibleTiles(y, x, map.getCurrentLevel(), 8);
 
         for(Tile t : fieldOfVisionTiles) {
             t.setVisible(true);
@@ -196,11 +194,11 @@ public class Roguelike {
     }
 
     private void moveActor(Direction d) {
-        Tile playerTile = player.getTile();
+        Tile prevTile = player.getTile();
         Tile nextTile = null;
         boolean move = true;
-        int y = playerTile.getY();
-        int x = playerTile.getX();
+        int y = prevTile.getY();
+        int x = prevTile.getX();
         switch(d) {
             case UP:
                 y--;
@@ -241,10 +239,12 @@ public class Roguelike {
             } else if(nextTile.isBlocked()) {
                 messageConsole.addMessage("You bumped into a wall");
             } else {
+                /*
+                I don't like this
+                 */
                 player.setTile(nextTile);
-                nextTile.setVisible(true);
-                // This removed the player from the previous tile
-                refreshTile(playerTile);
+                nextTile.setActor(player);
+                prevTile.setActor(null);
             }
 
         }
@@ -259,14 +259,34 @@ public class Roguelike {
      * @param tile
      */
     private void refreshTile(Tile tile) {
+        /*
+        Shimmer water code
+
+        Sets the backgroundColor of tile to a varied color based on the standard WATER_BG
+         */
+        Random rng = new Random();
+        if(tile.getType() == Tile.Type.WATER) {
+            if(rng.nextInt(100) < 2) {
+                tile.setBackgroundColor(ColorTools.varyColor(Colors.WATER_BG, 0.5, 1.0, ColorTools.BaseColor.RGB));
+            }
+        }
+
+        /*
+
+         */
         if(tile.isVisible()) {
-            mapConsole.setChar(tile.getY(), tile.getX(), tile.getSymbol());
-            mapConsole.setColor(tile.getY(), tile.getX(), tile.getColor());
+            if(tile.hasActor()) {
+                mapConsole.setChar(tile.getY(), tile.getX(), tile.getActor().getSymbol());
+                mapConsole.setColor(tile.getY(), tile.getX(), tile.getActor().getColor());
+            } else {
+                mapConsole.setChar(tile.getY(), tile.getX(), tile.getSymbol());
+                mapConsole.setColor(tile.getY(), tile.getX(), tile.getColor());
+            }
             mapConsole.setBgColor(tile.getY(), tile.getX(), tile.getBackgroundColor());
         } else if(tile.isExplored()) {
             mapConsole.setChar(tile.getY(), tile.getX(), tile.getSymbol());
-            mapConsole.setColor(tile.getY(), tile.getX(), tile.getColor().darker().darker());
-            mapConsole.setBgColor(tile.getY(), tile.getX(), tile.getBackgroundColor().darker().darker());
+            mapConsole.setColor(tile.getY(), tile.getX(), tile.getColor().darker().darker().darker());
+            mapConsole.setBgColor(tile.getY(), tile.getX(), tile.getBackgroundColor().darker().darker().darker());
         } else {
             mapConsole.setChar(tile.getY(), tile.getX(), ' ');
             mapConsole.setColor(tile.getY(), tile.getX(), Color.black);
@@ -281,9 +301,9 @@ public class Roguelike {
             // Refresh the map buffer
             copyMapToBuffer();
             // Copy player to the map
-            Tile playerTile = player.getTile();
-            mapConsole.setChar(playerTile.getY(), playerTile.getX(), player.getSymbol());
-            mapConsole.setColor(playerTile.getY(), playerTile.getX(), player.getColor());
+            //Tile playerTile = player.getTile();
+            //mapConsole.setChar(playerTile.getY(), playerTile.getX(), player.getSymbol());
+            //mapConsole.setColor(playerTile.getY(), playerTile.getX(), player.getColor());
             this.mapConsole.copyBufferTo(rootConsole, 1, 1);
 
 
@@ -337,12 +357,17 @@ public class Roguelike {
 
         // Create player at that tile and set them up
         player = new Actor('@', ColorTools.getRandomColor(), startingTile);
+        startingTile.setActor(player);
         calculateVision();
 
         // Copy the map to mapConsole(buffer)
         this.copyMapToBuffer();
 
         // Init the GUI
+        initGui();
+    }
+
+    private void initGui() {
         initMessageConsole();
         gameInformationConsole = new GameInformationConsole(gameInformationConsoleHeight, gameInformationConsoleWidth, player);
         gameInformationConsole.setBorder(true);

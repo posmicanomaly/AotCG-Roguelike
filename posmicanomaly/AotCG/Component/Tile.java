@@ -6,8 +6,45 @@ import java.awt.*;
  * Created by Jesse Pospisil on 8/17/2015.
  */
 public class Tile {
-    public static enum Type {
-        DEFAULT, WALL, FLOOR, WATER, PATH, BUILD_FLOOD
+    private Type type;
+    private boolean transparent;
+    private boolean explored;
+    private boolean visible;
+    private int y, x;
+    private char symbol;
+    private Color color;
+    private Color backgroundColor;
+    private boolean blocked;
+
+    public Actor getActor() {
+        return actor;
+    }
+
+    public void setActor(Actor actor) {
+        this.actor = actor;
+    }
+
+    public boolean hasActor() {
+        return this.actor != null;
+    }
+
+    private Actor actor;
+
+    public Tile(int y, int x) {
+        this.y = y;
+        this.x = x;
+        this.symbol = '?';
+        this.color = Color.GREEN;
+        this.backgroundColor = Color.black;
+        this.blocked = false;
+        this.type = Type.DEFAULT;
+
+        // All tiles are assumed to be transparent unless explicitly set as not
+        this.transparent = true;
+        this.explored = false;
+        this.visible = false;
+
+        this.actor = null;
     }
 
     public Type getType() {
@@ -18,8 +55,6 @@ public class Tile {
         this.type = type;
     }
 
-    private Type type;
-
     public boolean isTransparent() {
         return transparent;
     }
@@ -27,8 +62,6 @@ public class Tile {
     public void setTransparent(boolean transparent) {
         this.transparent = transparent;
     }
-
-    private boolean transparent;
 
     public boolean isExplored() {
         return explored;
@@ -38,8 +71,6 @@ public class Tile {
         this.explored = explored;
     }
 
-    private boolean explored;
-
     public boolean isVisible() {
         return visible;
     }
@@ -48,7 +79,6 @@ public class Tile {
         this.visible = visible;
     }
 
-    private boolean visible;
     public int getY() {
         return y;
     }
@@ -81,10 +111,6 @@ public class Tile {
         this.color = color;
     }
 
-    private int y, x;
-    private char symbol;
-    private Color color;
-
     public Color getBackgroundColor() {
         return backgroundColor;
     }
@@ -92,8 +118,6 @@ public class Tile {
     public void setBackgroundColor(Color backgroundColor) {
         this.backgroundColor = backgroundColor;
     }
-
-    private Color backgroundColor;
 
     public boolean isBlocked() {
         return blocked;
@@ -103,21 +127,8 @@ public class Tile {
         this.blocked = blocked;
     }
 
-    private boolean blocked;
-
-    public Tile(int y, int x) {
-        this.y = y;
-        this.x = x;
-        this.symbol = '?';
-        this.color = Color.GREEN;
-        this.backgroundColor = Color.black;
-        this.blocked = false;
-        this.type = Type.DEFAULT;
-
-        // All tiles are assumed to be transparent unless explicitly set as not
-        this.transparent = true;
-        this.explored = false;
-        this.visible = false;
+    public static enum Type {
+        DEFAULT, WALL, FLOOR, WATER, PATH, BUILD_FLOOD
     }
 //    public Tile(int y, int x, char symbol, Color color) {
 //        this.y = y;

@@ -32,10 +32,10 @@ public abstract class FieldOfVision {
      * @param level
      * @return
      */
-    public static ArrayList<Tile> calculateRayCastingFOVVisibleTiles(int y, int x, Level level) {
+    public static ArrayList<Tile> calculateRayCastingFOVVisibleTiles(int y, int x, Level level, int radius) {
         ArrayList<Tile> visibleTiles = new ArrayList<Tile>();
         visibleTiles.add(level.getTile(y, x));
-        int VIEW_RADIUS = 10;
+        int VIEW_RADIUS = radius;
         for(int i = 0; i < 360; i++) {
             double xd = Math.cos((double) i * 0.01745f);
             double yd = Math.sin((double) i * 0.01745f);

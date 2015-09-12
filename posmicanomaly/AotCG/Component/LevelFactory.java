@@ -1,6 +1,7 @@
 package posmicanomaly.AotCG.Component;
 
 import posmicanomaly.libjsrte.Console.Symbol;
+import posmicanomaly.libjsrte.Util.ColorTools;
 
 import java.awt.*;
 import java.util.Random;
@@ -88,14 +89,14 @@ public abstract class LevelFactory {
                     case FLOOR:
                         symbol = Symbol.MIDDLE_DOT;
                         isBlocked = false;
-                        color = Colors.FLOOR;
-                        backgroundColor = Colors.FLOOR_BG;
+                        color = ColorTools.varyColor(Colors.FLOOR, 0.8, 1.0, ColorTools.BaseColor.RGB);
+                        backgroundColor = ColorTools.varyColor(Colors.FLOOR_BG, 0.9, 1.0, ColorTools.BaseColor.RGB);
                         break;
                     case WALL:
                         symbol = '#';
                         isBlocked = true;
                         color = Colors.WALL;
-                        backgroundColor = Colors.WALL_BG;
+                        backgroundColor = ColorTools.varyColor(Colors.WALL_BG, 0.7, 1.0, ColorTools.BaseColor.RGB);
                         //
                         transparent = false;
                         break;
