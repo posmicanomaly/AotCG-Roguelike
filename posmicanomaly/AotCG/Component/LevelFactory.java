@@ -90,7 +90,7 @@ public abstract class LevelFactory {
                         symbol = Symbol.MIDDLE_DOT;
                         isBlocked = false;
                         color = ColorTools.varyColor(Colors.FLOOR, 0.8, 1.0, ColorTools.BaseColor.RGB);
-                        backgroundColor = ColorTools.varyColor(Colors.FLOOR_BG, 0.9, 1.0, ColorTools.BaseColor.RGB);
+                        backgroundColor = ColorTools.varyColor(Colors.FLOOR_BG, 0.5, 1.5, ColorTools.BaseColor.RGB);
                         break;
                     case WALL:
                         symbol = '#';
@@ -424,12 +424,21 @@ public abstract class LevelFactory {
 
         System.out.println("Level took " + levelCreationTries + " tries");
         processMap(result);
-        for(int i = 0; i < height * width / 1; i++) {
+        for(int i = 0; i < height * width / 32; i++) {
             Random rng = new Random();
             int y = rng.nextInt(height);
             int x = rng.nextInt(width);
             if(result[y][x].getType() == Tile.Type.FLOOR) {
                 result[y][x].setType(Tile.Type.WATER);
+            }
+        }
+        for(int i = 0; i < height * width / 64; i++) {
+            Random rng = new Random();
+            int y = rng.nextInt(height);
+            int x = rng.nextInt(width);
+            if(result[y][x].getType() == Tile.Type.FLOOR && !result[y][x].hasActor()) {
+                Actor actor = new Actor('G', Color.orange, result[y][x]);
+                result[y][x].setActor(actor);
             }
         }
         processMap(result);

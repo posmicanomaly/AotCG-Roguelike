@@ -23,8 +23,8 @@ public class MessageConsole extends Console {
 
     private void updateMessages() {
         this.clear();
-        int y = 1;
-        int x = 1;
+        int y = 0;
+        int x = 0;
         for(int i = messageList.size() - 1; i > messageList.size() - 1 - messageHeight; i--) {
             if(i >= 0) {
                 writeString(messageList.get(i), y, x);

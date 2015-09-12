@@ -18,9 +18,9 @@ public class InventorySideConsole extends EnhancedConsole{
         placeHolder.add("HP: 10/10");
         placeHolder.add("Well");
         placeHolder.add("Turn: 23993");
-        int row = 1;
+        int row = 0;
         for(String s : placeHolder) {
-            writeString(s, row, 1);
+            writeString(s, row, 0);
             row++;
         }
         for(int y = 0; y < this.getyBufferHeight(); y++) {

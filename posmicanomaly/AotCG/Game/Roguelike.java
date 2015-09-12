@@ -36,18 +36,18 @@ public class Roguelike {
 
     private State currentState;
 
-    int fontSize = 16;
+    int fontSize = 24;
 
-    int windowHeight = 9 * 6;
-    int windowWidth = 16 * 8;
-    int messageHeight = 10;
+    int windowHeight = 40;
+    int windowWidth = 135;
+    int messageHeight = 6;
     int messageWidth;
     int mapHeight;
     int mapWidth;
     int mapDepth = 10;
 
     int gameInformationConsoleHeight = windowHeight;
-    int gameInformationConsoleWidth = 16;
+    int gameInformationConsoleWidth = 24;
     boolean showMenu;
     boolean showInventory;
     Map map;
@@ -58,7 +58,7 @@ public class Roguelike {
     public Roguelike() {
 
         this.window = new Window(this.windowHeight, this.windowWidth, "AotCG", fontSize);
-        this.window.getMainPanel().getRootConsole().setBorder(true);
+        //this.window.getMainPanel().getRootConsole().setBorder(true);
 
         this.messageWidth = this.windowWidth - gameInformationConsoleWidth;
 
@@ -186,7 +186,7 @@ public class Roguelike {
         int y = player.getTile().getY();
         int x = player.getTile().getX();
 
-        ArrayList<Tile> fieldOfVisionTiles = FieldOfVision.calculateRayCastingFOVVisibleTiles(y, x, map.getCurrentLevel(), 8);
+        ArrayList<Tile> fieldOfVisionTiles = FieldOfVision.calculateRayCastingFOVVisibleTiles(y, x, map.getCurrentLevel(), 12);
 
         for(Tile t : fieldOfVisionTiles) {
             t.setVisible(true);
@@ -239,7 +239,10 @@ public class Roguelike {
                 messageConsole.addMessage("Tile is null");
             } else if(nextTile.isBlocked()) {
                 messageConsole.addMessage("You bumped into a wall");
-            } else {
+            } else if(nextTile.hasActor()) {
+                messageConsole.addMessage("Actor is there!");
+            }
+            else {
                 /*
                 I don't like this
                  */
@@ -267,9 +270,12 @@ public class Roguelike {
          */
         Random rng = new Random();
         if(tile.getType() == Tile.Type.WATER) {
-            if(rng.nextInt(100) < 10) {
-                tile.setBackgroundColor(ColorTools.varyColor(Colors.WATER_BG, 0.5, 1.0, ColorTools.BaseColor.RGB));
+            if(rng.nextInt(100) < 1) {
+                tile.setBackgroundColor(ColorTools.varyColor(Colors.WATER_BG, 0.7, 1.0, ColorTools.BaseColor.RGB));
 
+            }
+            if(rng.nextInt(100) < 1) {
+                tile.setColor(ColorTools.varyColor(Colors.WATER, 0.7, 1.0, ColorTools.BaseColor.RGB));
                 if(tile.getSymbol() == Symbol.ALMOST_EQUAL_TO) {
                     tile.setSymbol('=');
                 } else {
@@ -287,13 +293,13 @@ public class Roguelike {
                 mapConsole.setColor(tile.getY(), tile.getX(), tile.getActor().getColor());
             } else {
                 mapConsole.setChar(tile.getY(), tile.getX(), tile.getSymbol());
-                mapConsole.setColor(tile.getY(), tile.getX(), tile.getColor());
+                mapConsole.setColor(tile.getY(), tile.getX(), tile.getColor().brighter());
             }
-            mapConsole.setBgColor(tile.getY(), tile.getX(), tile.getBackgroundColor());
+            mapConsole.setBgColor(tile.getY(), tile.getX(), tile.getBackgroundColor().brighter());
         } else if(tile.isExplored()) {
             mapConsole.setChar(tile.getY(), tile.getX(), tile.getSymbol());
-            mapConsole.setColor(tile.getY(), tile.getX(), tile.getColor().darker().darker().darker());
-            mapConsole.setBgColor(tile.getY(), tile.getX(), tile.getBackgroundColor().darker().darker().darker());
+            mapConsole.setColor(tile.getY(), tile.getX(), tile.getColor().darker().darker());
+            mapConsole.setBgColor(tile.getY(), tile.getX(), tile.getBackgroundColor().darker().darker());
         } else {
             mapConsole.setChar(tile.getY(), tile.getX(), ' ');
             mapConsole.setColor(tile.getY(), tile.getX(), Color.black);
@@ -311,7 +317,7 @@ public class Roguelike {
             //Tile playerTile = player.getTile();
             //mapConsole.setChar(playerTile.getY(), playerTile.getX(), player.getSymbol());
             //mapConsole.setColor(playerTile.getY(), playerTile.getX(), player.getColor());
-            this.mapConsole.copyBufferTo(rootConsole, 1, 1);
+            this.mapConsole.copyBufferTo(rootConsole, 0, 0);
 
 
             this.messageConsole.copyBufferTo(rootConsole, this.mapHeight + 1, 0);
@@ -324,7 +330,7 @@ public class Roguelike {
 
             if (showInventory) {
                 inventorySideConsole.updateConsole();
-                inventorySideConsole.copyBufferTo(rootConsole, 1, 1);
+                inventorySideConsole.copyBufferTo(rootConsole, 0, 0);
             }
 
             this.window.refresh();
@@ -336,7 +342,7 @@ public class Roguelike {
 
     private void initMessageConsole() {
         this.messageConsole = new MessageConsole(this.messageHeight, this.messageWidth);
-        this.messageConsole.setBorder(true);
+        //this.messageConsole.setBorder(true);
         this.messageConsole.addMessage("Welcome");
 
 //        this.messageConsole.writeString("Hello World", 1, 1);
@@ -348,7 +354,7 @@ public class Roguelike {
 
         //title console
         titleConsole = new Console(windowHeight, windowWidth);
-        titleConsole.setBorder(true);
+        //titleConsole.setBorder(true);
         String title1 = "AotCG";
         String title2 = "A Roguelike game written in Java using Swing with libjsrte";
         String title3 = "Press any key to start game";
@@ -377,13 +383,14 @@ public class Roguelike {
     private void initGui() {
         initMessageConsole();
         gameInformationConsole = new GameInformationConsole(gameInformationConsoleHeight, gameInformationConsoleWidth, player);
-        gameInformationConsole.setBorder(true);
+        //gameInformationConsole.setBorder(true);
 
         inventorySideConsole = new InventorySideConsole(mapHeight, 20);
-        inventorySideConsole.setBorder(true);
+        //inventorySideConsole.setBorder(true);
 
         this.menuWindow = new Console(25, 25);
         this.menuWindow.setBorder(true);
+        this.menuWindow.fillBgColor(new Color(0, 0, 0, 0.3f));
         this.showMenu = false;
         showInventory = false;
     }
