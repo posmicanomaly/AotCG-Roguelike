@@ -424,7 +424,7 @@ public abstract class LevelFactory {
 
         System.out.println("Level took " + levelCreationTries + " tries");
         processMap(result);
-        for(int i = 0; i < height * width / 16; i++) {
+        for(int i = 0; i < height * width / 1; i++) {
             Random rng = new Random();
             int y = rng.nextInt(height);
             int x = rng.nextInt(width);

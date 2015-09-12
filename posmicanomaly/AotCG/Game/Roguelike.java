@@ -7,6 +7,7 @@ import posmicanomaly.AotCG.Gui.Component.InventorySideConsole;
 import posmicanomaly.AotCG.Gui.Component.MessageConsole;
 import posmicanomaly.AotCG.Gui.Gui;
 import posmicanomaly.libjsrte.Console.Console;
+import posmicanomaly.libjsrte.Console.Symbol;
 import posmicanomaly.libjsrte.Util.ColorTools;
 import posmicanomaly.libjsrte.Window;
 
@@ -266,8 +267,14 @@ public class Roguelike {
          */
         Random rng = new Random();
         if(tile.getType() == Tile.Type.WATER) {
-            if(rng.nextInt(100) < 2) {
+            if(rng.nextInt(100) < 10) {
                 tile.setBackgroundColor(ColorTools.varyColor(Colors.WATER_BG, 0.5, 1.0, ColorTools.BaseColor.RGB));
+
+                if(tile.getSymbol() == Symbol.ALMOST_EQUAL_TO) {
+                    tile.setSymbol('=');
+                } else {
+                    tile.setSymbol(Symbol.ALMOST_EQUAL_TO);
+                }
             }
         }
 
