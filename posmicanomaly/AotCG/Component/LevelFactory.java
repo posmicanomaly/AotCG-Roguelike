@@ -291,6 +291,7 @@ public abstract class LevelFactory {
     /**
      * Places a room at y, x, with width and height, in level
      * Sets type to floor
+     *
      * @param yStart
      * @param xStart
      * @param width
@@ -307,6 +308,7 @@ public abstract class LevelFactory {
 
     /**
      * Checks if a level is completely flooded, by returning false if any floor is present
+     *
      * @param level
      * @return
      */
@@ -324,14 +326,16 @@ public abstract class LevelFactory {
 
     /**
      * Returns a Tile[][] of "defaultLevel"
-     * defaultLevel is rooms between MIN_ROOM_SIZE and MAX_ROOM_SIZE being placed in non overlapping fashion using random coordinates.
+     * defaultLevel is rooms between MIN_ROOM_SIZE and MAX_ROOM_SIZE being placed in non overlapping fashion using
+     * random coordinates.
      * The walls are then checked if they're "thin", and then replaced with a floor if they are.
      * "Thin" meaning two floor tiles are adjacent horizontally or vertically
      * Then the map is flooded with BUILD_FLOOD to check that all rooms are accessible.
      * If it is, then the Tile[][] is returned
      * If it is not, the process repeats until it is.
+     *
      * @param height height of map
-     * @param width width of map
+     * @param width  width of map
      * @return
      */
     public static Tile[][] makeDefaultLevel(int height, int width) {
@@ -424,19 +428,19 @@ public abstract class LevelFactory {
 
         System.out.println("Level took " + levelCreationTries + " tries");
         processMap(result);
-        for(int i = 0; i < height * width / 32; i++) {
+        for (int i = 0; i < height * width / 32; i++) {
             Random rng = new Random();
             int y = rng.nextInt(height);
             int x = rng.nextInt(width);
-            if(result[y][x].getType() == Tile.Type.FLOOR) {
+            if (result[y][x].getType() == Tile.Type.FLOOR) {
                 result[y][x].setType(Tile.Type.WATER);
             }
         }
-        for(int i = 0; i < height * width / 64; i++) {
+        for (int i = 0; i < height * width / 64; i++) {
             Random rng = new Random();
             int y = rng.nextInt(height);
             int x = rng.nextInt(width);
-            if(result[y][x].getType() == Tile.Type.FLOOR && !result[y][x].hasActor()) {
+            if (result[y][x].getType() == Tile.Type.FLOOR && !result[y][x].hasActor()) {
                 Actor actor = new Actor('G', Color.orange, result[y][x]);
                 result[y][x].setActor(actor);
             }

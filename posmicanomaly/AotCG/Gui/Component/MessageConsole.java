@@ -10,6 +10,7 @@ import java.util.ArrayList;
 public class MessageConsole extends Console {
     private ArrayList<String> messageList;
     private final int messageHeight = 10;
+
     public MessageConsole(int yBufferWidth, int xBufferWidth) {
         super(yBufferWidth, xBufferWidth);
 
@@ -25,8 +26,8 @@ public class MessageConsole extends Console {
         this.clear();
         int y = 0;
         int x = 0;
-        for(int i = messageList.size() - 1; i > messageList.size() - 1 - messageHeight; i--) {
-            if(i >= 0) {
+        for (int i = messageList.size() - 1; i > messageList.size() - 1 - messageHeight; i--) {
+            if (i >= 0) {
                 writeString(messageList.get(i), y, x);
                 y++;
             }

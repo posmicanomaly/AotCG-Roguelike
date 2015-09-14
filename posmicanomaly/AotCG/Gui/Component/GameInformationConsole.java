@@ -9,6 +9,7 @@ import java.util.ArrayList;
  */
 public class GameInformationConsole extends EnhancedConsole {
     Actor player;
+
     public GameInformationConsole(int yBufferWidth, int xBufferWidth, Actor player) {
         super(yBufferWidth, xBufferWidth);
         this.player = player;
@@ -22,7 +23,7 @@ public class GameInformationConsole extends EnhancedConsole {
         placeHolder.add("Well");
         placeHolder.add("Turn: 23993");
         int row = 0;
-        for(String s : placeHolder) {
+        for (String s : placeHolder) {
             writeString(s, row, 0);
             row++;
         }

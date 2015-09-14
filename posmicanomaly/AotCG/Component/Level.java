@@ -19,7 +19,7 @@ public class Level {
 
     public ArrayList<Tile> getNearbyTiles(int y, int x) {
         ArrayList<Tile> result = new ArrayList<Tile>();
-        if(!inBounds(y, x)) {
+        if (!inBounds(y, x)) {
             return null;
         }
         Tile tLeft = getTile(y, x - 1);
@@ -27,37 +27,37 @@ public class Level {
         Tile tUp = getTile(y - 1, x);
         Tile tDown = getTile(y + 1, x);
 
-        Tile tNW = getTile(y -1, x - 1);
+        Tile tNW = getTile(y - 1, x - 1);
         Tile tNE = getTile(y - 1, x + 1);
         Tile tSW = getTile(y + 1, x - 1);
         Tile tSE = getTile(y + 1, x + 1);
 
-        if(tLeft != null) {
+        if (tLeft != null) {
             result.add(tLeft);
         }
-        if(tRight != null) {
+        if (tRight != null) {
             result.add(tRight);
         }
-        if(tUp != null) {
+        if (tUp != null) {
             result.add(tUp);
         }
-        if(tDown != null) {
+        if (tDown != null) {
             result.add(tDown);
         }
 
-        if(tNW != null) {
+        if (tNW != null) {
             result.add(tNW);
         }
 
-        if(tNE != null) {
+        if (tNE != null) {
             result.add(tNE);
         }
 
-        if(tSW != null) {
+        if (tSW != null) {
             result.add(tSW);
         }
 
-        if(tSE != null) {
+        if (tSE != null) {
             result.add(tSE);
         }
 
@@ -77,16 +77,18 @@ public class Level {
      */
 
     public void toggleAllTilesVisible(boolean visible) {
-        for(int y = 0; y < height; y++) {
-            for(int x = 0; x < width; x++) {
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
                 Tile t = tileArray[y][x];
                 t.setVisible(visible);
             }
         }
     }
+
     private void init() {
         this.tileArray = makeMap(height, width);
     }
+
     private Tile[][] makeMap(int height, int width) {
         return LevelFactory.makeDefaultLevel(height, width);
     }
@@ -119,6 +121,7 @@ public class Level {
 
     /**
      * Debug function
+     *
      * @return
      */
     public Tile[][] getTileArray() {

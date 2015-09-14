@@ -11,6 +11,7 @@ import java.util.ArrayList;
 public abstract class FieldOfVision {
     /**
      * Simple returns the surrounding tiles nearest to the y, x, location on level
+     *
      * @param y
      * @param x
      * @param level
@@ -25,8 +26,9 @@ public abstract class FieldOfVision {
 
     /**
      * Uses raycasting to get visible tiles from y,x location on level
-     *
+     * <p/>
      * Based on Eligloscode on roguebasin
+     *
      * @param y
      * @param x
      * @param level
@@ -36,16 +38,16 @@ public abstract class FieldOfVision {
         ArrayList<Tile> visibleTiles = new ArrayList<Tile>();
         visibleTiles.add(level.getTile(y, x));
         int VIEW_RADIUS = radius;
-        for(int i = 0; i < 360; i++) {
+        for (int i = 0; i < 360; i++) {
             double xd = Math.cos((double) i * 0.01745f);
             double yd = Math.sin((double) i * 0.01745f);
 
             double oy = (double) y + 0.5f;
             double ox = (double) x + 0.5f;
-            for(int r = 0; r < VIEW_RADIUS; r++) {
-                Tile t = level.getTile((int)oy, (int)ox);
+            for (int r = 0; r < VIEW_RADIUS; r++) {
+                Tile t = level.getTile((int) oy, (int) ox);
                 visibleTiles.add(t);
-                if(!t.isTransparent()) {
+                if (!t.isTransparent()) {
                     break;
                 }
                 ox += xd;

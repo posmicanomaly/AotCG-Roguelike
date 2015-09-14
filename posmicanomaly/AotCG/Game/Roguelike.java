@@ -32,6 +32,7 @@ public class Roguelike {
     private Console titleConsole;
 
     public enum Direction {UP, DOWN, LEFT, RIGHT, NW, NE, SW, SE}
+
     public enum State {TITLE, PLAYING}
 
     private State currentState;
@@ -73,112 +74,149 @@ public class Roguelike {
         startGame();
 
         while (true) {
-            try {
-                Thread.sleep((long) Window.THREAD_SLEEP);
-            } catch (InterruptedException var2) {
-                var2.printStackTrace();
+           gameLoop();
+        }
+    }
+
+    private void gameLoop() {
+        try {
+            Thread.sleep((long) Window.THREAD_SLEEP);
+        } catch (InterruptedException var2) {
+            var2.printStackTrace();
+        }
+
+            /*
+            Key pressed
+             */
+        if (!this.window.getLastKeyEvent().equals(this.lastKeyEvent)) {
+                /*
+                Skip title screen, start PLAYING
+                 */
+            if (currentState == State.TITLE) {
+                currentState = State.PLAYING;
             }
+                /*
+                Game Loop
+                 */
+            else {
+                boolean recalculateFOV = false;
+                KeyEvent key = this.window.getLastKeyEvent();
+                Input.Command command = Input.processKey(key);
+                switch (command) {
+                    case MOVEMENT:
+                        Direction direction = getPlayerMovementDirection(key);
+                        if (moveActor(player, direction)) {
+                            recalculateFOV = true;
+                        }
+                        break;
+                    case DEBUG:
+                        processDebugCommand(key);
+                        break;
+                    case MENU:
+                        processMenuCommand(key);
+                        break;
+                    default:
+                        break;
+                }
 
-            if (!this.window.getLastKeyEvent().equals(this.lastKeyEvent)) {
-                if (currentState == State.TITLE) {
-                    currentState = State.PLAYING;
-                } else {
-                    boolean recalculateFOV = false;
-                    switch (this.window.getLastKeyEvent().getKeyCode()) {
-                    /*
-                    Player Movement Input
-                     */
-                        case KeyEvent.VK_W:
-                        case KeyEvent.VK_UP:
-                            moveActor(Direction.UP);
-                            recalculateFOV = true;
-                            break;
-                        case KeyEvent.VK_S:
-                        case KeyEvent.VK_DOWN:
-                            moveActor(Direction.DOWN);
-                            recalculateFOV = true;
-                            break;
-                        case KeyEvent.VK_A:
-                        case KeyEvent.VK_LEFT:
-                            moveActor(Direction.LEFT);
-                            recalculateFOV = true;
-                            break;
-                        case KeyEvent.VK_D:
-                        case KeyEvent.VK_RIGHT:
-                            moveActor(Direction.RIGHT);
-                            recalculateFOV = true;
-                            break;
-                        case KeyEvent.VK_Q:
-                            moveActor(Direction.NW);
-                            recalculateFOV = true;
-                            break;
-                        case KeyEvent.VK_E:
-                            moveActor(Direction.NE);
-                            recalculateFOV = true;
-                            break;
-                        case KeyEvent.VK_Z:
-                            moveActor(Direction.SW);
-                            recalculateFOV = true;
-                            break;
-                        case KeyEvent.VK_C:
-                            moveActor(Direction.SE);
-                            recalculateFOV = true;
-                            break;
+                if (recalculateFOV) {
+                    //
+                    calculateVision();
+                }
+            }
+            this.lastKeyEvent = this.window.getLastKeyEvent();
+        }
+        this.drawGame(this.window.getMainPanel().getRootConsole());
+    }
 
-                    /*
-                    DEBUG Input
-                     */
-                        case KeyEvent.VK_F:
-                            LevelFactory.DEBUG_FLOOD_FILL(map.getCurrentLevel().getTileArray());
-                            LevelFactory.DEBUG_PROCESS_MAP(map.getCurrentLevel().getTileArray());
-                            messageConsole.addMessage("Level flood filled");
-                            break;
-                        case KeyEvent.VK_R:
-                            initGame();
-                            break;
-                        case KeyEvent.VK_V:
-                            map.getCurrentLevel().toggleAllTilesVisible(true);
-                            messageConsole.addMessage("All tiles visible");
-                            break;
-                        case KeyEvent.VK_B:
-                            if (window.getMainPanel().isDrawBackgroundGlyphs()) {
-                                messageConsole.addMessage("Background glyphs off");
-                                window.getMainPanel().setDrawBackgroundGlyphs(false);
-                            } else {
-                                messageConsole.addMessage("Background glyphs on");
-                                window.getMainPanel().setDrawBackgroundGlyphs(true);
-                            }
-                            break;
+    private void processMenuCommand(KeyEvent key) {
+        switch (key.getKeyCode()) {
 
                     /*
                     Menu Toggle Input
                      */
-                        case KeyEvent.VK_M:
-                            if (this.showMenu) {
-                                this.showMenu = false;
-                            } else {
-                                this.showMenu = true;
-                            }
-                            break;
-                        case KeyEvent.VK_I:
-                            if (showInventory) {
-                                showInventory = false;
-                            } else {
-                                showInventory = true;
-                            }
-                            break;
-                        default:
-                            break;
-                    }
-                    if (recalculateFOV) {
-                        //
-                        calculateVision();
-                    }
+            case KeyEvent.VK_M:
+                if (this.showMenu) {
+                    this.showMenu = false;
+                } else {
+                    this.showMenu = true;
                 }
-                this.lastKeyEvent = this.window.getLastKeyEvent();
-            }
-            this.drawGame(this.window.getMainPanel().getRootConsole());
+                break;
+            case KeyEvent.VK_I:
+                if (showInventory) {
+                    showInventory = false;
+                } else {
+                    showInventory = true;
+                }
+                break;
+            default:
+                break;
         }
+    }
+
+    private void processDebugCommand(KeyEvent key) {
+        switch (key.getKeyCode()) {
+
+                    /*
+                    DEBUG Input
+                     */
+            case KeyEvent.VK_F:
+                LevelFactory.DEBUG_FLOOD_FILL(map.getCurrentLevel().getTileArray());
+                LevelFactory.DEBUG_PROCESS_MAP(map.getCurrentLevel().getTileArray());
+                messageConsole.addMessage("Level flood filled");
+                break;
+            case KeyEvent.VK_R:
+                initGame();
+                break;
+            case KeyEvent.VK_V:
+                map.getCurrentLevel().toggleAllTilesVisible(true);
+                messageConsole.addMessage("All tiles visible");
+                break;
+            case KeyEvent.VK_B:
+                if (window.getMainPanel().isDrawBackgroundGlyphs()) {
+                    messageConsole.addMessage("Background glyphs off");
+                    window.getMainPanel().setDrawBackgroundGlyphs(false);
+                } else {
+                    messageConsole.addMessage("Background glyphs on");
+                    window.getMainPanel().setDrawBackgroundGlyphs(true);
+                }
+                break;
+        }
+    }
+
+    private Direction getPlayerMovementDirection(KeyEvent key) {
+        Direction direction = null;
+        switch (key.getKeyCode()) {
+            case KeyEvent.VK_W:
+            case KeyEvent.VK_UP:
+                direction = Direction.UP;
+                break;
+            case KeyEvent.VK_S:
+            case KeyEvent.VK_DOWN:
+                direction = Direction.DOWN;
+                break;
+            case KeyEvent.VK_A:
+            case KeyEvent.VK_LEFT:
+                direction = Direction.LEFT;
+                break;
+            case KeyEvent.VK_D:
+            case KeyEvent.VK_RIGHT:
+                direction = Direction.RIGHT;
+                break;
+            case KeyEvent.VK_Q:
+                direction = Direction.NW;
+                break;
+            case KeyEvent.VK_E:
+                direction = Direction.NE;
+                break;
+            case KeyEvent.VK_Z:
+                direction = Direction.SW;
+                break;
+            case KeyEvent.VK_C:
+                direction = Direction.SE;
+                break;
+        }
+        return direction;
     }
 
     private void calculateVision() {
@@ -186,21 +224,22 @@ public class Roguelike {
         int y = player.getTile().getY();
         int x = player.getTile().getX();
 
-        ArrayList<Tile> fieldOfVisionTiles = FieldOfVision.calculateRayCastingFOVVisibleTiles(y, x, map.getCurrentLevel(), 12);
+        ArrayList<Tile> fieldOfVisionTiles = FieldOfVision.calculateRayCastingFOVVisibleTiles(y, x, map
+                .getCurrentLevel(), 12);
 
-        for(Tile t : fieldOfVisionTiles) {
+        for (Tile t : fieldOfVisionTiles) {
             t.setVisible(true);
             t.setExplored(true);
         }
     }
 
-    private void moveActor(Direction d) {
-        Tile prevTile = player.getTile();
+    private boolean moveActor(Actor actor, Direction d) {
+        Tile prevTile = actor.getTile();
         Tile nextTile = null;
         boolean move = true;
         int y = prevTile.getY();
         int x = prevTile.getX();
-        switch(d) {
+        switch (d) {
             case UP:
                 y--;
                 break;
@@ -233,31 +272,35 @@ public class Roguelike {
                 move = false;
                 break;
         }
-        if(move) {
+        if (move) {
             nextTile = map.getCurrentLevel().getTile(y, x);
-            if(nextTile == null) {
+            if (nextTile == null) {
                 messageConsole.addMessage("Tile is null");
-            } else if(nextTile.isBlocked()) {
+                return false;
+            } else if (nextTile.isBlocked()) {
                 messageConsole.addMessage("You bumped into a wall");
-            } else if(nextTile.hasActor()) {
+                return false;
+            } else if (nextTile.hasActor()) {
                 messageConsole.addMessage("Actor is there!");
-            }
-            else {
+                return false;
+            } else {
                 /*
                 I don't like this
                  */
-                player.setTile(nextTile);
-                nextTile.setActor(player);
+                actor.setTile(nextTile);
+                nextTile.setActor(actor);
                 prevTile.setActor(null);
+                return true;
             }
 
         }
+        return false;
     }
 
 
     /**
      * refreshTile
-     *
+     * <p/>
      * calls mapConsole setChar and setColor at the tile's Y X location, using the tile's symbol and color
      *
      * @param tile
@@ -269,14 +312,14 @@ public class Roguelike {
         Sets the backgroundColor of tile to a varied color based on the standard WATER_BG
          */
         Random rng = new Random();
-        if(tile.getType() == Tile.Type.WATER) {
-            if(rng.nextInt(100) < 1) {
+        if (tile.getType() == Tile.Type.WATER) {
+            if (rng.nextInt(100) < 1) {
                 tile.setBackgroundColor(ColorTools.varyColor(Colors.WATER_BG, 0.7, 1.0, ColorTools.BaseColor.RGB));
 
             }
-            if(rng.nextInt(100) < 1) {
+            if (rng.nextInt(100) < 1) {
                 tile.setColor(ColorTools.varyColor(Colors.WATER, 0.7, 1.0, ColorTools.BaseColor.RGB));
-                if(tile.getSymbol() == Symbol.ALMOST_EQUAL_TO) {
+                if (tile.getSymbol() == Symbol.ALMOST_EQUAL_TO) {
                     tile.setSymbol('=');
                 } else {
                     tile.setSymbol(Symbol.ALMOST_EQUAL_TO);
@@ -287,8 +330,8 @@ public class Roguelike {
         /*
 
          */
-        if(tile.isVisible()) {
-            if(tile.hasActor()) {
+        if (tile.isVisible()) {
+            if (tile.hasActor()) {
                 mapConsole.setChar(tile.getY(), tile.getX(), tile.getActor().getSymbol());
                 mapConsole.setColor(tile.getY(), tile.getX(), tile.getActor().getColor());
             } else {
@@ -296,7 +339,7 @@ public class Roguelike {
                 mapConsole.setColor(tile.getY(), tile.getX(), tile.getColor().brighter());
             }
             mapConsole.setBgColor(tile.getY(), tile.getX(), tile.getBackgroundColor().brighter());
-        } else if(tile.isExplored()) {
+        } else if (tile.isExplored()) {
             mapConsole.setChar(tile.getY(), tile.getX(), tile.getSymbol());
             mapConsole.setColor(tile.getY(), tile.getX(), tile.getColor().darker().darker());
             mapConsole.setBgColor(tile.getY(), tile.getX(), tile.getBackgroundColor().darker().darker());
@@ -309,7 +352,7 @@ public class Roguelike {
 
     private void drawGame(Console rootConsole) {
         rootConsole.clear();
-        if(currentState == State.PLAYING) {
+        if (currentState == State.PLAYING) {
 
             // Refresh the map buffer
             copyMapToBuffer();
@@ -334,7 +377,7 @@ public class Roguelike {
             }
 
             this.window.refresh();
-        } else if(currentState == State.TITLE) {
+        } else if (currentState == State.TITLE) {
             this.titleConsole.copyBufferTo(rootConsole, 0, 0);
             this.window.refresh();
         }
@@ -366,7 +409,8 @@ public class Roguelike {
         this.map = new Map(mapHeight, mapWidth, mapDepth);
 
         // Set up starting tile for player
-        Tile startingTile = map.getCurrentLevel().getTile(map.getCurrentLevel().getHeight() / 2, map.getCurrentLevel().getWidth() / 2);
+        Tile startingTile = map.getCurrentLevel().getTile(map.getCurrentLevel().getHeight() / 2, map.getCurrentLevel
+                ().getWidth() / 2);
 
         // Create player at that tile and set them up
         player = new Actor('@', ColorTools.getRandomColor(), startingTile);
@@ -382,7 +426,8 @@ public class Roguelike {
 
     private void initGui() {
         initMessageConsole();
-        gameInformationConsole = new GameInformationConsole(gameInformationConsoleHeight, gameInformationConsoleWidth, player);
+        gameInformationConsole = new GameInformationConsole(gameInformationConsoleHeight,
+                gameInformationConsoleWidth, player);
         //gameInformationConsole.setBorder(true);
 
         inventorySideConsole = new InventorySideConsole(mapHeight, 20);

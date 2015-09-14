@@ -22,7 +22,7 @@ public class Map {
 
     private ArrayList<Level> makeMap(int height, int width, int depth) {
         levelList = new ArrayList<Level>();
-        for(int z = 0; z < depth; z++) {
+        for (int z = 0; z < depth; z++) {
             levelList.add(new Level(height, width));
         }
 
