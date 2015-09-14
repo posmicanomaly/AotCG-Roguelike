@@ -36,7 +36,7 @@ public class Roguelike {
 
     public enum Direction {UP, DOWN, LEFT, RIGHT, NW, NE, SW, SE}
 
-    public enum State {TITLE, PLAYING}
+    public enum State {TITLE, PLAYING, VICTORY}
 
     private State currentState;
 
@@ -101,6 +101,13 @@ public class Roguelike {
             if (currentState == State.TITLE) {
                 currentState = State.PLAYING;
             }
+
+            if (showVictoryConsole) {
+                switch (this.window.getLastKeyEvent().getKeyCode()) {
+                    case KeyEvent.VK_ESCAPE:
+                        showVictoryConsole = false;
+                }
+            }
                 /*
                 Game Loop
                  */
@@ -116,7 +123,14 @@ public class Roguelike {
                                 recalculateFOV = true;
                             }
                             turns++;
-                            if(giantSlain) {
+                            /*
+                            Check win condition
+                            if giant was killed
+                            and victoryConsole is null(not initialized yet)
+
+                            If it is not null, then we've seen it and likely hit ESCAPE to keep playing
+                             */
+                            if(giantSlain && victoryConsole == null) {
                                 initVictoryConsole();
                                 showVictoryConsole = true;
                             }
@@ -472,6 +486,8 @@ public class Roguelike {
         victoryMessages.add("Level Reached: " + player.getLevel());
         victoryMessages.add("Turns taken: " + turns);
         victoryMessages.add("Maximum HP: " + player.getMaxHp());
+        victoryMessages.add("");
+        victoryMessages.add("Press ESCAPE to keep playing");
         for(String s : victoryMessages) {
             victoryConsole.writeCenteredString(s, row);
             row++;
