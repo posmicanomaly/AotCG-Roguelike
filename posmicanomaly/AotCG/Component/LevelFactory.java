@@ -90,7 +90,7 @@ public abstract class LevelFactory {
                         symbol = Symbol.MIDDLE_DOT;
                         isBlocked = false;
                         color = ColorTools.varyColor(Colors.FLOOR, 0.8, 1.0, ColorTools.BaseColor.RGB);
-                        backgroundColor = ColorTools.varyColor(Colors.FLOOR_BG, 0.5, 1.5, ColorTools.BaseColor.RGB);
+                        backgroundColor = ColorTools.varyColor(Colors.FLOOR_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
                         break;
                     case WALL:
                         symbol = '#';
