@@ -11,10 +11,15 @@ public class Actor extends Entity {
     private String corpseName;
     private boolean alive;
 
+    private int level;
+
+    private int experience;
+
     public Actor(char symbol, Color color, Tile tile) {
         super(symbol, color, tile);
 
-        setMaxHp(15);
+        setLevel(1);
+        setMaxHp(20);
         setCurrentHp(getMaxHp());
         setAlive(true);
 
@@ -59,4 +64,41 @@ public class Actor extends Entity {
         this.corpseName = corpseName;
     }
 
+    public int getExperience() {
+        return experience;
+    }
+
+    public void setExperience(int experience) {
+        this.experience = experience;
+    }
+
+    public void addExperience(int experience) {
+        this.experience += experience;
+    }
+
+    public int getExperienceCap(int level) {
+        // 10 exp base per kill
+        // balance based on kills to level
+        // e.g. level 1 * 10 kills * 10 xp each = 100
+        //      level 2 * 20 kills * 10 xp each =
+        int averageKillsToLevel = level * 4;
+        return (averageKillsToLevel * 10);
+    }
+    public void evaulateLevel() {
+        while(getExperience() >= getExperienceCap(getLevel())) {
+            setMaxHp((int) (getMaxHp() * 1.5));
+            setCurrentHp(getMaxHp());
+            setExperience(getExperience() - getExperienceCap(getLevel()));
+
+            setLevel(getLevel() + 1);
+        }
+    }
+
+    public int getLevel() {
+        return level;
+    }
+
+    public void setLevel(int level) {
+        this.level = level;
+    }
 }

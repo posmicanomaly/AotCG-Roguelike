@@ -4,6 +4,7 @@ import posmicanomaly.libjsrte.Console.Symbol;
 import posmicanomaly.libjsrte.Util.ColorTools;
 
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.Random;
 
 /**
@@ -116,6 +117,12 @@ public abstract class LevelFactory {
                         color = Colors.WATER;
                         backgroundColor = Colors.WATER_BG;
                         break;
+                    case CAVE_GRASS:
+                        symbol = '"';
+                        isBlocked = false;
+                        color = ColorTools.varyColor(Colors.CAVE_GRASS, 0.5, 1.0, ColorTools.BaseColor.RGB);
+                        backgroundColor = ColorTools.varyColor(Colors.CAVE_GRASS_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
+                        break;
                     default:
                         symbol = '?';
                         isBlocked = false;
@@ -176,7 +183,7 @@ public abstract class LevelFactory {
                     // If this is water
                     if (t.getType() == Tile.Type.BUILD_FLOOD) {
                         // Spread the water, store the result
-                        boolean spreadSuccess = spreadFlood(t, level);
+                        boolean spreadSuccess = spreadBuildFlood(t, level);
                         // If we spread this time
                         if (spreadSuccess) {
                             checkFlooded = false;   // Set this false so we check at least one more entire loop
@@ -200,7 +207,7 @@ public abstract class LevelFactory {
      * @param level level to use as a reference
      * @return
      */
-    private static boolean spreadFlood(Tile tile, Tile[][] level) {
+    private static boolean spreadBuildFlood(Tile tile, Tile[][] level) {
         int x = tile.getX();
         int y = tile.getY();
         Tile tLeft = null;
@@ -324,6 +331,94 @@ public abstract class LevelFactory {
         return true;
     }
 
+
+    /**
+     * Adds a Tile.Type in a pooling manner, which means it spreads in cardinal directions until the amount is reached
+     * @param level
+     * @param amount
+     * @param feature
+     */
+    private static void addPoolFeature(Tile[][] level, int amount, Tile.Type feature) {
+        Random rng = new Random();
+        for(int i = 0; i < amount; i++) {
+            boolean startTileFound = false;
+            Tile startTile = null;
+            while(!startTileFound) {
+                int y = rng.nextInt(level.length);
+                int x = rng.nextInt(level[0].length);
+                if(!level[y][x].isBlocked()) {
+                    startTileFound = true;
+                    startTile = level[y][x];
+                }
+            }
+            startTile.setType(feature);
+            if(startTileFound) {
+                int strength = rng.nextInt(15);
+                spreadPool(level, startTile, feature, 0, strength);
+            }
+        }
+    }
+
+    /**
+     * recursive spreadPool method to use with addPoolFeature. Uses a current and max value to know when to stop.
+     * Spreads the feature in cardinal directions if the tile is not null or blocked.
+     * @param level
+     * @param t
+     * @param feature
+     * @param current
+     * @param max
+     */
+    private static void spreadPool(Tile[][] level, Tile t, Tile.Type feature, int current, int max) {
+        if(current == max) {
+            return;
+        }
+        int x = t.getX();
+        int y = t.getY();
+        Tile tLeft = null;
+        Tile tRight = null;
+        Tile tUp = null;
+        Tile tDown = null;
+
+        // Check bounds to avoid nullReferences
+        if (x > 1)
+            tLeft = level[y][x - 1];
+        if (x < level[0].length - 1)
+            tRight = level[y][x + 1];
+        if (y > 1)
+            tUp = level[y - 1][x];
+        if (y < level.length - 1)
+            tDown = level[y + 1][x];
+
+        // the return result, init to false
+        // If we can spread, we will change this to true
+        boolean canSpread = false;
+        ArrayList<Tile> tiles = new ArrayList<Tile>();
+                    /*
+                    For each case, if the tile != null, isBlocked == false, type != WATER
+                     */
+        if (tLeft != null && tLeft.isBlocked() == false && tLeft.getType() != feature) {
+            tLeft.setType(feature);
+            tiles.add(tLeft);
+        }
+        if (tRight != null && tRight.isBlocked() == false && tRight.getType() != feature) {
+            tRight.setType(feature);
+            tiles.add(tRight);
+        }
+
+        if (tUp != null && tUp.isBlocked() == false && tUp.getType() != feature) {
+            tUp.setType(feature);
+            tiles.add(tUp);
+        }
+
+        if (tDown != null && tDown.isBlocked() == false && tDown.getType() != feature) {
+            tDown.setType(feature);
+            tiles.add(tDown);
+        }
+        for(Tile nextTile : tiles) {
+            spreadPool(level, nextTile, feature, current + 1, max);
+        }
+    }
+
     /**
      * Returns a Tile[][] of "defaultLevel"
      * defaultLevel is rooms between MIN_ROOM_SIZE and MAX_ROOM_SIZE being placed in non overlapping fashion using
@@ -428,24 +523,26 @@ public abstract class LevelFactory {
 
         System.out.println("Level took " + levelCreationTries + " tries");
         processMap(result);
-        for (int i = 0; i < height * width / 32; i++) {
-            Random rng = new Random();
-            int y = rng.nextInt(height);
-            int x = rng.nextInt(width);
-            if (result[y][x].getType() == Tile.Type.FLOOR) {
-                result[y][x].setType(Tile.Type.WATER);
-            }
-        }
+
+        boolean giantAdded = false;
         for (int i = 0; i < height * width / 64; i++) {
             Random rng = new Random();
             int y = rng.nextInt(height);
             int x = rng.nextInt(width);
             if (result[y][x].getType() == Tile.Type.FLOOR && !result[y][x].hasActor()) {
-                Actor actor = new Actor('G', Color.orange, result[y][x]);
-                actor.setName("Giant");
+                Actor actor = new Actor('k', Color.orange, result[y][x]);
+                actor.setName("Kobold");
+                if(!giantAdded) {
+                    actor.setSymbol('G');
+                    actor.setName("Giant");
+                    giantAdded = true;
+                }
                 result[y][x].setActor(actor);
             }
         }
+        Random rng = new Random();
+        addPoolFeature(result, rng.nextInt(30), Tile.Type.CAVE_GRASS);
+        addPoolFeature(result, rng.nextInt(10), Tile.Type.WATER);
         processMap(result);
         return result;
     }

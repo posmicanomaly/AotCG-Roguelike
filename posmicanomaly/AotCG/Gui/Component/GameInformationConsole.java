@@ -12,27 +12,36 @@ import java.util.ArrayList;
  */
 public class GameInformationConsole extends EnhancedConsole {
     Actor player;
+    private int turns;
 
-    public GameInformationConsole(int yBufferWidth, int xBufferWidth, Actor player) {
-        super(yBufferWidth, xBufferWidth);
+    public GameInformationConsole(int height, int width, Actor player) {
+        super(height, width);
         this.player = player;
+        turns = 0;
     }
 
     @Override
     public void updateConsole() {
         clear();
+        int barWidth = getxBufferWidth();
+
+        int healthPerChar = player.getMaxHp() / barWidth;
+        int expPerChar = player.getExperienceCap(player.getLevel()) / barWidth;
+
+        String healthString = "HP: " + player.getCurrentHp() + "/" + player.getMaxHp();
+        String expString = "EXP: " + player.getExperience() + "/" + player.getExperienceCap(player.getLevel());
 
         ArrayList<String> placeHolder = new ArrayList<String>();
         int row = 0;
-        drawBar(row, 0, this.getxBufferWidth(), Colors.HEALTH_DEFICIT, "");
-        drawBar(row, 0, (int) (this.getxBufferWidth() * .75), Colors.HEALTH_REMAINING, "75 / 100");
+        writeString("@: " + player.getLevel(), row, 0);
+        row++;
+        drawBar(row, 0, barWidth, Colors.HEALTH_DEFICIT, "");
+        drawBar(row, 0, barWidth - ((player.getMaxHp() - player.getCurrentHp()) / healthPerChar), Colors.HEALTH_REMAINING, healthString);
 
         row++;
-
-        placeHolder.add(player.getName());
-        placeHolder.add("HP: " + player.getCurrentHp() + "/" + player.getMaxHp());
+        drawBar(row, 0, barWidth - ((player.getExperienceCap(player.getLevel()) - player.getExperience()) / expPerChar), Colors.EXPERIENCE, expString);
+        row++;
         placeHolder.add("Well");
-        placeHolder.add("Turn: 23993");
         placeHolder.add("Here:");
         if(player.getTile().hasItem()) {
             placeHolder.add(player.getTile().getItem().getName());
@@ -41,6 +50,12 @@ public class GameInformationConsole extends EnhancedConsole {
             writeString(s, row, 0);
             row++;
         }
+
+        row = getyBufferHeight() - 1;
+        writeString("T: " + turns, row, 0);
+        row--;
+        writeString("EXP: " + player.getExperience(), row, 0);
+        row--;
     }
 
     private void drawBar(int y, int x, int width, Color color, String text) {
@@ -48,5 +63,17 @@ public class GameInformationConsole extends EnhancedConsole {
         for(int xLoc = x; xLoc < x + width; xLoc++) {
             setBgColor(y, xLoc, color);
         }
+    }
+
+    public void tickTurns() {
+        turns++;
+    }
+
+    public int getTurns() {
+        return turns;
+    }
+
+    public void setTurns(int turns) {
+        this.turns = turns;
     }
 }

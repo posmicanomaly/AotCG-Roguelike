@@ -2,6 +2,7 @@ package posmicanomaly.AotCG.Component;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Random;
 
 /**
  * Created by Jesse Pospisil on 8/17/2015.
@@ -119,6 +120,18 @@ public class Level {
         return null;
     }
 
+    public Tile getRandomTile(Tile.Type type) {
+        Random rng = new Random();
+        int y, x;
+        Tile t;
+        do {
+            y = rng.nextInt(height);
+            x = rng.nextInt(width);
+            t = tileArray[y][x];
+        } while(t.getType() != type);
+
+        return t;
+    }
     /**
      * Debug function
      *
