@@ -535,6 +535,8 @@ public abstract class LevelFactory {
                 if(!giantAdded) {
                     actor.setSymbol('G');
                     actor.setName("Giant");
+                    actor.setMaxHp(40);
+                    actor.setCurrentHp(actor.getMaxHp());
                     giantAdded = true;
                 }
                 result[y][x].setActor(actor);

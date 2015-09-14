@@ -33,6 +33,7 @@ public class Roguelike {
     private Console menuWindow;
     private Console titleConsole;
     private Console victoryConsole;
+    private Console defeatConsole;
 
     public enum Direction {UP, DOWN, LEFT, RIGHT, NW, NE, SW, SE}
 
@@ -56,6 +57,7 @@ public class Roguelike {
     boolean showInventory;
     boolean giantSlain;
     boolean showVictoryConsole;
+    boolean showDefeatConsole;
     Map map;
 
     private Actor player;
@@ -106,6 +108,21 @@ public class Roguelike {
                 switch (this.window.getLastKeyEvent().getKeyCode()) {
                     case KeyEvent.VK_ESCAPE:
                         showVictoryConsole = false;
+                        break;
+                    case KeyEvent.VK_R:
+                        initGame();
+                    default:
+                        break;
+                }
+            }
+
+            else if (showDefeatConsole) {
+                switch (this.window.getLastKeyEvent().getKeyCode()) {
+                    case KeyEvent.VK_R:
+                        initGame();
+                        break;
+                    default:
+                        break;
                 }
             }
                 /*
@@ -134,6 +151,11 @@ public class Roguelike {
                                 initVictoryConsole();
                                 showVictoryConsole = true;
                             }
+
+                            if(!player.isAlive()) {
+                                initDefeatConsole();
+                                showDefeatConsole = true;
+                            }
                             break;
                         case DEBUG:
                             processDebugCommand(key);
@@ -156,6 +178,8 @@ public class Roguelike {
 
         this.drawGame(this.window.getMainPanel().getRootConsole());
     }
+
+
 
     private void processMenuCommand(KeyEvent key) {
         switch (key.getKeyCode()) {
@@ -310,31 +334,48 @@ public class Roguelike {
                 return false;
             } else if (nextTile.hasActor() && nextTile.getActor().isAlive()) {
                 Actor nextTileActor = nextTile.getActor();
+                nextTileActor.setCurrentHp(nextTileActor.getCurrentHp() - 20);
+                if(nextTileActor.getCurrentHp() <= 0) {
+                    nextTileActor.setAlive(false);
+                }
+                if(nextTileActor.isAlive()) {
+                    int damage = 1;
+                    if(nextTileActor.getName().equals("Giant")) {
+                        damage = 30;
+                    }
+                    player.setCurrentHp(player.getCurrentHp() - damage);
 
-                nextTileActor.setAlive(false);
-                nextTileActor.setTile(null);
-                nextTile.setActor(null);
-                Item corpse = new Item('%', Color.gray, nextTile);
-                corpse.setName(nextTileActor.getCorpseName());
-                nextTile.setItem(corpse);
-                player.setCurrentHp(player.getCurrentHp() - 1);
-                Random rng = new Random();
-                int baseExp = 10;
-                int expVariance = 3;
-                int randomExp = rng.nextInt((baseExp + expVariance) - (baseExp - expVariance) + 1) + (baseExp - expVariance);
-                player.addExperience(randomExp);
-                messageConsole.addMessage("Killed " + nextTileActor.getName() + " (" + randomExp + " exp)");
-                if(nextTileActor.getName().equals("Giant")) {
-                    messageConsole.addMessage("Main quest complete: Slay Giant (350 exp)");
-                    player.addExperience(350);
-                    giantSlain = true;
+                    if(player.getCurrentHp() <= 0) {
+                        player.setAlive(false);
+                    }
+                } else {
+                    int damageToPlayer = 1;
+                    nextTileActor.setAlive(false);
+                    nextTileActor.setTile(null);
+                    nextTile.setActor(null);
+                    Item corpse = new Item('%', Color.gray, nextTile);
+                    corpse.setName(nextTileActor.getCorpseName());
+                    nextTile.setItem(corpse);
+                    player.setCurrentHp(player.getCurrentHp() - damageToPlayer);
+                    Random rng = new Random();
+                    int baseExp = 10;
+                    int expVariance = 3;
+                    int randomExp = rng.nextInt((baseExp + expVariance) - (baseExp - expVariance) + 1) + (baseExp - expVariance);
+
+                    player.addExperience(randomExp);
+                    messageConsole.addMessage("Killed " + nextTileActor.getName() + " (" + randomExp + " exp)");
+                    if (nextTileActor.getName().equals("Giant")) {
+                        messageConsole.addMessage("Main quest complete: Slay Giant (350 exp)");
+                        player.addExperience(350);
+                        giantSlain = true;
+                    }
+                    int prevLevel = player.getLevel();
+                    player.evaulateLevel();
+                    if (prevLevel < player.getLevel()) {
+                        messageConsole.addMessage("You leveled up: " + player.getLevel());
+                    }
+                    return false;
                 }
-                int prevLevel = player.getLevel();
-                player.evaulateLevel();
-                if(prevLevel < player.getLevel()) {
-                    messageConsole.addMessage("You leveled up: " + player.getLevel());
-                }
-                return false;
             } else {
                 /*
                 I don't like this
@@ -441,6 +482,11 @@ public class Roguelike {
                 victoryConsole.update();
                 victoryConsole.copyBufferTo(rootConsole, this.windowHeight / 2 - victoryConsole.getyBufferHeight() / 2, this.windowWidth / 2 - victoryConsole.getxBufferWidth() / 2);
             }
+
+            if(showDefeatConsole) {
+                defeatConsole.update();
+                defeatConsole.copyBufferTo(rootConsole, this.windowHeight / 2 - defeatConsole.getyBufferHeight() / 2, this.windowWidth / 2 - defeatConsole.getxBufferWidth() / 2);
+            }
             this.window.refresh();
         } else if (currentState == State.TITLE) {
             this.titleConsole.copyBufferTo(rootConsole, 0, 0);
@@ -458,6 +504,7 @@ public class Roguelike {
         currentState = State.TITLE;
         giantSlain = false;
         showVictoryConsole = false;
+        showDefeatConsole = false;
         turns = 0;
 
         initTitleScreen();
@@ -488,8 +535,29 @@ public class Roguelike {
         victoryMessages.add("Maximum HP: " + player.getMaxHp());
         victoryMessages.add("");
         victoryMessages.add("Press ESCAPE to keep playing");
+        victoryMessages.add("Press R to restart");
         for(String s : victoryMessages) {
             victoryConsole.writeCenteredString(s, row);
+            row++;
+        }
+    }
+
+    private void initDefeatConsole() {
+        defeatConsole = new Console(windowHeight / 2, windowWidth / 2);
+        defeatConsole.setBorder(true);
+        int row = 1;
+        ArrayList<String> defeatMessages = new ArrayList<String>();
+        defeatMessages.add("You Died!");
+        defeatMessages.add("");
+        defeatMessages.add("You were killed and now the Giant will destroy everyone!");
+        defeatMessages.add("");
+        defeatMessages.add("Level Reached: " + player.getLevel());
+        defeatMessages.add("Turns taken: " + turns);
+        defeatMessages.add("Maximum HP: " + player.getMaxHp());
+        defeatMessages.add("");
+        defeatMessages.add("Press R to restart");
+        for(String s : defeatMessages) {
+            defeatConsole.writeCenteredString(s, row);
             row++;
         }
     }
