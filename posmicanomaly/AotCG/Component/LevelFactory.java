@@ -442,6 +442,7 @@ public abstract class LevelFactory {
             int x = rng.nextInt(width);
             if (result[y][x].getType() == Tile.Type.FLOOR && !result[y][x].hasActor()) {
                 Actor actor = new Actor('G', Color.orange, result[y][x]);
+                actor.setName("Giant");
                 result[y][x].setActor(actor);
             }
         }

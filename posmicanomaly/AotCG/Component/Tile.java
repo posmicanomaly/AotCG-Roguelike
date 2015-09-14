@@ -29,6 +29,7 @@ public class Tile {
     }
 
     private Actor actor;
+    private Item item;
 
     public Tile(int y, int x) {
         this.y = y;
@@ -125,6 +126,18 @@ public class Tile {
 
     public void setBlocked(boolean blocked) {
         this.blocked = blocked;
+    }
+
+    public Item getItem() {
+        return item;
+    }
+
+    public void setItem(Item item) {
+        this.item = item;
+    }
+
+    public boolean hasItem() {
+        return item != null;
     }
 
     public static enum Type {

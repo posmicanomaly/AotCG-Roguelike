@@ -5,20 +5,14 @@ import java.awt.*;
 /**
  * Created by Jesse Pospisil on 8/17/2015.
  */
-public class Actor {
-    private char symbol;
-    private Color color;
-    private Tile tile;
+public class Actor extends Entity {
     private int maxHp;
     private int currentHp;
-    private String name;
     private String corpseName;
     private boolean alive;
 
     public Actor(char symbol, Color color, Tile tile) {
-        this.symbol = symbol;
-        this.color = color;
-        this.tile = tile;
+        super(symbol, color, tile);
 
         setMaxHp(15);
         setCurrentHp(getMaxHp());
@@ -32,6 +26,11 @@ public class Actor {
         return alive;
     }
 
+    @Override
+    public void setName(String name) {
+        this.name = name;
+        setCorpseName(this.getName() +"'s corpse");
+    }
     public void setAlive(boolean alive) {
         this.alive = alive;
     }
@@ -52,44 +51,12 @@ public class Actor {
         this.currentHp = currentHp;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public String getCorpseName() {
         return corpseName;
     }
 
     public void setCorpseName(String corpseName) {
         this.corpseName = corpseName;
-    }
-
-    public Tile getTile() {
-        return tile;
-    }
-
-    public void setTile(Tile tile) {
-        this.tile = tile;
-    }
-
-    public Color getColor() {
-        return color;
-    }
-
-    public void setColor(Color color) {
-        this.color = color;
-    }
-
-    public char getSymbol() {
-        return symbol;
-    }
-
-    public void setSymbol(char symbol) {
-        this.symbol = symbol;
     }
 
 }

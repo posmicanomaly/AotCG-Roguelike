@@ -48,7 +48,7 @@ public class Roguelike {
     int mapDepth = 10;
 
     int gameInformationConsoleHeight = windowHeight;
-    int gameInformationConsoleWidth = 24;
+    int gameInformationConsoleWidth = 20;
     boolean showMenu;
     boolean showInventory;
     Map map;
@@ -79,15 +79,16 @@ public class Roguelike {
     }
 
     private void gameLoop() {
+        /*
+        Limit CPU
+         */
         try {
             Thread.sleep((long) Window.THREAD_SLEEP);
         } catch (InterruptedException var2) {
             var2.printStackTrace();
         }
 
-            /*
-            Key pressed
-             */
+        // Check for key input
         if (!this.window.getLastKeyEvent().equals(this.lastKeyEvent)) {
                 /*
                 Skip title screen, start PLAYING
@@ -102,21 +103,23 @@ public class Roguelike {
                 boolean recalculateFOV = false;
                 KeyEvent key = this.window.getLastKeyEvent();
                 Input.Command command = Input.processKey(key);
-                switch (command) {
-                    case MOVEMENT:
-                        Direction direction = getPlayerMovementDirection(key);
-                        if (moveActor(player, direction)) {
-                            recalculateFOV = true;
-                        }
-                        break;
-                    case DEBUG:
-                        processDebugCommand(key);
-                        break;
-                    case MENU:
-                        processMenuCommand(key);
-                        break;
-                    default:
-                        break;
+                if(command != null) {
+                    switch (command) {
+                        case MOVEMENT:
+                            Direction direction = getPlayerMovementDirection(key);
+                            if (moveActor(player, direction)) {
+                                recalculateFOV = true;
+                            }
+                            break;
+                        case DEBUG:
+                            processDebugCommand(key);
+                            break;
+                        case MENU:
+                            processMenuCommand(key);
+                            break;
+                        default:
+                            break;
+                    }
                 }
 
                 if (recalculateFOV) {
@@ -126,6 +129,7 @@ public class Roguelike {
             }
             this.lastKeyEvent = this.window.getLastKeyEvent();
         }
+
         this.drawGame(this.window.getMainPanel().getRootConsole());
     }
 
@@ -235,7 +239,7 @@ public class Roguelike {
 
     private boolean moveActor(Actor actor, Direction d) {
         Tile prevTile = actor.getTile();
-        Tile nextTile = null;
+        Tile nextTile;
         boolean move = true;
         int y = prevTile.getY();
         int x = prevTile.getX();
@@ -280,8 +284,15 @@ public class Roguelike {
             } else if (nextTile.isBlocked()) {
                 messageConsole.addMessage("You bumped into a wall");
                 return false;
-            } else if (nextTile.hasActor()) {
-                messageConsole.addMessage("Actor is there!");
+            } else if (nextTile.hasActor() && nextTile.getActor().isAlive()) {
+                Actor nextTileActor = nextTile.getActor();
+                messageConsole.addMessage("Killed " + nextTileActor.getSymbol());
+                nextTileActor.setAlive(false);
+                nextTileActor.setTile(null);
+                nextTile.setActor(null);
+                Item corpse = new Item('%', Color.gray, nextTile);
+                corpse.setName(nextTileActor.getCorpseName());
+                nextTile.setItem(corpse);
                 return false;
             } else {
                 /*
@@ -330,24 +341,35 @@ public class Roguelike {
         /*
 
          */
+        char glyph;
+        Color color;
+        Color bgColor;
         if (tile.isVisible()) {
             if (tile.hasActor()) {
-                mapConsole.setChar(tile.getY(), tile.getX(), tile.getActor().getSymbol());
-                mapConsole.setColor(tile.getY(), tile.getX(), tile.getActor().getColor());
+                Actor actor = tile.getActor();
+                glyph = actor.getSymbol();
+                color = actor.getColor();
+            } else if(tile.hasItem()) {
+                Item item = tile.getItem();
+                glyph = item.getSymbol();
+                color = item.getColor();
             } else {
-                mapConsole.setChar(tile.getY(), tile.getX(), tile.getSymbol());
-                mapConsole.setColor(tile.getY(), tile.getX(), tile.getColor().brighter());
+                glyph = tile.getSymbol();
+                color = tile.getColor().brighter();
             }
-            mapConsole.setBgColor(tile.getY(), tile.getX(), tile.getBackgroundColor().brighter());
+            bgColor = tile.getBackgroundColor().brighter();
         } else if (tile.isExplored()) {
-            mapConsole.setChar(tile.getY(), tile.getX(), tile.getSymbol());
-            mapConsole.setColor(tile.getY(), tile.getX(), tile.getColor().darker().darker());
-            mapConsole.setBgColor(tile.getY(), tile.getX(), tile.getBackgroundColor().darker().darker());
+            glyph = tile.getSymbol();
+            color = tile.getColor().darker().darker();
+            bgColor = tile.getBackgroundColor().darker().darker();
         } else {
-            mapConsole.setChar(tile.getY(), tile.getX(), ' ');
-            mapConsole.setColor(tile.getY(), tile.getX(), Color.black);
-            mapConsole.setBgColor(tile.getY(), tile.getX(), Color.black);
+            glyph = ' ';
+            color = Color.black;
+            bgColor = Color.black;
         }
+        mapConsole.setColor(tile.getY(), tile.getX(), color);
+        mapConsole.setBgColor(tile.getY(), tile.getX(), bgColor);
+        mapConsole.setChar(tile.getY(), tile.getX(), glyph);
     }
 
     private void drawGame(Console rootConsole) {
@@ -356,16 +378,13 @@ public class Roguelike {
 
             // Refresh the map buffer
             copyMapToBuffer();
-            // Copy player to the map
-            //Tile playerTile = player.getTile();
-            //mapConsole.setChar(playerTile.getY(), playerTile.getX(), player.getSymbol());
-            //mapConsole.setColor(playerTile.getY(), playerTile.getX(), player.getColor());
-            this.mapConsole.copyBufferTo(rootConsole, 0, 0);
+
+            this.mapConsole.copyBufferTo(rootConsole, 0, gameInformationConsoleWidth);
 
 
-            this.messageConsole.copyBufferTo(rootConsole, this.mapHeight + 1, 0);
+            this.messageConsole.copyBufferTo(rootConsole, this.mapHeight + 1, gameInformationConsoleWidth);
             gameInformationConsole.updateConsole();
-            gameInformationConsole.copyBufferTo(rootConsole, 0, mapWidth + 2);
+            gameInformationConsole.copyBufferTo(rootConsole, 0, 0);
 
             if (this.showMenu) {
                 this.menuWindow.copyBufferTo(rootConsole, this.window.HEIGHT / 2 - 12, this.window.WIDTH / 2 - 12);
@@ -387,14 +406,25 @@ public class Roguelike {
         this.messageConsole = new MessageConsole(this.messageHeight, this.messageWidth);
         //this.messageConsole.setBorder(true);
         this.messageConsole.addMessage("Welcome");
-
-//        this.messageConsole.writeString("Hello World", 1, 1);
-//        this.messageConsole.writeString("KeyEvent: " + this.lastKeyEvent.getKeyCode(), 2, 1);
     }
 
     private void initGame() {
         currentState = State.TITLE;
 
+        initTitleScreen();
+        // Set up map
+        this.mapConsole = new Console(this.mapHeight, this.mapWidth);
+        this.map = new Map(mapHeight, mapWidth, mapDepth);
+
+       initPlayer();
+
+
+
+        // Init the GUI
+        initGui();
+    }
+
+    private void initTitleScreen() {
         //title console
         titleConsole = new Console(windowHeight, windowWidth);
         //titleConsole.setBorder(true);
@@ -404,24 +434,18 @@ public class Roguelike {
         titleConsole.writeString(title1, 2, titleConsole.getxBufferWidth() / 2 - title1.length() / 2);
         titleConsole.writeString(title2, 4, titleConsole.getxBufferWidth() / 2 - title2.length() / 2);
         titleConsole.writeString(title3, 6, titleConsole.getxBufferWidth() / 2 - title3.length() / 2);
-        // Set up map
-        this.mapConsole = new Console(this.mapHeight, this.mapWidth);
-        this.map = new Map(mapHeight, mapWidth, mapDepth);
+    }
 
+    private void initPlayer() {
         // Set up starting tile for player
         Tile startingTile = map.getCurrentLevel().getTile(map.getCurrentLevel().getHeight() / 2, map.getCurrentLevel
                 ().getWidth() / 2);
 
         // Create player at that tile and set them up
         player = new Actor('@', ColorTools.getRandomColor(), startingTile);
+        player.setName("Player");
         startingTile.setActor(player);
         calculateVision();
-
-        // Copy the map to mapConsole(buffer)
-        this.copyMapToBuffer();
-
-        // Init the GUI
-        initGui();
     }
 
     private void initGui() {
@@ -441,6 +465,8 @@ public class Roguelike {
     }
 
     private void startGame() {
+        // Copy the map to mapConsole(buffer)
+        this.copyMapToBuffer();
         // Allow rendering
         this.window.getMainPanel().setRender(true);
 
