@@ -6,6 +6,7 @@ import posmicanomaly.AotCG.Gui.Component.GameInformationConsole;
 import posmicanomaly.AotCG.Gui.Component.InventorySideConsole;
 import posmicanomaly.AotCG.Gui.Component.MessageConsole;
 import posmicanomaly.AotCG.Gui.Gui;
+import posmicanomaly.AotCG.Screen.Title;
 import posmicanomaly.libjsrte.Console.Console;
 import posmicanomaly.libjsrte.Console.Symbol;
 import posmicanomaly.libjsrte.Util.ColorTools;
@@ -31,7 +32,8 @@ public class Roguelike {
     private GameInformationConsole gameInformationConsole;
     private EnhancedConsole inventorySideConsole;
     private Console menuWindow;
-    private Console titleConsole;
+    private Title title;
+
     private Console victoryConsole;
     private Console defeatConsole;
 
@@ -101,7 +103,18 @@ public class Roguelike {
                 Skip title screen, start PLAYING
                  */
             if (currentState == State.TITLE) {
-                currentState = State.PLAYING;
+                switch (this.window.getLastKeyEvent().getKeyCode()) {
+                    case KeyEvent.VK_UP:
+                        title.scrollUp();
+                        break;
+                    case KeyEvent.VK_DOWN:
+                        title.scrollDown();
+                        break;
+                    case KeyEvent.VK_ENTER:
+                        if(title.getSelectedItem().equals("New Game")) {
+                            currentState = State.PLAYING;
+                        }
+                }
             }
 
             if (showVictoryConsole) {
@@ -464,7 +477,7 @@ public class Roguelike {
             this.mapConsole.copyBufferTo(rootConsole, 0, gameInformationConsoleWidth);
 
 
-            this.messageConsole.copyBufferTo(rootConsole, this.mapHeight + 1, gameInformationConsoleWidth);
+            this.messageConsole.copyBufferTo(rootConsole, this.mapHeight, gameInformationConsoleWidth);
             gameInformationConsole.setTurns(turns);
             gameInformationConsole.updateConsole();
             gameInformationConsole.copyBufferTo(rootConsole, 0, 0);
@@ -489,7 +502,8 @@ public class Roguelike {
             }
             this.window.refresh();
         } else if (currentState == State.TITLE) {
-            this.titleConsole.copyBufferTo(rootConsole, 0, 0);
+            title.update();
+            this.title.getTitleConsole().copyBufferTo(rootConsole, 0, 0);
             this.window.refresh();
         }
     }
@@ -563,15 +577,7 @@ public class Roguelike {
     }
 
     private void initTitleScreen() {
-        //title console
-        titleConsole = new Console(windowHeight, windowWidth);
-        //titleConsole.setBorder(true);
-        String title1 = "AotCG";
-        String title2 = "A Roguelike game written in Java using Swing with libjsrte";
-        String title3 = "Press any key to start game";
-        titleConsole.writeString(title1, 2, titleConsole.getxBufferWidth() / 2 - title1.length() / 2);
-        titleConsole.writeString(title2, 4, titleConsole.getxBufferWidth() / 2 - title2.length() / 2);
-        titleConsole.writeString(title3, 6, titleConsole.getxBufferWidth() / 2 - title3.length() / 2);
+        title = new Title(windowHeight, windowWidth);
     }
 
     private void initPlayer() {

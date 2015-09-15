@@ -8,6 +8,7 @@ import java.awt.*;
 public class Actor extends Entity {
     private int maxHp;
     private int currentHp;
+
     private String corpseName;
     private boolean alive;
 
