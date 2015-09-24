@@ -1,5 +1,6 @@
 package posmicanomaly.AotCG.Game;
 
+import jdk.jfr.events.ThrowablesEvent;
 import posmicanomaly.AotCG.Component.*;
 import posmicanomaly.AotCG.Gui.Component.EnhancedConsole;
 import posmicanomaly.AotCG.Gui.Component.GameInformationConsole;
@@ -44,6 +45,8 @@ public class Roguelike {
     private State currentState;
 
     int fontSize = 24;
+
+    private int THREAD_SLEEP = 30;
 
     int windowHeight = 40;
     int windowWidth = 135;
@@ -92,8 +95,9 @@ public class Roguelike {
         Limit CPU
          */
         try {
-            Thread.sleep((long) Window.THREAD_SLEEP);
+            Thread.sleep((long) THREAD_SLEEP);
         } catch (InterruptedException var2) {
+            System.out.println("Couldn't sleep gameLoop()");
             var2.printStackTrace();
         }
 
@@ -244,6 +248,16 @@ public class Roguelike {
                 } else {
                     messageConsole.addMessage("Background glyphs on");
                     window.getMainPanel().setDrawBackgroundGlyphs(true);
+                }
+                break;
+            case KeyEvent.VK_EQUALS:
+                THREAD_SLEEP++;
+                messageConsole.addMessage("THREAD_SLEEP: " + THREAD_SLEEP);
+                break;
+            case KeyEvent.VK_MINUS:
+                if(THREAD_SLEEP > 0) {
+                    THREAD_SLEEP--;
+                    messageConsole.addMessage("THREAD_SLEEP: " + THREAD_SLEEP);
                 }
                 break;
         }

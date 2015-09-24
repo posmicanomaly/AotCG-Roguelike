@@ -32,6 +32,8 @@ public abstract class Input {
             case KeyEvent.VK_R:
             case KeyEvent.VK_V:
             case KeyEvent.VK_B:
+            case KeyEvent.VK_MINUS:
+            case KeyEvent.VK_EQUALS:
                 return Command.DEBUG;
 
                     /*
