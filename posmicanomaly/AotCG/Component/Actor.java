@@ -1,6 +1,7 @@
 package posmicanomaly.AotCG.Component;
 
 import java.awt.*;
+import java.util.ArrayList;
 
 /**
  * Created by Jesse Pospisil on 8/17/2015.
@@ -18,11 +19,13 @@ public class Actor extends Entity {
     private int speed;
     private int mod;
 
+    private ArrayList<Tile> visibleTiles;
+
     private int experience;
 
     public Actor(char symbol, Color color, Tile tile) {
         super(symbol, color, tile);
-
+        visibleTiles = new ArrayList<Tile>();
         setLevel(1);
         setMaxHp(1);
         setCurrentHp(getMaxHp());
@@ -124,8 +127,7 @@ public class Actor extends Entity {
     public int getExperienceCap(int level) {
         // 10 exp base per kill
         // balance based on kills to level
-        // e.g. level 1 * 10 kills * 10 xp each = 100
-        //      level 2 * 20 kills * 10 xp each =
+
         int averageKillsToLevel = level * 4;
         return (averageKillsToLevel * 10);
     }
@@ -143,5 +145,22 @@ public class Actor extends Entity {
 
     public void setLevel(int level) {
         this.level = level;
+    }
+
+    public void clearVisibleTiles() {
+        visibleTiles = new ArrayList<Tile>();
+    }
+
+    public void addVisibleTile(Tile t) {
+        for(Tile tile : visibleTiles) {
+            if(tile == t) {
+                return;
+            }
+        }
+        visibleTiles.add(t);
+    }
+
+    public ArrayList<Tile> getVisibleTiles() {
+        return visibleTiles;
     }
 }

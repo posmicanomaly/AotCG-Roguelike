@@ -202,7 +202,7 @@ public class Roguelike {
                 // Recalculate field of vision if it was set to true
                 if (recalculateFOV) {
                     //
-                    calculateVision();
+                    calculateVision(player);
                 }
             }
 
@@ -348,8 +348,9 @@ public class Roguelike {
         return direction;
     }
 
-    private void calculateVision() {
+    private void calculateVision(Actor actor) {
         map.getCurrentLevel().toggleAllTilesVisible(false);
+        actor.clearVisibleTiles();
         int y = player.getTile().getY();
         int x = player.getTile().getX();
 
@@ -359,6 +360,7 @@ public class Roguelike {
         for (Tile t : fieldOfVisionTiles) {
             t.setVisible(true);
             t.setExplored(true);
+            actor.addVisibleTile(t);
         }
     }
 
@@ -720,7 +722,7 @@ public class Roguelike {
         // Create player at that tile and set them up
         player = ActorFactory.createActor(ActorFactory.TYPE.PLAYER, startingTile);
         startingTile.setActor(player);
-        calculateVision();
+        calculateVision(player);
     }
 
     private void initGui() {

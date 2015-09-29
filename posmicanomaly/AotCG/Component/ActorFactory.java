@@ -9,7 +9,7 @@ import java.awt.*;
  */
 public class ActorFactory {
     public enum TYPE {
-        PLAYER, RAT, GIANT
+        PLAYER, RAT, BAT, GIANT
     }
     public static Actor createActor(TYPE type, Tile t) {
         String actorName;
@@ -22,7 +22,7 @@ public class ActorFactory {
         switch(type) {
             case PLAYER:
                 level = 1;
-                mod = 10;
+                mod = 20;
                 speed = 1;
                 glyph = '@';
                 actorName = "you";
@@ -30,15 +30,23 @@ public class ActorFactory {
                 break;
             case RAT:
                 level = 1;
-                mod = 2;
+                mod = 4;
                 speed = 1;
                 glyph = 'r';
                 actorName = "rat";
                 color = Color.yellow;
                 break;
+            case BAT:
+                level = 2;
+                mod = 4;
+                speed = 2;
+                glyph = 'b';
+                actorName = "bat";
+                color = Color.green;
+                break;
             case GIANT:
                 level = 7;
-                mod = 4;
+                mod = 8;
                 speed = 3;
                 glyph = 'G';
                 actorName = "giant";

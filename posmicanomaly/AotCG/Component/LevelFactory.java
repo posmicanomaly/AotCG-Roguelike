@@ -573,7 +573,8 @@ public abstract class LevelFactory {
         processMap(result);
 
         boolean giantAdded = false;
-        for (int i = 0; i < height * width / 64; i++) {
+        int actorsToAdd = 7 * 4 * 10;
+        for (int i = 0; i < actorsToAdd; i++) {
             Random rng = new Random();
             int y = rng.nextInt(height);
             int x = rng.nextInt(width);
@@ -583,7 +584,12 @@ public abstract class LevelFactory {
                     actor = ActorFactory.createActor(ActorFactory.TYPE.GIANT, result[y][x]);
                     giantAdded = true;
                 } else {
-                    actor = ActorFactory.createActor(ActorFactory.TYPE.RAT, result[y][x]);
+                    int rngResult = rng.nextInt(100);
+                    if(rngResult < 50) {
+                        actor = ActorFactory.createActor(ActorFactory.TYPE.RAT, result[y][x]);
+                    } else {
+                        actor = ActorFactory.createActor(ActorFactory.TYPE.BAT, result[y][x]);
+                    }
                 }
 
                 result[y][x].setActor(actor);

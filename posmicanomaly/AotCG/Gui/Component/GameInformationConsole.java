@@ -61,6 +61,31 @@ public class GameInformationConsole extends EnhancedConsole {
             row++;
         }
 
+        row++;
+        writeCenteredString("Visible", row);
+        row++;
+
+        int maxTargets = 10;
+        int targets = 0;
+        for(Tile t : player.getVisibleTiles()) {
+            if(t.hasActor() && t.getActor() != player) {
+                if(targets == maxTargets) {
+                    continue;
+                }
+                targets++;
+                barWidth = getxBufferWidth();
+                if(barWidth > t.getActor().getMaxHp()) {
+                    barWidth = t.getActor().getMaxHp();
+                }
+
+                healthPerChar = t.getActor().getMaxHp() / barWidth;
+                drawBar(row, 0, barWidth, Colors.HEALTH_DEFICIT, "");
+                drawBar(row, 0, barWidth - ((t.getActor().getMaxHp() - t.getActor().getCurrentHp()) / healthPerChar), Colors.HEALTH_REMAINING, t.getActor().getName());
+                row++;
+                row++;
+            }
+        }
+
         row = getyBufferHeight() - 1;
         writeString("T: " + turns, row, 0);
         row--;
@@ -71,6 +96,9 @@ public class GameInformationConsole extends EnhancedConsole {
     }
 
     private void drawBar(int y, int x, int width, Color color, String text) {
+        if(y > getyBufferHeight() - 1) {
+            return;
+        }
         writeString(text, y, x);
         for(int xLoc = x; xLoc < x + width; xLoc++) {
             setBgColor(y, xLoc, color);
