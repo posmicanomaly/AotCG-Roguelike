@@ -56,6 +56,101 @@ public abstract class LevelFactory {
     }
 
     /**
+     * Used to init a tile during gameplay, will call to ignoreBuild tiles
+     * @param t
+     */
+    public static void initTile(Tile t) {
+        initTile(t, true);
+    }
+
+    private static void initTile(Tile t, boolean ignoreBuild) {
+        char symbol;
+        boolean isBlocked;
+        Color color;
+        Color backgroundColor;
+
+        if (!ignoreBuild) {
+                /*
+                Convert any building types
+                 */
+            switch (t.getType()) {
+                case BUILD_FLOOD:
+                    t.setType(Tile.Type.FLOOR);
+                    break;
+            }
+        }
+                /*
+                Process regular types
+                 */
+        boolean transparent = true;
+        backgroundColor = Color.black;
+        switch (t.getType()) {
+            case FLOOR:
+                symbol = Symbol.MIDDLE_DOT;
+                isBlocked = false;
+                color = ColorTools.varyColor(Colors.FLOOR, 0.8, 1.0, ColorTools.BaseColor.RGB);
+                backgroundColor = ColorTools.varyColor(Colors.FLOOR_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
+                break;
+            case WALL:
+                symbol = '#';
+                isBlocked = true;
+                color = Colors.WALL;
+                backgroundColor = ColorTools.varyColor(Colors.WALL_BG, 0.7, 1.0, ColorTools.BaseColor.RGB);
+                //
+                transparent = false;
+                break;
+            case WALL_SECRET:
+                symbol = '#';
+                isBlocked = false;
+                color = Colors.WALL;
+                backgroundColor = ColorTools.varyColor(Colors.WALL_BG, 0.7, 1.0, ColorTools.BaseColor.RGB);
+                //
+                transparent = false;
+                break;
+            case PATH:
+                symbol = Symbol.MIDDLE_DOT;
+                isBlocked = false;
+                color = Color.WHITE;
+                break;
+            case BUILD_FLOOD:
+                symbol = Symbol.ALMOST_EQUAL_TO;
+                isBlocked = false;
+                color = Color.ORANGE;
+                break;
+            case WATER:
+                symbol = Symbol.ALMOST_EQUAL_TO;
+                isBlocked = false;
+                color = Colors.WATER;
+                backgroundColor = Colors.WATER_BG;
+                break;
+            case CAVE_GRASS:
+                symbol = '"';
+                isBlocked = false;
+                color = ColorTools.varyColor(Colors.CAVE_GRASS, 0.5, 1.0, ColorTools.BaseColor.RGB);
+                backgroundColor = ColorTools.varyColor(Colors.CAVE_GRASS_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
+                break;
+            case DOOR:
+                symbol ='+';
+                isBlocked = false;
+                color = ColorTools.varyColor(Colors.DOOR, 0.5, 1.0, ColorTools.BaseColor.RGB);
+                backgroundColor = ColorTools.varyColor(Colors.DOOR_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
+                transparent = false;
+                break;
+            default:
+                symbol = '?';
+                isBlocked = false;
+                color = Color.blue;
+                break;
+        }
+
+        t.setSymbol(symbol);
+        t.setBlocked(isBlocked);
+        t.setColor(color);
+        t.setBackgroundColor(backgroundColor);
+        t.setTransparent(transparent);
+    }
+
+    /**
      * Loops through all tiles in supplied level and determines the tile specific information based on the type
      * If ignoreBuild is set to true, it will convert the building types back to their regular types first
      *
@@ -66,75 +161,7 @@ public abstract class LevelFactory {
         for (int y = 0; y < level.length; y++) {
             for (int x = 0; x < level[0].length; x++) {
                 Tile t = level[y][x];
-                char symbol;
-                boolean isBlocked;
-                Color color;
-                Color backgroundColor;
-
-                if (!ignoreBuild) {
-                /*
-                Convert any building types
-                 */
-                    switch (t.getType()) {
-                        case BUILD_FLOOD:
-                            t.setType(Tile.Type.FLOOR);
-                            break;
-                    }
-                }
-                /*
-                Process regular types
-                 */
-                boolean transparent = true;
-                backgroundColor = Color.black;
-                switch (t.getType()) {
-                    case FLOOR:
-                        symbol = Symbol.MIDDLE_DOT;
-                        isBlocked = false;
-                        color = ColorTools.varyColor(Colors.FLOOR, 0.8, 1.0, ColorTools.BaseColor.RGB);
-                        backgroundColor = ColorTools.varyColor(Colors.FLOOR_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
-                        break;
-                    case WALL:
-                        symbol = '#';
-                        isBlocked = true;
-                        color = Colors.WALL;
-                        backgroundColor = ColorTools.varyColor(Colors.WALL_BG, 0.7, 1.0, ColorTools.BaseColor.RGB);
-                        //
-                        transparent = false;
-                        break;
-                    case PATH:
-                        symbol = Symbol.MIDDLE_DOT;
-                        isBlocked = false;
-                        color = Color.WHITE;
-                        break;
-                    case BUILD_FLOOD:
-                        symbol = Symbol.ALMOST_EQUAL_TO;
-                        isBlocked = false;
-                        color = Color.ORANGE;
-                        break;
-                    case WATER:
-                        symbol = Symbol.ALMOST_EQUAL_TO;
-                        isBlocked = false;
-                        color = Colors.WATER;
-                        backgroundColor = Colors.WATER_BG;
-                        break;
-                    case CAVE_GRASS:
-                        symbol = '"';
-                        isBlocked = false;
-                        color = ColorTools.varyColor(Colors.CAVE_GRASS, 0.5, 1.0, ColorTools.BaseColor.RGB);
-                        backgroundColor = ColorTools.varyColor(Colors.CAVE_GRASS_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
-                        break;
-                    default:
-                        symbol = '?';
-                        isBlocked = false;
-                        color = Color.blue;
-                        break;
-                }
-
-                t.setSymbol(symbol);
-                t.setBlocked(isBlocked);
-                t.setColor(color);
-                t.setBackgroundColor(backgroundColor);
-                t.setTransparent(transparent);
+                initTile(t, ignoreBuild);
             }
         }
     }
@@ -463,8 +490,11 @@ public abstract class LevelFactory {
             }
 
             /*
-            Check for thin walls
+            Find the thin walls
              */
+
+            ArrayList<Tile> thinWalls = new ArrayList<Tile>();
+
             for (int y = 0; y < height; y++) {
                 for (int x = 0; x < width; x++) {
                     Tile t = result[y][x];
@@ -505,19 +535,37 @@ public abstract class LevelFactory {
                         // If either are true
                         if (horizontalDivide || verticalDivide) {
                             // Set it as a PATH (DEBUG)
-                            t.setType(Tile.Type.PATH);
+                            thinWalls.add(t);
                         }
                     }
                 }
             }
-            // Process the map to set tile properties
-            processMap(result);
-            // FloodFill the map
-            floodFill(result);
+            int maxAttempts = 50;
+            for(int i = 0; i < maxAttempts; i++) {
+                // Process the map to set tile properties
+                processMap(result);
+                // FloodFill the map
+                floodFill(result);
 
-            // If the entire map is flooded, map is playable
-            if (isFlooded(result)) {
-                playableMap = true;
+                // If the entire map is flooded, map is playable
+                if (isFlooded(result)) {
+                    playableMap = true;
+                    break;
+                } else {
+                    int findTimeout = 0;
+                    Tile t;
+                    do {
+                        // Pick a random thin wall and break it
+                        t = thinWalls.get(rng.nextInt(thinWalls.size()));
+                        findTimeout++;
+                    } while(!hasFloodAndFloorNeighborTiles(t, result, height, width) && findTimeout < 50);
+
+                    if(hasFloodAndFloorNeighborTiles(t, result, height, width)) {
+                        // Break the wall
+                        t.setType(Tile.Type.PATH);
+                        thinWalls.remove(t);
+                    }
+                }
             }
         }
 
@@ -530,22 +578,137 @@ public abstract class LevelFactory {
             int y = rng.nextInt(height);
             int x = rng.nextInt(width);
             if (result[y][x].getType() == Tile.Type.FLOOR && !result[y][x].hasActor()) {
-                Actor actor = new Actor('k', Color.orange, result[y][x]);
-                actor.setName("Kobold");
+                Actor actor;
                 if(!giantAdded) {
-                    actor.setSymbol('G');
-                    actor.setName("Giant");
-                    actor.setMaxHp(40);
-                    actor.setCurrentHp(actor.getMaxHp());
+                    actor = ActorFactory.createActor(ActorFactory.TYPE.GIANT, result[y][x]);
                     giantAdded = true;
+                } else {
+                    actor = ActorFactory.createActor(ActorFactory.TYPE.RAT, result[y][x]);
                 }
+
                 result[y][x].setActor(actor);
             }
         }
         Random rng = new Random();
         addPoolFeature(result, rng.nextInt(30), Tile.Type.CAVE_GRASS);
         addPoolFeature(result, rng.nextInt(10), Tile.Type.WATER);
+        addDoorways(result, 4);
         processMap(result);
         return result;
+    }
+
+    private static void addDoorways(Tile[][] result, int secret) {
+        ArrayList<Tile> eligibileDoorways = getEligibleDoorways(result);
+
+        int secretDoorwaysPlaced = 0;
+        if(eligibileDoorways.size() - secret < 0) {
+            secret = 0;
+        }
+        for(Tile t : eligibileDoorways) {
+            if(secretDoorwaysPlaced < secret) {
+                t.setType(Tile.Type.WALL_SECRET);
+                secretDoorwaysPlaced++;
+            } else {
+                t.setType(Tile.Type.DOOR);
+            }
+        }
+    }
+
+    private static ArrayList<Tile> getEligibleDoorways(Tile[][] result) {
+        ArrayList<Tile.Type> validBaseTypes = new ArrayList<Tile.Type>();
+        validBaseTypes.add(Tile.Type.CAVE_GRASS);
+        validBaseTypes.add(Tile.Type.FLOOR);
+
+        ArrayList<Tile> tiles = new ArrayList<Tile>();
+        int height = result.length;
+        int width = result[0].length;
+        for(int y = 0; y < result.length; y++) {
+            for(int x = 0; x < result[y].length; x++) {
+                Tile currentTile = result[y][x];
+                boolean validType = false;
+                for(Tile.Type type : validBaseTypes) {
+                    if(currentTile.getType() == type) {
+                        validType = true;
+                        break;
+                    }
+                }
+                if(validType) {
+
+                    Tile tLeft = null;
+                    Tile tRight = null;
+                    Tile tUp = null;
+                    Tile tDown = null;
+                    if (x > 1)
+                        tLeft = result[y][x - 1];
+                    if (x < width - 1)
+                        tRight = result[y][x + 1];
+                    if (y > 1)
+                        tUp = result[y - 1][x];
+                    if (y < height - 1)
+                        tDown = result[y + 1][x];
+                    ArrayList<Tile> neighborTiles = new ArrayList<Tile>();
+
+                    boolean horizontalWalls = false;
+                    boolean verticalWalls = false;
+                    if(tLeft != null && tLeft.getType() == Tile.Type.WALL) {
+                        if(tRight != null && tRight.getType() == Tile.Type.WALL) {
+                            horizontalWalls = true;
+                        }
+                    }
+
+                    if(tUp != null && tUp.getType() == Tile.Type.WALL) {
+                        if(tDown != null && tDown.getType() == Tile.Type.WALL) {
+                            verticalWalls = true;
+                        }
+                    }
+
+                    if(horizontalWalls && verticalWalls) {
+                        // Don't put a door here, would look bad
+                    } else if(horizontalWalls || verticalWalls) {
+                        tiles.add(currentTile);
+                    }
+                }
+            }
+        }
+
+        return tiles;
+    }
+
+    private static boolean hasFloodAndFloorNeighborTiles(Tile t, Tile[][] result, int height, int width) {
+        // Get the surrounding tiles
+        int x = t.getX();
+        int y = t.getY();
+        Tile tLeft = null;
+        Tile tRight = null;
+        Tile tUp = null;
+        Tile tDown = null;
+        if (x > 1)
+            tLeft = result[y][x - 1];
+        if (x < width - 1)
+            tRight = result[y][x + 1];
+        if (y > 1)
+            tUp = result[y - 1][x];
+        if (y < height - 1)
+            tDown = result[y + 1][x];
+
+        ArrayList<Tile> tiles = new ArrayList<Tile>();
+
+        tiles.add(tLeft);
+        tiles.add(tRight);
+        tiles.add(tUp);
+        tiles.add(tDown);
+        boolean nearFloor = false;
+        boolean nearFlood = false;
+        for(Tile tile : tiles) {
+            if(tile != null) {
+                if(tile.getType() == Tile.Type.FLOOR) {
+                    nearFloor = true;
+                } else if(tile.getType() == Tile.Type.BUILD_FLOOD) {
+                    nearFlood = true;
+                }
+            }
+        }
+
+        return nearFloor && nearFlood;
     }
 }

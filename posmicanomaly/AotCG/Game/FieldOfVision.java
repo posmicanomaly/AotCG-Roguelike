@@ -36,7 +36,8 @@ public abstract class FieldOfVision {
      */
     public static ArrayList<Tile> calculateRayCastingFOVVisibleTiles(int y, int x, Level level, int radius) {
         ArrayList<Tile> visibleTiles = new ArrayList<Tile>();
-        visibleTiles.add(level.getTile(y, x));
+        Tile startTile = level.getTile(y, x);
+        visibleTiles.add(startTile);
         int VIEW_RADIUS = radius;
         for (int i = 0; i < 360; i++) {
             double xd = Math.cos((double) i * 0.01745f);
@@ -47,7 +48,7 @@ public abstract class FieldOfVision {
             for (int r = 0; r < VIEW_RADIUS; r++) {
                 Tile t = level.getTile((int) oy, (int) ox);
                 visibleTiles.add(t);
-                if (!t.isTransparent()) {
+                if (!t.isTransparent() && t != startTile) {
                     break;
                 }
                 ox += xd;

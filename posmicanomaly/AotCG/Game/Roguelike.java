@@ -1,6 +1,5 @@
 package posmicanomaly.AotCG.Game;
 
-import jdk.jfr.events.ThrowablesEvent;
 import posmicanomaly.AotCG.Component.*;
 import posmicanomaly.AotCG.Gui.Component.EnhancedConsole;
 import posmicanomaly.AotCG.Gui.Component.GameInformationConsole;
@@ -24,30 +23,7 @@ import java.util.Random;
 public class Roguelike {
 
     Window window;
-    private Console mapConsole;
-
-    private int turns;
-    private Gui gui;
-
-    private MessageConsole messageConsole;
-    private GameInformationConsole gameInformationConsole;
-    private EnhancedConsole inventorySideConsole;
-    private Console menuWindow;
-    private Title title;
-
-    private Console victoryConsole;
-    private Console defeatConsole;
-
-    public enum Direction {UP, DOWN, LEFT, RIGHT, NW, NE, SW, SE}
-
-    public enum State {TITLE, PLAYING, VICTORY}
-
-    private State currentState;
-
     int fontSize = 24;
-
-    private int THREAD_SLEEP = 30;
-
     int windowHeight = 40;
     int windowWidth = 135;
     int messageHeight = 6;
@@ -55,7 +31,11 @@ public class Roguelike {
     int mapHeight;
     int mapWidth;
     int mapDepth = 10;
-
+    long lastRenderTime;
+    long minFrameSpeed = 40;
+    int currentFrames;
+    int lastFramesPerSecond;
+    long fpsTimerStart;
     int gameInformationConsoleHeight = windowHeight;
     int gameInformationConsoleWidth = 20;
     boolean showMenu;
@@ -64,7 +44,17 @@ public class Roguelike {
     boolean showVictoryConsole;
     boolean showDefeatConsole;
     Map map;
-
+    private Console mapConsole;
+    private int turns;
+    private Gui gui;
+    private MessageConsole messageConsole;
+    private GameInformationConsole gameInformationConsole;
+    private EnhancedConsole inventorySideConsole;
+    private Console menuWindow;
+    private Title title;
+    private Console victoryConsole;
+    private Console defeatConsole;
+    private State currentState;
     private Actor player;
     private KeyEvent lastKeyEvent;
 
@@ -90,22 +80,24 @@ public class Roguelike {
         }
     }
 
+    public static void main(String[] args) {
+        new Roguelike();
+    }
+
     private void gameLoop() {
-        /*
-        Limit CPU
-         */
-        try {
-            Thread.sleep((long) THREAD_SLEEP);
-        } catch (InterruptedException var2) {
-            System.out.println("Couldn't sleep gameLoop()");
-            var2.printStackTrace();
-        }
+        long startTime = System.currentTimeMillis();
 
         // Check for key input
         if (!this.window.getLastKeyEvent().equals(this.lastKeyEvent)) {
-                /*
-                Skip title screen, start PLAYING
-                 */
+
+            /**
+             * Check for game state or victory/defeat console displayed
+             */
+
+            // Title Screen
+            // .
+            // .
+
             if (currentState == State.TITLE) {
                 switch (this.window.getLastKeyEvent().getKeyCode()) {
                     case KeyEvent.VK_UP:
@@ -115,23 +107,31 @@ public class Roguelike {
                         title.scrollDown();
                         break;
                     case KeyEvent.VK_ENTER:
-                        if(title.getSelectedItem().equals("New Game")) {
+                        if (title.getSelectedItem().equals("New Game")) {
                             currentState = State.PLAYING;
                         }
                 }
             }
+            // Victory Achieved
+            // .
+            // .
 
             if (showVictoryConsole) {
                 switch (this.window.getLastKeyEvent().getKeyCode()) {
+                    // Player decides to keep playing
                     case KeyEvent.VK_ESCAPE:
                         showVictoryConsole = false;
                         break;
+                    // Player decides to start new game
                     case KeyEvent.VK_R:
                         initGame();
                     default:
                         break;
                 }
             }
+            // Defeated
+            // .
+            // .
 
             else if (showDefeatConsole) {
                 switch (this.window.getLastKeyEvent().getKeyCode()) {
@@ -142,61 +142,111 @@ public class Roguelike {
                         break;
                 }
             }
-                /*
-                Game Loop
-                 */
+
+
+            // Main portion of game loop
+            // .
+            // .
+
             else {
+                // By default, do not recalculate field of vision unless we need to
                 boolean recalculateFOV = false;
+
                 KeyEvent key = this.window.getLastKeyEvent();
+
+                // Obtain the command related to the keypress determined by game state
                 Input.Command command = Input.processKey(key);
-                if(command != null) {
+
+                // Check command and act upon it
+                if (command != null) {
                     switch (command) {
+
                         case MOVEMENT:
                             Direction direction = getPlayerMovementDirection(key);
                             if (moveActor(player, direction)) {
                                 recalculateFOV = true;
                             }
                             turns++;
-                            /*
-                            Check win condition
-                            if giant was killed
-                            and victoryConsole is null(not initialized yet)
 
-                            If it is not null, then we've seen it and likely hit ESCAPE to keep playing
+                            /**
+                             Check win condition
+                             if giant was killed
+                             and victoryConsole is null(not initialized yet)
+
+                             If it is not null, then we've seen it and likely hit ESCAPE to keep playing
                              */
-                            if(giantSlain && victoryConsole == null) {
+                            if (giantSlain && victoryConsole == null) {
                                 initVictoryConsole();
                                 showVictoryConsole = true;
                             }
 
-                            if(!player.isAlive()) {
+                            if (!player.isAlive()) {
                                 initDefeatConsole();
                                 showDefeatConsole = true;
                             }
                             break;
+
                         case DEBUG:
                             processDebugCommand(key);
                             break;
+
                         case MENU:
                             processMenuCommand(key);
                             break;
+
                         default:
                             break;
                     }
                 }
 
+                // Recalculate field of vision if it was set to true
                 if (recalculateFOV) {
                     //
                     calculateVision();
                 }
             }
+
+            // Set lastKeyEent to this one that we just used, so we do not enter loop again
             this.lastKeyEvent = this.window.getLastKeyEvent();
         }
 
+        // Draw the game
+        // TODO: draw only if we need to, to improve CPU usage
         this.drawGame(this.window.getMainPanel().getRootConsole());
+
+        // Determine remaining time in frame based on when we started loop, to after we've drawn the game
+        long remainingTime = minFrameSpeed - (System.currentTimeMillis() - startTime);
+
+        // During initialization, this time may go negative. Set to 0 if this happens to prevent exception.
+        if (remainingTime < 0) {
+            remainingTime = 0;
+        }
+
+        // Sleep for whatever time we have remaining to maintain the desired FPS
+        try {
+            Thread.sleep(remainingTime);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // Increment our current frames
+        currentFrames++;
+
+        // Determine FPS
+        // .
+        // .
+
+        // fpsTimerStart is initialized in startGame()
+        // if over 1 second or more has passed, set the currentFrames to lastFramesPerSecond
+        if (System.currentTimeMillis() - fpsTimerStart >= 1000) {
+            lastFramesPerSecond = currentFrames;
+
+            // Reset currentFrames
+            currentFrames = 0;
+            // Reset fpsTimerStart
+            fpsTimerStart = System.currentTimeMillis();
+        }
     }
-
-
 
     private void processMenuCommand(KeyEvent key) {
         switch (key.getKeyCode()) {
@@ -251,13 +301,13 @@ public class Roguelike {
                 }
                 break;
             case KeyEvent.VK_EQUALS:
-                THREAD_SLEEP++;
-                messageConsole.addMessage("THREAD_SLEEP: " + THREAD_SLEEP);
+                minFrameSpeed++;
+                messageConsole.addMessage("minFrameSpeed: " + minFrameSpeed);
                 break;
             case KeyEvent.VK_MINUS:
-                if(THREAD_SLEEP > 0) {
-                    THREAD_SLEEP--;
-                    messageConsole.addMessage("THREAD_SLEEP: " + THREAD_SLEEP);
+                if(minFrameSpeed > 0) {
+                    minFrameSpeed--;
+                    messageConsole.addMessage("minFrameSpeed: " + minFrameSpeed);
                 }
                 break;
         }
@@ -313,110 +363,173 @@ public class Roguelike {
     }
 
     private boolean moveActor(Actor actor, Direction d) {
-        Tile prevTile = actor.getTile();
-        Tile nextTile;
+        // Obtain the current tile the actor is on
+        Tile currentTile = actor.getTile();
+
+        // desiredTile is the tile we will try to move the actor to
+        Tile desiredTile;
+
+        // by default, the move will be true
+        // we will inhibit the move by setting this to false
         boolean move = true;
-        int y = prevTile.getY();
-        int x = prevTile.getX();
+
+        // Get coordinates of the currentTile
+        int y = currentTile.getY();
+        int x = currentTile.getX();
+
+        // Determine coordinates of desired tile based on direction input
         switch (d) {
-            case UP:
-                y--;
-                break;
-            case DOWN:
-                y++;
-                break;
-            case LEFT:
-                x--;
-                break;
-            case RIGHT:
-                x++;
-                break;
-            case NW:
-                x--;
-                y--;
-                break;
-            case NE:
-                x++;
-                y--;
-                break;
-            case SW:
-                x--;
-                y++;
-                break;
-            case SE:
-                x++;
-                y++;
-                break;
+            case UP:    y--;        break;
+            case DOWN:  y++;        break;
+            case LEFT:  x--;        break;
+            case RIGHT: x++;        break;
+            case NW:    x--; y--;   break;
+            case NE:    x++; y--;   break;
+            case SW:    x--; y++;   break;
+            case SE:    x++; y++;   break;
             default:
                 move = false;
                 break;
         }
+
+        // If the input was good, move will still be true
         if (move) {
-            nextTile = map.getCurrentLevel().getTile(y, x);
-            if (nextTile == null) {
+            // set desiredTile to the tile located at the y, x coordinates
+            desiredTile = map.getCurrentLevel().getTile(y, x);
+
+            // If the tile is null, it is likely out of range
+            if (desiredTile == null) {
                 messageConsole.addMessage("Tile is null");
                 return false;
-            } else if (nextTile.isBlocked()) {
+            }
+
+            // If the tile is blocked(terrain), we can't go there, likely a wall at this point
+            else if (desiredTile.isBlocked()) {
                 messageConsole.addMessage("You bumped into a wall");
                 return false;
-            } else if (nextTile.hasActor() && nextTile.getActor().isAlive()) {
-                Actor nextTileActor = nextTile.getActor();
-                nextTileActor.setCurrentHp(nextTileActor.getCurrentHp() - 20);
-                if(nextTileActor.getCurrentHp() <= 0) {
-                    nextTileActor.setAlive(false);
-                }
-                if(nextTileActor.isAlive()) {
-                    int damage = 1;
-                    if(nextTileActor.getName().equals("Giant")) {
-                        damage = 30;
-                    }
-                    player.setCurrentHp(player.getCurrentHp() - damage);
+            }
 
-                    if(player.getCurrentHp() <= 0) {
-                        player.setAlive(false);
+            // If the tile already has an actor, and the actor is alive, we need to do some combat
+            else if (desiredTile.hasActor() && desiredTile.getActor().isAlive()) {
+                // Combat
+                // .
+                // .
+
+                Actor nextTileActor = desiredTile.getActor();
+
+
+
+                // Determine who goes first
+
+                Actor firstAttacker = null;
+                Actor secondAttacker = null;
+
+                if(actor.getSpeed() > nextTileActor.getSpeed()) {
+                    firstAttacker = actor;
+                    secondAttacker = nextTileActor;
+                } else if(actor.getSpeed() < nextTileActor.getSpeed()) {
+                    firstAttacker = nextTileActor;
+                    secondAttacker = actor;
+                } else if(actor.getSpeed() == nextTileActor.getSpeed()) {
+                    firstAttacker = actor;
+                    secondAttacker = nextTileActor;
+                }
+
+                int firstAttackerDamage = firstAttacker.getPower();
+                int secondAttackerDamage = secondAttacker.getPower();
+                String combatMessage = "";
+                // firstAttacker attacks
+                combatMessage += firstAttacker.getName() + " hit " + secondAttacker.getName() + " for " + firstAttackerDamage;
+                secondAttacker.setCurrentHp(secondAttacker.getCurrentHp() - firstAttackerDamage);
+
+                // Check if secondAttacker was killed
+                if(secondAttacker.getCurrentHp() <= 0) {
+                    secondAttacker.setAlive(false);
+                }
+
+                // If secondAttacker is still alive
+                if(secondAttacker.isAlive()) {
+                    // secondAttacker attacks
+                    combatMessage += ", " + secondAttacker.getName() + " hit " + firstAttacker.getName() + " for " + secondAttackerDamage;
+                    firstAttacker.setCurrentHp(firstAttacker.getCurrentHp() - secondAttackerDamage);
+
+                    // Check if firstAttacker was killed
+                    if(firstAttacker.getCurrentHp() <= 0) {
+                        firstAttacker.setAlive(false);
                     }
-                } else {
-                    int damageToPlayer = 1;
+                }
+
+                messageConsole.addMessage(combatMessage);
+
+                // If nextTileActor was killed
+                // .
+                // .
+
+                if(!nextTileActor.isAlive()) {
                     nextTileActor.setAlive(false);
                     nextTileActor.setTile(null);
-                    nextTile.setActor(null);
-                    Item corpse = new Item('%', Color.gray, nextTile);
+                    desiredTile.setActor(null);
+
+                    Item corpse = new Item('%', Color.gray, desiredTile);
                     corpse.setName(nextTileActor.getCorpseName());
-                    nextTile.setItem(corpse);
-                    player.setCurrentHp(player.getCurrentHp() - damageToPlayer);
+                    desiredTile.setItem(corpse);
+
                     Random rng = new Random();
                     int baseExp = 10;
                     int expVariance = 3;
                     int randomExp = rng.nextInt((baseExp + expVariance) - (baseExp - expVariance) + 1) + (baseExp - expVariance);
 
-                    player.addExperience(randomExp);
-                    messageConsole.addMessage("Killed " + nextTileActor.getName() + " (" + randomExp + " exp)");
+                    actor.addExperience(randomExp);
+                    messageConsole.addMessage(actor.getName() + " killed " + nextTileActor.getName() + " (" + randomExp + " exp)");
                     if (nextTileActor.getName().equals("Giant")) {
                         messageConsole.addMessage("Main quest complete: Slay Giant (350 exp)");
-                        player.addExperience(350);
+                        actor.addExperience(350);
                         giantSlain = true;
                     }
-                    int prevLevel = player.getLevel();
-                    player.evaulateLevel();
-                    if (prevLevel < player.getLevel()) {
-                        messageConsole.addMessage("You leveled up: " + player.getLevel());
+                    int prevLevel = actor.getLevel();
+                    actor.evaulateLevel();
+                    if (prevLevel < actor.getLevel()) {
+                        messageConsole.addMessage(actor.getName() + " leveled up: " + actor.getLevel());
                     }
                     return false;
                 }
-            } else {
+            }
+            // The tile is valid, not blocked, and has no "living" actor
+            // We can move the actor there
+            else {
                 /*
                 I don't like this
                  */
-                actor.setTile(nextTile);
-                nextTile.setActor(actor);
-                prevTile.setActor(null);
+
+                Tile previousTile = currentTile;
+
+                // set actor's tile
+                actor.setTile(desiredTile);
+                // set tile's actor
+                desiredTile.setActor(actor);
+
+                // Secret wall?
+                // .
+                // .
+
+                if(desiredTile.getType() == Tile.Type.WALL_SECRET) {
+                    // Set type to DOOR
+                    desiredTile.setType(Tile.Type.DOOR);
+                    LevelFactory.initTile(desiredTile);
+                }
+
+                // remove actor from old tile
+
+                previousTile.setActor(null);
+
+                // Return true, a move was made
                 return true;
             }
 
         }
+        // Return false, no move was made
         return false;
     }
-
 
     /**
      * refreshTile
@@ -464,9 +577,9 @@ public class Roguelike {
                 color = item.getColor();
             } else {
                 glyph = tile.getSymbol();
-                color = tile.getColor().brighter();
+                color = tile.getColor().brighter().brighter();
             }
-            bgColor = tile.getBackgroundColor().brighter();
+            bgColor = tile.getBackgroundColor().brighter().brighter();
         } else if (tile.isExplored()) {
             glyph = tile.getSymbol();
             color = tile.getColor().darker().darker();
@@ -493,6 +606,8 @@ public class Roguelike {
 
             this.messageConsole.copyBufferTo(rootConsole, this.mapHeight, gameInformationConsoleWidth);
             gameInformationConsole.setTurns(turns);
+            gameInformationConsole.setCurrentFrames(currentFrames);
+            gameInformationConsole.setFps(lastFramesPerSecond);
             gameInformationConsole.updateConsole();
             gameInformationConsole.copyBufferTo(rootConsole, 0, 0);
 
@@ -531,9 +646,13 @@ public class Roguelike {
     private void initGame() {
         currentState = State.TITLE;
         giantSlain = false;
+        victoryConsole = null;
         showVictoryConsole = false;
+        defeatConsole = null;
         showDefeatConsole = false;
         turns = 0;
+        lastRenderTime = 0;
+
 
         initTitleScreen();
 
@@ -599,8 +718,7 @@ public class Roguelike {
         Tile startingTile = map.getCurrentLevel().getRandomTile(Tile.Type.FLOOR);
 
         // Create player at that tile and set them up
-        player = new Actor('@', ColorTools.getRandomColor(), startingTile);
-        player.setName("Player");
+        player = ActorFactory.createActor(ActorFactory.TYPE.PLAYER, startingTile);
         startingTile.setActor(player);
         calculateVision();
     }
@@ -629,6 +747,8 @@ public class Roguelike {
 
         // Set lastKeyEvent so we can reference a change
         this.lastKeyEvent = this.window.getLastKeyEvent();
+
+        fpsTimerStart = System.currentTimeMillis();
     }
 
     private void copyMapToBuffer() {
@@ -641,9 +761,9 @@ public class Roguelike {
 
     }
 
-    public static void main(String[] args) {
-        new Roguelike();
-    }
+    public enum Direction {UP, DOWN, LEFT, RIGHT, NW, NE, SW, SE}
+
+    public enum State {TITLE, PLAYING, VICTORY}
 }
 
 

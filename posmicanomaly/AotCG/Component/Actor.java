@@ -11,8 +11,12 @@ public class Actor extends Entity {
 
     private String corpseName;
     private boolean alive;
+    private boolean onCooldown;
 
+    private int power;
     private int level;
+    private int speed;
+    private int mod;
 
     private int experience;
 
@@ -20,9 +24,12 @@ public class Actor extends Entity {
         super(symbol, color, tile);
 
         setLevel(1);
-        setMaxHp(20);
+        setMaxHp(1);
         setCurrentHp(getMaxHp());
         setAlive(true);
+        onCooldown = false;
+        setSpeed(1);
+        setPower(1);
 
         setName("Default Actor");
         setCorpseName(getName() + "'s corpse");
@@ -30,6 +37,43 @@ public class Actor extends Entity {
 
     public boolean isAlive() {
         return alive;
+    }
+
+    public void initStats() {
+        // Calculate true power
+        power = 0 + level;
+        maxHp = power * mod;
+        currentHp = maxHp;
+    }
+    public boolean isOnCooldown() {
+        return onCooldown;
+    }
+
+    public void setMod(int mod) {
+        this.mod = mod;
+    }
+
+    public int getMod() {
+        return mod;
+    }
+    public void setOnCooldown(boolean b) {
+        onCooldown = b;
+    }
+
+    public void setPower(int power) {
+        this.power = power;
+    }
+
+    public int getPower() {
+        return power;
+    }
+
+
+    public int getSpeed() {
+        return this.speed;
+    }
+    public void setSpeed(int speed) {
+        this.speed = speed;
     }
 
     @Override
@@ -87,11 +131,9 @@ public class Actor extends Entity {
     }
     public void evaulateLevel() {
         while(getExperience() >= getExperienceCap(getLevel())) {
-            setMaxHp((int) (getMaxHp() * 1.5));
-            setCurrentHp(getMaxHp());
             setExperience(getExperience() - getExperienceCap(getLevel()));
-
             setLevel(getLevel() + 1);
+            initStats();
         }
     }
 

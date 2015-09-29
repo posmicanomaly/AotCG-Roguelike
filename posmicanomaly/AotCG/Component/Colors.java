@@ -15,6 +15,8 @@ public abstract class Colors {
     public static Color FLOOR_BG = new Color(0.039215688f, 0.039215688f, 0.05882353f, 1.0f);
     public static Color CAVE_GRASS = new Color(0, 84, 0);
     public static Color CAVE_GRASS_BG = FLOOR_BG;
+    public static Color DOOR = new Color(136, 17, 0);
+    public static Color DOOR_BG = new Color(51, 1, 0);
 
     public static Color HEALTH_REMAINING = new Color(0, 142, 0);
     public static Color HEALTH_DEFICIT = new Color(102, 0, 0);

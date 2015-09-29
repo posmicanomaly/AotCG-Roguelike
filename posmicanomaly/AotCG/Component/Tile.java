@@ -60,24 +60,24 @@ public class Tile {
         return transparent;
     }
 
-    public void setTransparent(boolean transparent) {
-        this.transparent = transparent;
+    public void setTransparent(boolean b) {
+        this.transparent = b;
     }
 
     public boolean isExplored() {
         return explored;
     }
 
-    public void setExplored(boolean explored) {
-        this.explored = explored;
+    public void setExplored(boolean b) {
+        this.explored = b;
     }
 
     public boolean isVisible() {
         return visible;
     }
 
-    public void setVisible(boolean visible) {
-        this.visible = visible;
+    public void setVisible(boolean b) {
+        this.visible = b;
     }
 
     public int getY() {
@@ -141,7 +141,7 @@ public class Tile {
     }
 
     public static enum Type {
-        DEFAULT, WALL, FLOOR, WATER, PATH, BUILD_FLOOD, CAVE_GRASS
+        DEFAULT, WALL, FLOOR, WATER, PATH, BUILD_FLOOD, DOOR, WALL_SECRET, CAVE_GRASS
     }
 //    public Tile(int y, int x, char symbol, Color color) {
 //        this.y = y;

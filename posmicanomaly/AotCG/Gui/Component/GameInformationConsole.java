@@ -13,23 +13,31 @@ import java.util.ArrayList;
 public class GameInformationConsole extends EnhancedConsole {
     Actor player;
     private int turns;
+    private int currentFrames;
+    private int fps;
 
     public GameInformationConsole(int height, int width, Actor player) {
         super(height, width);
         this.player = player;
         turns = 0;
+        currentFrames = 0;
+        fps = 0;
     }
 
     @Override
     public void updateConsole() {
         clear();
         int barWidth = getxBufferWidth();
+        if(barWidth > player.getMaxHp()) {
+            barWidth = player.getMaxHp();
+        }
 
         int healthPerChar = player.getMaxHp() / barWidth;
         int expPerChar = player.getExperienceCap(player.getLevel()) / barWidth;
 
         String healthString = "HP: " + player.getCurrentHp() + "/" + player.getMaxHp();
         String expString = "EXP: " + player.getExperience() + "/" + player.getExperienceCap(player.getLevel());
+        String powerString = "PWR: " + player.getPower();
 
         ArrayList<String> placeHolder = new ArrayList<String>();
         int row = 0;
@@ -40,6 +48,8 @@ public class GameInformationConsole extends EnhancedConsole {
 
         row++;
         drawBar(row, 0, barWidth - ((player.getExperienceCap(player.getLevel()) - player.getExperience()) / expPerChar), Colors.EXPERIENCE, expString);
+        row++;
+        writeString(powerString, row, 0);
         row++;
         placeHolder.add("Well");
         placeHolder.add("Here:");
@@ -54,7 +64,9 @@ public class GameInformationConsole extends EnhancedConsole {
         row = getyBufferHeight() - 1;
         writeString("T: " + turns, row, 0);
         row--;
-        writeString("EXP: " + player.getExperience(), row, 0);
+        writeString("CF: " + currentFrames, row, 0);
+        row--;
+        writeString("FPS: " + fps, row, 0);
         row--;
     }
 
@@ -75,5 +87,13 @@ public class GameInformationConsole extends EnhancedConsole {
 
     public void setTurns(int turns) {
         this.turns = turns;
+    }
+
+    public void setCurrentFrames(int currentFrames) {
+        this.currentFrames = currentFrames;
+    }
+
+    public void setFps(int fps) {
+        this.fps = fps;
     }
 }
