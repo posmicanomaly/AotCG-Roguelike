@@ -136,6 +136,18 @@ public abstract class LevelFactory {
                 backgroundColor = ColorTools.varyColor(Colors.DOOR_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
                 transparent = false;
                 break;
+            case STAIRS_UP:
+                symbol = '<';
+                isBlocked = false;
+                color = Color.GREEN;
+                backgroundColor = ColorTools.varyColor(Colors.FLOOR_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
+                break;
+            case STAIRS_DOWN:
+                symbol = '>';
+                isBlocked = false;
+                color = Color.RED;
+                backgroundColor = ColorTools.varyColor(Colors.FLOOR_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
+                break;
             default:
                 symbol = '?';
                 isBlocked = false;
@@ -572,33 +584,12 @@ public abstract class LevelFactory {
         System.out.println("Level took " + levelCreationTries + " tries");
         processMap(result);
 
-        boolean giantAdded = false;
-        int actorsToAdd = 7 * 4 * 10;
-        for (int i = 0; i < actorsToAdd; i++) {
-            Random rng = new Random();
-            int y = rng.nextInt(height);
-            int x = rng.nextInt(width);
-            if (result[y][x].getType() == Tile.Type.FLOOR && !result[y][x].hasActor()) {
-                Actor actor;
-                if(!giantAdded) {
-                    actor = ActorFactory.createActor(ActorFactory.TYPE.GIANT, result[y][x]);
-                    giantAdded = true;
-                } else {
-                    int rngResult = rng.nextInt(100);
-                    if(rngResult < 50) {
-                        actor = ActorFactory.createActor(ActorFactory.TYPE.RAT, result[y][x]);
-                    } else {
-                        actor = ActorFactory.createActor(ActorFactory.TYPE.BAT, result[y][x]);
-                    }
-                }
-
-                result[y][x].setActor(actor);
-            }
-        }
+        addMonsters(result);
         Random rng = new Random();
-        addPoolFeature(result, rng.nextInt(30), Tile.Type.CAVE_GRASS);
-        addPoolFeature(result, rng.nextInt(10), Tile.Type.WATER);
+        addPoolFeature(result, rng.nextInt(30) + 5, Tile.Type.CAVE_GRASS);
+        addPoolFeature(result, rng.nextInt(10) + 5, Tile.Type.WATER);
         addDoorways(result, 4);
+        addStairs(result);
         processMap(result);
         return result;
     }
@@ -618,6 +609,36 @@ public abstract class LevelFactory {
                 t.setType(Tile.Type.DOOR);
             }
         }
+    }
+
+    private static void addMonsters(Tile[][] result) {
+        int height = result.length;
+        int width = result[0].length;
+        boolean giantAdded = false;
+        int actorsToAdd = 10;
+        int actorsAdded = 0;
+        do{
+            Random rng = new Random();
+            int y = rng.nextInt(height);
+            int x = rng.nextInt(width);
+            if (result[y][x].getType() == Tile.Type.FLOOR && !result[y][x].hasActor()) {
+                Actor actor;
+                if(!giantAdded) {
+                    actor = ActorFactory.createActor(ActorFactory.TYPE.GIANT, result[y][x]);
+                    giantAdded = true;
+                } else {
+                    int rngResult = rng.nextInt(100);
+                    if(rngResult < 50) {
+                        actor = ActorFactory.createActor(ActorFactory.TYPE.RAT, result[y][x]);
+                    } else {
+                        actor = ActorFactory.createActor(ActorFactory.TYPE.BAT, result[y][x]);
+                    }
+                }
+
+                result[y][x].setActor(actor);
+                actorsAdded++;
+            }
+        } while(actorsAdded < actorsToAdd);
     }
 
     private static ArrayList<Tile> getEligibleDoorways(Tile[][] result) {
@@ -716,5 +737,41 @@ public abstract class LevelFactory {
         }
 
         return nearFloor && nearFlood;
+    }
+
+    private static void addStairs(Tile[][] result) {
+        Random rng = new Random();
+        int y, x;
+        Tile t;
+        boolean validTile = false;
+        do {
+            y = rng.nextInt(result.length);
+            x = rng.nextInt(result[0].length);
+            t = result[y][x];
+            switch(t.getType()) {
+                case FLOOR:
+                case CAVE_GRASS:
+                    validTile = true;
+                    break;
+                default:
+                    break;
+            }
+        } while (!validTile);
+        t.setType(Tile.Type.STAIRS_UP);
+        validTile = false;
+        do {
+            y = rng.nextInt(result.length);
+            x = rng.nextInt(result[0].length);
+            t = result[y][x];
+            switch(t.getType()) {
+                case FLOOR:
+                case CAVE_GRASS:
+                    validTile = true;
+                    break;
+                default:
+                    break;
+            }
+        } while (!validTile);
+        t.setType(Tile.Type.STAIRS_DOWN);
     }
 }

@@ -26,7 +26,7 @@ public class ActorFactory {
                 speed = 1;
                 glyph = '@';
                 actorName = "you";
-                color = ColorTools.getRandomColor();
+                color = Color.PINK;
                 break;
             case RAT:
                 level = 1;

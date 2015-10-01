@@ -502,30 +502,41 @@ public class Roguelike {
                 /*
                 I don't like this
                  */
-
-                Tile previousTile = currentTile;
-
-                // set actor's tile
-                actor.setTile(desiredTile);
-                // set tile's actor
-                desiredTile.setActor(actor);
-
-                // Secret wall?
-                // .
-                // .
-
-                if(desiredTile.getType() == Tile.Type.WALL_SECRET) {
-                    // Set type to DOOR
-                    desiredTile.setType(Tile.Type.DOOR);
-                    LevelFactory.initTile(desiredTile);
+                if(desiredTile.getType() == Tile.Type.STAIRS_DOWN) {
+                    boolean levelChanged = map.goDeeper();
+                    if(levelChanged) {
+                        desiredTile = map.getCurrentLevel().getUpStairs();
+                    }
+                } else if(desiredTile.getType() == Tile.Type.STAIRS_UP) {
+                    boolean levelChanged = map.goHigher();
+                    if(levelChanged) {
+                        desiredTile = map.getCurrentLevel().getDownStairs();
+                    }
                 }
+                    Tile previousTile = currentTile;
 
-                // remove actor from old tile
+                    // set actor's tile
+                    actor.setTile(desiredTile);
+                    // set tile's actor
+                    desiredTile.setActor(actor);
 
-                previousTile.setActor(null);
+                    // Secret wall?
+                    // .
+                    // .
 
-                // Return true, a move was made
-                return true;
+                    if (desiredTile.getType() == Tile.Type.WALL_SECRET) {
+                        // Set type to DOOR
+                        desiredTile.setType(Tile.Type.DOOR);
+                        LevelFactory.initTile(desiredTile);
+                    }
+
+                    // remove actor from old tile
+
+                    previousTile.setActor(null);
+
+                    // Return true, a move was made
+                    return true;
+
             }
 
         }
@@ -660,7 +671,9 @@ public class Roguelike {
 
         // Set up map
         this.mapConsole = new Console(this.mapHeight, this.mapWidth);
-        this.map = new Map(mapHeight, mapWidth, mapDepth);
+
+        // Start with a depth of 1. We can create new levels as needed.
+        this.map = new Map(mapHeight, mapWidth);
 
         initPlayer();
 
@@ -717,7 +730,7 @@ public class Roguelike {
 
     private void initPlayer() {
         // Set up starting tile for player
-        Tile startingTile = map.getCurrentLevel().getRandomTile(Tile.Type.FLOOR);
+        Tile startingTile = map.getCurrentLevel().getUpStairs();
 
         // Create player at that tile and set them up
         player = ActorFactory.createActor(ActorFactory.TYPE.PLAYER, startingTile);

@@ -12,21 +12,39 @@ public class Map {
 
     private ArrayList<Level> levelList;
 
-    public Map(int height, int width, int depth) {
+    public Map(int height, int width) {
         this.height = height;
         this.width = width;
         this.depth = depth;
-        this.levelList = makeMap(height, width, depth);
+        levelList = new ArrayList<>();
+        Level firstLevel = makeMap(height, width);
+        levelList.add(firstLevel);
         currentLevel = levelList.get(0);
     }
 
-    private ArrayList<Level> makeMap(int height, int width, int depth) {
-        levelList = new ArrayList<Level>();
-        for (int z = 0; z < depth; z++) {
-            levelList.add(new Level(height, width));
+    public boolean goDeeper() {
+        int currentLevelDepth = levelList.indexOf(currentLevel);
+        if(currentLevelDepth == levelList.size() - 1) {
+            System.out.println("Making new level to go deeper");
+            levelList.add(makeMap(height, width));
         }
+        currentLevel = levelList.get(currentLevelDepth + 1);
+        return true;
+    }
 
-        return levelList;
+    public boolean goHigher() {
+        int currentLevelDepth = levelList.indexOf(currentLevel);
+        if(currentLevelDepth == 0) {
+            System.out.println("Can't go up");
+            return false;
+        } else {
+            currentLevel = levelList.get(currentLevelDepth - 1);
+            return true;
+        }
+    }
+
+    private Level makeMap(int height, int width) {
+            return new Level(height, width);
     }
 
     public int getHeight() {

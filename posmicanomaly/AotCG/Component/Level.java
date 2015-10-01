@@ -144,4 +144,12 @@ public class Level {
     public boolean inBounds(int y, int x) {
         return y >= 0 && y < height && x >= 0 && x < width;
     }
+
+    public Tile getUpStairs() {
+        return getRandomTile(Tile.Type.STAIRS_UP);
+    }
+
+    public Tile getDownStairs() {
+        return getRandomTile(Tile.Type.STAIRS_DOWN);
+    }
 }
