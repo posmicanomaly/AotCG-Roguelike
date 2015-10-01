@@ -23,22 +23,20 @@ public class Map {
     }
 
     public boolean goDeeper() {
-        int currentLevelDepth = levelList.indexOf(currentLevel);
-        if(currentLevelDepth == levelList.size() - 1) {
+        if(getCurrentDepth() == levelList.size() - 1) {
             System.out.println("Making new level to go deeper");
             levelList.add(makeMap(height, width));
         }
-        currentLevel = levelList.get(currentLevelDepth + 1);
+        currentLevel = levelList.get(getCurrentDepth() + 1);
         return true;
     }
 
     public boolean goHigher() {
-        int currentLevelDepth = levelList.indexOf(currentLevel);
-        if(currentLevelDepth == 0) {
+        if(getCurrentDepth() == 0) {
             System.out.println("Can't go up");
             return false;
         } else {
-            currentLevel = levelList.get(currentLevelDepth - 1);
+            currentLevel = levelList.get(getCurrentDepth() - 1);
             return true;
         }
     }
@@ -69,5 +67,9 @@ public class Map {
 
     public Level getCurrentLevel() {
         return currentLevel;
+    }
+
+    public int getCurrentDepth() {
+        return levelList.indexOf(currentLevel);
     }
 }

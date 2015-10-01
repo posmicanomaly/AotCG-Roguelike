@@ -741,7 +741,7 @@ public class Roguelike {
     private void initGui() {
         initMessageConsole();
         gameInformationConsole = new GameInformationConsole(gameInformationConsoleHeight,
-                gameInformationConsoleWidth, player);
+                gameInformationConsoleWidth, player, map);
         //gameInformationConsole.setBorder(true);
 
         inventorySideConsole = new InventorySideConsole(mapHeight, 20);

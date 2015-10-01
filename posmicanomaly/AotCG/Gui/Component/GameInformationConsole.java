@@ -2,6 +2,7 @@ package posmicanomaly.AotCG.Gui.Component;
 
 import posmicanomaly.AotCG.Component.Actor;
 import posmicanomaly.AotCG.Component.Colors;
+import posmicanomaly.AotCG.Component.Map;
 import posmicanomaly.AotCG.Component.Tile;
 
 import java.awt.*;
@@ -15,13 +16,15 @@ public class GameInformationConsole extends EnhancedConsole {
     private int turns;
     private int currentFrames;
     private int fps;
+    private Map map;
 
-    public GameInformationConsole(int height, int width, Actor player) {
+    public GameInformationConsole(int height, int width, Actor player, Map map) {
         super(height, width);
         this.player = player;
         turns = 0;
         currentFrames = 0;
         fps = 0;
+        this.map = map;
     }
 
     @Override
@@ -41,7 +44,7 @@ public class GameInformationConsole extends EnhancedConsole {
 
         ArrayList<String> placeHolder = new ArrayList<String>();
         int row = 0;
-        writeString("@: " + player.getLevel(), row, 0);
+        writeString("@: " + player.getLevel() + " (Depth " + map.getCurrentDepth() + ")", row, 0);
         row++;
         drawBar(row, 0, barWidth, Colors.HEALTH_DEFICIT, "");
         drawBar(row, 0, barWidth - ((player.getMaxHp() - player.getCurrentHp()) / healthPerChar), Colors.HEALTH_REMAINING, healthString);
