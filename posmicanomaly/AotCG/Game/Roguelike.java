@@ -355,7 +355,7 @@ public class Roguelike {
         int x = player.getTile().getX();
 
         ArrayList<Tile> fieldOfVisionTiles = FieldOfVision.calculateRayCastingFOVVisibleTiles(y, x, map
-                .getCurrentLevel(), 12);
+                .getCurrentLevel(), map.getWidth());
 
         for (Tile t : fieldOfVisionTiles) {
             t.setVisible(true);
