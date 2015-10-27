@@ -256,9 +256,9 @@ public class Roguelike {
     private void processMenuCommand(KeyEvent key) {
         switch (key.getKeyCode()) {
 
-                    /*
-                    Menu Toggle Input
-                     */
+            /*
+            Menu Toggle Input
+             */
             case KeyEvent.VK_M:
                 if (this.showMenu) {
                     this.showMenu = false;
@@ -386,10 +386,30 @@ public class Roguelike {
 
 
         for(Actor a : npcActors) {
-            moveActor(a, Direction.getRandomDirection());
+            if(actorInPlayerView(a)) {
+                //moveActor(a, Direction.getRandomDirection());
+                Direction direction = testAStar(a, player);
+                if(direction == null) {
+                    messageConsole.addMessage("processNpcActors() :: direction is null");
+                } else {
+                    moveActor(a, direction);
+                }
+            } else {
+                moveActor(a, Direction.getRandomDirection());
+            }
         }
     }
 
+    private boolean actorInPlayerView(Actor actor) {
+        for(Tile t : player.getVisibleTiles()) {
+            if(t.hasActor()) {
+                if(t.getActor().equals(actor)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
     private void processCombat(Actor firstAttacker, Actor secondAttacker) {
         // get power
@@ -424,6 +444,10 @@ public class Roguelike {
     }
 
     private boolean moveActor(Actor actor, Direction d) {
+        if(d == null) {
+            messageConsole.addMessage("moveActor(" + actor.hashCode() + ", " + d + ") error");
+            return false;
+        }
         // Obtain the current tile the actor is on
         Tile currentTile = actor.getTile();
 
@@ -823,9 +847,62 @@ public class Roguelike {
 
     }
 
+    private Direction testAStar(Actor source, Actor target) {
+        AStar astar = new AStar(map.getCurrentLevel());
+
+        Tile sourceTile = source.getTile();
+        Tile targetTile = target.getTile();
+
+        ArrayList<Tile> path = astar.getShortestPath(sourceTile, targetTile);
+
+        if(path == null) {
+            messageConsole.addMessage("testAStar() :: Path is null");
+        } else {
+            return getDirectionTowardsTile(sourceTile, path.get(0));
+        }
+        return null;
+    }
+
+    private Direction getDirectionTowardsTile(Tile sourceTile, Tile targetTile) {
+        int yd = sourceTile.getY() - targetTile.getY();
+        int xd = sourceTile.getX() - targetTile.getX();
+
+        if(Math.abs(yd) > Math.abs(xd)) {
+            if(yd < 0) {
+                return Direction.DOWN;
+            } else {
+                return Direction.UP;
+            }
+        }
+        else if (Math.abs(yd) < Math.abs(xd)) {
+            if(xd < 0) {
+                return Direction.RIGHT;
+            } else {
+                return Direction.LEFT;
+            }
+        }
+        else if(Math.abs(yd) == Math.abs(xd)) {
+            if(yd < 0 && xd < 0) {
+                return Direction.SE;
+            } else if(yd > 0 && xd > 0) {
+                return Direction.NW;
+            } else if( yd < 0 && xd > 0) {
+                return Direction.SW;
+            } else if(yd > 0 && xd < 0) {
+                return Direction.NE;
+            }
+        }
+        return null;
+    }
+
+    private Direction getDirectionTowardsActor(Actor source, Actor target) {
+        Tile sourceTile = source.getTile();
+        Tile targetTile = target.getTile();
+        return getDirectionTowardsTile(sourceTile, targetTile);
+    }
+
     public enum Direction {UP, DOWN, LEFT, RIGHT, NW, NE, SW, SE;
         public static Direction getRandomDirection() {
-
             return values()[rng.nextInt(values().length)];
         }
     }
