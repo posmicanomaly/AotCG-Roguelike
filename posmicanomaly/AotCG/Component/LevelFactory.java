@@ -1,5 +1,6 @@
 package posmicanomaly.AotCG.Component;
 
+import posmicanomaly.AotCG.Game.Roguelike;
 import posmicanomaly.libjsrte.Console.Symbol;
 import posmicanomaly.libjsrte.Util.ColorTools;
 
@@ -378,7 +379,7 @@ public abstract class LevelFactory {
      * @param feature
      */
     private static void addPoolFeature(Tile[][] level, int amount, Tile.Type feature) {
-        Random rng = new Random();
+        Random rng = Roguelike.rng;
         for(int i = 0; i < amount; i++) {
             boolean startTileFound = false;
             Tile startTile = null;
@@ -482,7 +483,7 @@ public abstract class LevelFactory {
             levelCreationTries++;
             // Make a blank map filled with walls
             result = makeBlankMap(height, width);
-            Random rng = new Random();
+            Random rng = Roguelike.rng;
             // Number of rooms to try and place
             final int NUMBER_OF_ROOMS = height * width;
 
@@ -585,7 +586,7 @@ public abstract class LevelFactory {
         processMap(result);
 
         addMonsters(result);
-        Random rng = new Random();
+        Random rng = Roguelike.rng;
         addPoolFeature(result, rng.nextInt(30) + 5, Tile.Type.CAVE_GRASS);
         addPoolFeature(result, rng.nextInt(10) + 5, Tile.Type.WATER);
         addDoorways(result, 4);
@@ -618,7 +619,7 @@ public abstract class LevelFactory {
         int actorsToAdd = 10;
         int actorsAdded = 0;
         do{
-            Random rng = new Random();
+            Random rng = Roguelike.rng;
             int y = rng.nextInt(height);
             int x = rng.nextInt(width);
             if (result[y][x].getType() == Tile.Type.FLOOR && !result[y][x].hasActor()) {
@@ -740,7 +741,7 @@ public abstract class LevelFactory {
     }
 
     private static void addStairs(Tile[][] result) {
-        Random rng = new Random();
+        Random rng = Roguelike.rng;
         int y, x;
         Tile t;
         boolean validTile = false;

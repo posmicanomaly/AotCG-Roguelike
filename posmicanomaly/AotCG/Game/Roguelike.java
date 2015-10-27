@@ -58,6 +58,8 @@ public class Roguelike {
     private Actor player;
     private KeyEvent lastKeyEvent;
 
+    public static Random rng;
+
     public Roguelike() {
 
         this.window = new Window(this.windowHeight, this.windowWidth, "AotCG", fontSize);
@@ -70,6 +72,7 @@ public class Roguelike {
 
         this.gui = new Gui();
 
+        rng = new Random();
 
         initGame();
 
@@ -513,7 +516,7 @@ public class Roguelike {
                         corpse.setName(nextTileActor.getCorpseName());
                         desiredTile.setItem(corpse);
 
-                        Random rng = new Random();
+
                         int baseExp = 10;
                         int expVariance = 3;
                         int randomExp = rng.nextInt((baseExp + expVariance) - (baseExp - expVariance) + 1) + (baseExp
@@ -598,7 +601,7 @@ public class Roguelike {
 
         Sets the backgroundColor of tile to a varied color based on the standard WATER_BG
          */
-        Random rng = new Random();
+
         if (tile.getType() == Tile.Type.WATER) {
             if (rng.nextInt(100) < 1) {
                 tile.setBackgroundColor(ColorTools.varyColor(Colors.WATER_BG, 0.7, 1.0, ColorTools.BaseColor.RGB));
@@ -706,6 +709,9 @@ public class Roguelike {
         showDefeatConsole = false;
         turns = 0;
         lastRenderTime = 0;
+
+        // Set seed
+        rng.setSeed(12345);
 
 
         initTitleScreen();
@@ -819,7 +825,7 @@ public class Roguelike {
 
     public enum Direction {UP, DOWN, LEFT, RIGHT, NW, NE, SW, SE;
         public static Direction getRandomDirection() {
-            Random rng = new Random();
+
             return values()[rng.nextInt(values().length)];
         }
     }

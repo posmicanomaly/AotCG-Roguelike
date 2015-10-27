@@ -1,5 +1,7 @@
 package posmicanomaly.AotCG.Component;
 
+import posmicanomaly.AotCG.Game.Roguelike;
+
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Random;
@@ -121,12 +123,12 @@ public class Level {
     }
 
     public Tile getRandomTile(Tile.Type type) {
-        Random rng = new Random();
+
         int y, x;
         Tile t;
         do {
-            y = rng.nextInt(height);
-            x = rng.nextInt(width);
+            y = Roguelike.rng.nextInt(height);
+            x = Roguelike.rng.nextInt(width);
             t = tileArray[y][x];
         } while(t.getType() != type);
 
