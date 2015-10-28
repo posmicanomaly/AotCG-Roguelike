@@ -50,21 +50,22 @@ public class GameInformationConsole extends EnhancedConsole {
         drawBar(row, 0, barWidth - ((player.getMaxHp() - player.getCurrentHp()) / healthPerChar), Colors.HEALTH_REMAINING, healthString);
 
         row++;
-        drawBar(row, 0, barWidth - ((player.getExperienceCap(player.getLevel()) - player.getExperience()) / expPerChar), Colors.EXPERIENCE, expString);
+        drawBar(row, 0, barWidth - ((player.getExperienceCap(player.getLevel()) - player.getExperience()) /
+                expPerChar), Colors.EXPERIENCE, expString);
         row++;
         writeString(powerString, row, 0);
         row++;
         placeHolder.add("Well");
         placeHolder.add("Here:");
-        if(player.isAlive()) {
-            if (player.getTile().hasItem()) {
-                placeHolder.add(player.getTile().getItem().getName());
-            }
-            for (String s : placeHolder) {
-                writeString(s, row, 0);
-                row++;
-            }
+
+        if (player.getTile().hasItem()) {
+            placeHolder.add(player.getTile().getItem().getName());
         }
+        for (String s : placeHolder) {
+            writeString(s, row, 0);
+            row++;
+        }
+
 
         row++;
         writeCenteredString("Visible", row);
