@@ -2,7 +2,6 @@ package posmicanomaly.AotCG.Screen;
 
 import posmicanomaly.libjsrte.Console.Console;
 
-import java.awt.datatransfer.DataFlavor;
 import java.util.ArrayList;
 
 /**

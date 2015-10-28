@@ -21,11 +21,18 @@ public class Actor extends Entity {
 
     private ArrayList<Tile> visibleTiles;
 
+    public void setCurrentPath(ArrayList<Tile> currentPath) {
+        this.currentPath = currentPath;
+    }
+
+    private ArrayList<Tile> currentPath;
+
     private int experience;
 
     public Actor(char symbol, Color color, Tile tile) {
         super(symbol, color, tile);
         visibleTiles = new ArrayList<Tile>();
+        currentPath = new ArrayList<>();
         setLevel(1);
         setMaxHp(1);
         setCurrentHp(getMaxHp());
@@ -162,5 +169,9 @@ public class Actor extends Entity {
 
     public ArrayList<Tile> getVisibleTiles() {
         return visibleTiles;
+    }
+
+    public ArrayList<Tile> getCurrentPath() {
+        return currentPath;
     }
 }

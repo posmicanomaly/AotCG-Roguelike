@@ -4,6 +4,7 @@ import posmicanomaly.AotCG.Component.Level;
 import posmicanomaly.AotCG.Component.Tile;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 /**
  * Created by Jesse Pospisil on 10/27/2015.
@@ -143,7 +144,9 @@ public class AStar {
                     shortestPath.add(parent.getTile());
                     parent = parent.getParent();
                 }
-
+                Collections.reverse(shortestPath);
+                // Remove the source tile
+                shortestPath.remove(0);
                 return shortestPath;
             }
 

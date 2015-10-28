@@ -1,7 +1,5 @@
 package posmicanomaly.AotCG.Component;
 
-import posmicanomaly.libjsrte.Util.ColorTools;
-
 import java.awt.*;
 
 /**

@@ -79,7 +79,7 @@ public class Roguelike {
         startGame();
 
         while (true) {
-           gameLoop();
+            gameLoop();
         }
     }
 
@@ -96,6 +96,23 @@ public class Roguelike {
             /**
              * Check for game state or victory/defeat console displayed
              */
+
+            /**
+             Check win condition
+             if giant was killed
+             and victoryConsole is null(not initialized yet)
+
+             If it is not null, then we've seen it and likely hit ESCAPE to keep playing
+             */
+            if (giantSlain && victoryConsole == null) {
+                initVictoryConsole();
+                showVictoryConsole = true;
+            }
+
+            if (!player.isAlive()) {
+                initDefeatConsole();
+                showDefeatConsole = true;
+            }
 
             // Title Screen
             // .
@@ -161,6 +178,7 @@ public class Roguelike {
                 Input.Command command = Input.processKey(key);
 
                 // Check command and act upon it
+                int prevTurns = turns;
                 if (command != null) {
                     switch (command) {
 
@@ -170,25 +188,6 @@ public class Roguelike {
                                 recalculateFOV = true;
                             }
                             turns++;
-
-                            /**
-                             Check win condition
-                             if giant was killed
-                             and victoryConsole is null(not initialized yet)
-
-                             If it is not null, then we've seen it and likely hit ESCAPE to keep playing
-                             */
-                            if (giantSlain && victoryConsole == null) {
-                                initVictoryConsole();
-                                showVictoryConsole = true;
-                            }
-
-                            if (!player.isAlive()) {
-                                initDefeatConsole();
-                                showDefeatConsole = true;
-                            }
-
-                            processNpcActors();
                             break;
 
                         case DEBUG:
@@ -203,12 +202,24 @@ public class Roguelike {
                             break;
                     }
                 }
-
                 // Recalculate field of vision if it was set to true
+                // This allows us to know what we're seeing next, since NPC turn is after player
+                // NPC need to know if they now see the player
                 if (recalculateFOV) {
                     //
                     calculateVision(player);
                 }
+                // Was there a turn just there?
+                if(prevTurns != turns) {
+                    // Then we need to do the NPC moves
+                    // if we do it in MOVEMENT, then we don't get a path immediately.
+                    processNpcActors();
+
+                    // Following all the NPC movement, we need to recalculate player view to see any new NPC
+                    calculateVision(player);
+                }
+
+
             }
 
             // Set lastKeyEent to this one that we just used, so we do not enter loop again
@@ -310,7 +321,7 @@ public class Roguelike {
                 messageConsole.addMessage("minFrameSpeed: " + minFrameSpeed);
                 break;
             case KeyEvent.VK_MINUS:
-                if(minFrameSpeed > 0) {
+                if (minFrameSpeed > 0) {
                     minFrameSpeed--;
                     messageConsole.addMessage("minFrameSpeed: " + minFrameSpeed);
                 }
@@ -354,56 +365,74 @@ public class Roguelike {
     }
 
     private void calculateVision(Actor actor) {
-        map.getCurrentLevel().toggleAllTilesVisible(false);
+        if(actor.equals(player)) {
+            map.getCurrentLevel().toggleAllTilesVisible(false);
+        }
         actor.clearVisibleTiles();
-        int y = player.getTile().getY();
-        int x = player.getTile().getX();
+        int y = actor.getTile().getY();
+        int x = actor.getTile().getX();
 
         ArrayList<Tile> fieldOfVisionTiles = FieldOfVision.calculateRayCastingFOVVisibleTiles(y, x, map
                 .getCurrentLevel(), map.getWidth() / 2);
 
+
         for (Tile t : fieldOfVisionTiles) {
-            t.setVisible(true);
-            t.setExplored(true);
+            if(actor.equals(player)) {
+                t.setVisible(true);
+                t.setExplored(true);
+            }
             actor.addVisibleTile(t);
         }
     }
 
     private void processNpcActors() {
-        ArrayList<Actor> npcActors = new ArrayList<>();
-        Level currentLevel = map.getCurrentLevel();
-        Tile[][] tiles = currentLevel.getTileArray();
-        for(int y = 0; y < tiles.length; y++) {
-            for(int x = 0; x < tiles[y].length; x++) {
-                Tile t = tiles[y][x];
-                if(t.hasActor()) {
-                    if(!t.getActor().equals(player)) {
-                        npcActors.add(t.getActor());
+        ArrayList<Actor> npcActors = map.getCurrentLevel().getActors();
+        npcActors.remove(player);
+
+        for (Actor a : npcActors) {
+            // Check if player is dead
+            if(!player.isAlive()) {
+                continue;
+            }
+            // No zombies yet
+            if(!a.isAlive()) {
+                continue;
+            }
+            // Player in view
+            // (check both views, so we minimize "walking shadows")
+            // .
+            // .
+            if (actorCanSeeActor(a, player) && actorCanSeeActor(player, a)) {
+                // get a new AStar path to the player
+                a.setCurrentPath(map.getCurrentLevel().getAstar().getShortestPath(a.getTile(), player.getTile()));
+                if (a.getCurrentPath() != null) {
+                   if(moveActor(a, a.getCurrentPath().get(0))) {
+                       a.getCurrentPath().remove(0);
                     }
                 }
             }
-        }
-
-
-        for(Actor a : npcActors) {
-            if(actorInPlayerView(a)) {
-                //moveActor(a, Direction.getRandomDirection());
-                Direction direction = testAStar(a, player);
-                if(direction == null) {
-                    messageConsole.addMessage("processNpcActors() :: direction is null");
-                } else {
-                    moveActor(a, direction);
+            // Player's not in npc's view, but has a current path to follow
+            // .
+            // .
+            else if(a.getCurrentPath().size() > 0) {
+                if(moveActor(a, a.getCurrentPath().get(0))) {
+                    a.getCurrentPath().remove(0);
                 }
-            } else {
+            }
+            // Not in player view
+            else {
                 moveActor(a, Direction.getRandomDirection());
+            }
+            if(a.isAlive()) {
+                calculateVision(a);
             }
         }
     }
 
-    private boolean actorInPlayerView(Actor actor) {
-        for(Tile t : player.getVisibleTiles()) {
+    private boolean actorCanSeeActor(Actor source, Actor target) {
+        for(Tile t : source.getVisibleTiles()) {
             if(t.hasActor()) {
-                if(t.getActor().equals(actor)) {
+                if(t.getActor().equals(target)) {
                     return true;
                 }
             }
@@ -411,7 +440,28 @@ public class Roguelike {
         return false;
     }
 
-    private void processCombat(Actor firstAttacker, Actor secondAttacker) {
+    private boolean actorInPlayerView(Actor actor) {
+        return actorCanSeeActor(player, actor);
+    }
+
+    private void processCombat(Actor actor1, Actor actor2) {
+
+        // Determine who goes first
+
+        Actor firstAttacker = null;
+        Actor secondAttacker = null;
+
+        if (actor1.getSpeed() > actor2.getSpeed()) {
+            firstAttacker = actor1;
+            secondAttacker = actor2;
+        } else if (actor1.getSpeed() < actor2.getSpeed()) {
+            firstAttacker = actor2;
+            secondAttacker = actor1;
+        } else if (actor1.getSpeed() == actor2.getSpeed()) {
+            firstAttacker = actor1;
+            secondAttacker = actor2;
+        }
+
         // get power
         int firstAttackerDamage = firstAttacker.getPower();
         int secondAttackerDamage = secondAttacker.getPower();
@@ -440,7 +490,155 @@ public class Roguelike {
             }
         }
 
-        messageConsole.addMessage(combatMessage);
+        // If the player is watching, or is involved, show the message
+        // Otherwise, show some "noise" message
+        if(actor1.equals(player) || actor2.equals(player)) {
+            messageConsole.addMessage(combatMessage);
+        } else if(actorInPlayerView(actor1) || actorInPlayerView(actor2)) {
+            messageConsole.addMessage(combatMessage);
+        } else {
+            messageConsole.addMessage("You hear noise");
+        }
+    }
+
+    private boolean moveActor(Actor actor, Tile t) {
+        Tile currentTile = actor.getTile();
+        Tile desiredTile = t;
+        // If the tile is null, it is likely out of range
+        if (desiredTile == null) {
+            messageConsole.addMessage("Tile is null");
+            return false;
+        }
+
+        // If the tile is blocked(terrain), we can't go there, likely a wall at this point
+        else if (desiredTile.isBlocked()) {
+            if (actor.equals(player))
+                messageConsole.addMessage("You bumped into a wall");
+            return false;
+        }
+
+        // If the tile already has an actor, and the actor is alive, we need to do some combat
+        else if (desiredTile.hasActor() && desiredTile.getActor().isAlive()) {
+            processCombat(actor, desiredTile.getActor());
+
+            Actor winner = null;
+            Actor loser = null;
+            boolean bothDied = false;
+
+            if(actor.isAlive() && desiredTile.getActor().isAlive()) {
+                //messageConsole.addMessage("moveActor() :: both actors still alive");
+                return false;
+            }
+
+            if(actor.isAlive() && !desiredTile.getActor().isAlive()) {
+                winner = actor;
+                loser = desiredTile.getActor();
+                //messageConsole.addMessage("moveActor() :: W: " + winner.getName() + " L: " + loser.getName());
+            }
+            else if(!actor.isAlive() && desiredTile.getActor().isAlive()) {
+                winner = desiredTile.getActor();
+                loser = actor;
+               // messageConsole.addMessage("moveActor() :: W: " + winner.getName() + " L: " + loser.getName());
+            }
+            else if(!actor.isAlive() && !desiredTile.getActor().isAlive()) {
+                bothDied = true;
+                //messageConsole.addMessage("moveActor() :: Both died");
+            }
+
+            if(bothDied) {
+                //messageConsole.addMessage("Both died");
+                return false;
+            }
+
+            // Loser gets a corpse
+            Tile loserTile = loser.getTile();
+            loser.setAlive(false);
+            if(!loser.equals(player)) {
+                loser.setTile(null);
+            }
+            Item corpse = new Item ('%', Color.gray, loserTile);
+            corpse.setName(loser.getCorpseName());
+            loserTile.setItem(corpse);
+            if(!loser.equals(player)) {
+                loserTile.setActor(null);
+            }
+
+            // Winner gets reward, if player
+            if(winner.equals(player)) {
+                //messageConsole.addMessage("moveActor() :: W: " + winner.getName() + " (should be player)");
+                // Award exp
+                int baseExp = 10;
+                int expVariance = 3;
+                int randomExp = rng.nextInt((baseExp + expVariance) - (baseExp - expVariance) + 1) + (baseExp
+                        - expVariance);
+
+                winner.addExperience(randomExp);
+                messageConsole.addMessage(winner.getName() + " killed " + loser.getName() + " (" + randomExp +
+                        " exp)");
+
+
+                    if (loser.getName().equals("Giant")) {
+                        messageConsole.addMessage("Main quest complete: Slay Giant (350 exp)");
+                        winner.addExperience(350);
+                        giantSlain = true;
+                    }
+
+
+                int prevLevel = winner.getLevel();
+                winner.evaulateLevel();
+                if (prevLevel < winner.getLevel()) {
+                    messageConsole.addMessage(winner.getName() + " leveled up: " + winner.getLevel());
+                }
+                return false;
+            }
+
+        }
+        // The tile is valid, not blocked, and has no "living" actor
+        // We can move the actor there
+        else {
+                /*
+                I don't like this
+                 */
+            if (actor.equals(player)) {
+                if (desiredTile.getType() == Tile.Type.STAIRS_DOWN) {
+                    boolean levelChanged = map.goDeeper();
+                    if (levelChanged) {
+                        desiredTile = map.getCurrentLevel().getUpStairs();
+                    }
+                } else if (desiredTile.getType() == Tile.Type.STAIRS_UP) {
+                    boolean levelChanged = map.goHigher();
+                    if (levelChanged) {
+                        desiredTile = map.getCurrentLevel().getDownStairs();
+                    }
+                }
+            }
+            Tile previousTile = currentTile;
+
+            // set actor's tile
+            actor.setTile(desiredTile);
+            // set tile's actor
+            desiredTile.setActor(actor);
+
+            // Secret wall?
+            // .
+            // .
+
+            if (desiredTile.getType() == Tile.Type.WALL_SECRET) {
+                // Set type to DOOR
+                desiredTile.setType(Tile.Type.DOOR);
+                LevelFactory.initTile(desiredTile);
+            }
+
+            // remove actor from old tile
+
+            previousTile.setActor(null);
+
+            // Return true, a move was made
+            return true;
+
+        }
+        // Return false, no move was made
+        return false;
     }
 
     private boolean moveActor(Actor actor, Direction d) {
@@ -481,134 +679,9 @@ public class Roguelike {
         if (move) {
             // set desiredTile to the tile located at the y, x coordinates
             desiredTile = map.getCurrentLevel().getTile(y, x);
-
-            // If the tile is null, it is likely out of range
-            if (desiredTile == null) {
-                messageConsole.addMessage("Tile is null");
-                return false;
-            }
-
-            // If the tile is blocked(terrain), we can't go there, likely a wall at this point
-            else if (desiredTile.isBlocked()) {
-                if(actor.equals(player))
-                    messageConsole.addMessage("You bumped into a wall");
-                return false;
-            }
-
-            // If the tile already has an actor, and the actor is alive, we need to do some combat
-            else if (desiredTile.hasActor() && desiredTile.getActor().isAlive()) {
-                /**
-                 * Player only combat hack
-                 */
-                if (actor.equals(player) || desiredTile.getActor().equals(player)) {
-                    // Combat
-                    // .
-                    // .
-
-                    Actor nextTileActor = desiredTile.getActor();
-
-
-                    // Determine who goes first
-
-                    Actor firstAttacker = null;
-                    Actor secondAttacker = null;
-
-                    if (actor.getSpeed() > nextTileActor.getSpeed()) {
-                        firstAttacker = actor;
-                        secondAttacker = nextTileActor;
-                    } else if (actor.getSpeed() < nextTileActor.getSpeed()) {
-                        firstAttacker = nextTileActor;
-                        secondAttacker = actor;
-                    } else if (actor.getSpeed() == nextTileActor.getSpeed()) {
-                        firstAttacker = actor;
-                        secondAttacker = nextTileActor;
-                    }
-
-                    processCombat(firstAttacker, secondAttacker);
-
-
-                    // If nextTileActor was killed
-                    // .
-                    // .
-
-                    if (!nextTileActor.isAlive()) {
-                        nextTileActor.setAlive(false);
-                        nextTileActor.setTile(null);
-                        desiredTile.setActor(null);
-
-                        Item corpse = new Item('%', Color.gray, desiredTile);
-                        corpse.setName(nextTileActor.getCorpseName());
-                        desiredTile.setItem(corpse);
-
-
-                        int baseExp = 10;
-                        int expVariance = 3;
-                        int randomExp = rng.nextInt((baseExp + expVariance) - (baseExp - expVariance) + 1) + (baseExp
-                                - expVariance);
-
-                        actor.addExperience(randomExp);
-                        messageConsole.addMessage(actor.getName() + " killed " + nextTileActor.getName() + " (" + randomExp + " exp)");
-                        if (nextTileActor.getName().equals("Giant")) {
-                            messageConsole.addMessage("Main quest complete: Slay Giant (350 exp)");
-                            actor.addExperience(350);
-                            giantSlain = true;
-                        }
-                        int prevLevel = actor.getLevel();
-                        actor.evaulateLevel();
-                        if (prevLevel < actor.getLevel()) {
-                            messageConsole.addMessage(actor.getName() + " leveled up: " + actor.getLevel());
-                        }
-                        return false;
-                    }
-                }
-            }
-            // The tile is valid, not blocked, and has no "living" actor
-            // We can move the actor there
-            else {
-                /*
-                I don't like this
-                 */
-                if(actor.equals(player)) {
-                    if (desiredTile.getType() == Tile.Type.STAIRS_DOWN) {
-                        boolean levelChanged = map.goDeeper();
-                        if (levelChanged) {
-                            desiredTile = map.getCurrentLevel().getUpStairs();
-                        }
-                    } else if (desiredTile.getType() == Tile.Type.STAIRS_UP) {
-                        boolean levelChanged = map.goHigher();
-                        if (levelChanged) {
-                            desiredTile = map.getCurrentLevel().getDownStairs();
-                        }
-                    }
-                }
-                Tile previousTile = currentTile;
-
-                // set actor's tile
-                actor.setTile(desiredTile);
-                // set tile's actor
-                desiredTile.setActor(actor);
-
-                // Secret wall?
-                // .
-                // .
-
-                if (desiredTile.getType() == Tile.Type.WALL_SECRET) {
-                    // Set type to DOOR
-                    desiredTile.setType(Tile.Type.DOOR);
-                    LevelFactory.initTile(desiredTile);
-                }
-
-                // remove actor from old tile
-
-                previousTile.setActor(null);
-
-                // Return true, a move was made
-                return true;
-
-            }
-
+            return moveActor(actor, desiredTile);
         }
-        // Return false, no move was made
+        // Move was false
         return false;
     }
 
@@ -661,18 +734,39 @@ public class Roguelike {
                 color = tile.getColor().brighter().brighter();
             }
             bgColor = tile.getBackgroundColor().brighter().brighter();
-        } else if (tile.isExplored()) {
+        }
+        else if (tile.isExplored()) {
             glyph = tile.getSymbol();
             color = tile.getColor().darker().darker();
             bgColor = tile.getBackgroundColor().darker().darker();
-        } else {
+        }
+        else {
             glyph = ' ';
             color = Color.black;
             bgColor = Color.black;
         }
+
+
         mapConsole.setColor(tile.getY(), tile.getX(), color);
         mapConsole.setBgColor(tile.getY(), tile.getX(), bgColor);
         mapConsole.setChar(tile.getY(), tile.getX(), glyph);
+    }
+
+    private void showActorPaths() {
+        /**
+         * Debug
+         *
+         * Show paths
+         */
+        ArrayList<Actor> actors = map.getCurrentLevel().getActors();
+
+        for(Actor a : actors) {
+
+            for(Tile t : a.getCurrentPath()) {
+                Color pathColor = a.getColor().darker();
+                mapConsole.setBgColor(t.getY(), t.getX(), pathColor);
+            }
+        }
     }
 
     private void drawGame(Console rootConsole) {
@@ -681,6 +775,9 @@ public class Roguelike {
 
             // Refresh the map buffer
             copyMapToBuffer();
+
+            // Debug
+            showActorPaths();
 
             this.mapConsole.copyBufferTo(rootConsole, 0, gameInformationConsoleWidth);
 
@@ -748,6 +845,10 @@ public class Roguelike {
 
         initPlayer();
 
+        for(Actor a : map.getCurrentLevel().getActors()) {
+            calculateVision(a);
+        }
+
 
 
         // Init the GUI
@@ -806,7 +907,6 @@ public class Roguelike {
         // Create player at that tile and set them up
         player = ActorFactory.createActor(ActorFactory.TYPE.PLAYER, startingTile);
         startingTile.setActor(player);
-        calculateVision(player);
     }
 
     private void initGui() {
@@ -847,21 +947,7 @@ public class Roguelike {
 
     }
 
-    private Direction testAStar(Actor source, Actor target) {
-        AStar astar = new AStar(map.getCurrentLevel());
 
-        Tile sourceTile = source.getTile();
-        Tile targetTile = target.getTile();
-
-        ArrayList<Tile> path = astar.getShortestPath(sourceTile, targetTile);
-
-        if(path == null) {
-            messageConsole.addMessage("testAStar() :: Path is null");
-        } else {
-            return getDirectionTowardsTile(sourceTile, path.get(0));
-        }
-        return null;
-    }
 
     private Direction getDirectionTowardsTile(Tile sourceTile, Tile targetTile) {
         int yd = sourceTile.getY() - targetTile.getY();

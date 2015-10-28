@@ -56,12 +56,14 @@ public class GameInformationConsole extends EnhancedConsole {
         row++;
         placeHolder.add("Well");
         placeHolder.add("Here:");
-        if(player.getTile().hasItem()) {
-            placeHolder.add(player.getTile().getItem().getName());
-        }
-        for (String s : placeHolder) {
-            writeString(s, row, 0);
-            row++;
+        if(player.isAlive()) {
+            if (player.getTile().hasItem()) {
+                placeHolder.add(player.getTile().getItem().getName());
+            }
+            for (String s : placeHolder) {
+                writeString(s, row, 0);
+                row++;
+            }
         }
 
         row++;

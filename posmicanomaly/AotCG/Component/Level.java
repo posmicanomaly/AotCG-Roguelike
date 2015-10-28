@@ -1,22 +1,23 @@
 package posmicanomaly.AotCG.Component;
 
+import posmicanomaly.AotCG.Game.AStar;
 import posmicanomaly.AotCG.Game.Roguelike;
 
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.Random;
 
 /**
  * Created by Jesse Pospisil on 8/17/2015.
  */
 public class Level {
     private int height, width;
-
+    private AStar astar;
     private Tile[][] tileArray;
 
     public Level(int height, int width) {
         this.height = height;
         this.width = width;
+        astar = new AStar(this);
         init();
     }
 
@@ -143,6 +144,18 @@ public class Level {
         return tileArray;
     }
 
+    public ArrayList<Actor> getActors() {
+        ArrayList<Actor> result = new ArrayList<>();
+        for(int y = 0; y < tileArray.length; y++) {
+            for(int x = 0; x < tileArray[y].length; x++) {
+                if(tileArray[y][x].hasActor()) {
+                    result.add(tileArray[y][x].getActor());
+                }
+            }
+        }
+        return result;
+    }
+
     public boolean inBounds(int y, int x) {
         return y >= 0 && y < height && x >= 0 && x < width;
     }
@@ -153,5 +166,9 @@ public class Level {
 
     public Tile getDownStairs() {
         return getRandomTile(Tile.Type.STAIRS_DOWN);
+    }
+
+    public AStar getAstar() {
+        return astar;
     }
 }
