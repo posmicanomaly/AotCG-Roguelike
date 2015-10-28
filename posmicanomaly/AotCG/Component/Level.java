@@ -13,11 +13,13 @@ public class Level {
     private int height, width;
     private AStar astar;
     private Tile[][] tileArray;
+    private int turnExited;
 
     public Level(int height, int width) {
         this.height = height;
         this.width = width;
         astar = new AStar(this);
+        turnExited = -1;
         init();
     }
 
@@ -170,5 +172,13 @@ public class Level {
 
     public AStar getAstar() {
         return astar;
+    }
+
+    public void setTurnExited(int turnExited) {
+        this.turnExited = turnExited;
+    }
+
+    public int getTurnExited() {
+        return turnExited;
     }
 }

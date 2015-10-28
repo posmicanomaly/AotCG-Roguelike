@@ -1,5 +1,7 @@
 package posmicanomaly.AotCG.Component;
 
+import posmicanomaly.AotCG.Game.Roguelike;
+
 import java.awt.*;
 import java.util.ArrayList;
 
@@ -27,6 +29,7 @@ public class Map {
             System.out.println("Making new level to go deeper");
             levelList.add(makeMap(height, width));
         }
+        currentLevel.setTurnExited(Roguelike.turns);
         currentLevel = levelList.get(getCurrentDepth() + 1);
         return true;
     }
@@ -36,6 +39,7 @@ public class Map {
             System.out.println("Can't go up");
             return false;
         } else {
+            currentLevel.setTurnExited(Roguelike.turns);
             currentLevel = levelList.get(getCurrentDepth() - 1);
             return true;
         }

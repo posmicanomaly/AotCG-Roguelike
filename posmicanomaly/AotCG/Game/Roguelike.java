@@ -45,7 +45,7 @@ public class Roguelike {
     boolean showDefeatConsole;
     Map map;
     private Console mapConsole;
-    private int turns;
+    public static int turns;
     private Gui gui;
     private MessageConsole messageConsole;
     private GameInformationConsole gameInformationConsole;
@@ -253,7 +253,7 @@ public class Roguelike {
         // .
 
         // fpsTimerStart is initialized in startGame()
-        // if over 1 second or more has passed, set the currentFrames to lastFramesPerSecond
+        // if 1 second or more has passed, set the currentFrames to lastFramesPerSecond
         if (System.currentTimeMillis() - fpsTimerStart >= 1000) {
             lastFramesPerSecond = currentFrames;
 
@@ -292,9 +292,9 @@ public class Roguelike {
     private void processDebugCommand(KeyEvent key) {
         switch (key.getKeyCode()) {
 
-                    /*
-                    DEBUG Input
-                     */
+            /*
+            DEBUG Input
+             */
             case KeyEvent.VK_F:
                 LevelFactory.DEBUG_FLOOD_FILL(map.getCurrentLevel().getTileArray());
                 LevelFactory.DEBUG_PROCESS_MAP(map.getCurrentLevel().getTileArray());
@@ -603,11 +603,29 @@ public class Roguelike {
                 if (desiredTile.getType() == Tile.Type.STAIRS_DOWN) {
                     boolean levelChanged = map.goDeeper();
                     if (levelChanged) {
+                        System.out.println("turnsExit: " + map.getCurrentLevel().getTurnExited());
+                        if(map.getCurrentLevel().getTurnExited() != -1) {
+                            int catchup = 0;
+                            for (int i = map.getCurrentLevel().getTurnExited(); i < Roguelike.turns; i++) {
+                                processNpcActors();
+                                catchup++;
+                            }
+                            System.out.println("level caught up, processNpcActors() " + catchup + " times");
+                        }
                         desiredTile = map.getCurrentLevel().getUpStairs();
                     }
                 } else if (desiredTile.getType() == Tile.Type.STAIRS_UP) {
                     boolean levelChanged = map.goHigher();
                     if (levelChanged) {
+                        System.out.println("turnsExit: " + map.getCurrentLevel().getTurnExited());
+                        if(map.getCurrentLevel().getTurnExited() != -1) {
+                            int catchup = 0;
+                            for (int i = map.getCurrentLevel().getTurnExited(); i < Roguelike.turns; i++) {
+                                processNpcActors();
+                                catchup++;
+                            }
+                            System.out.println("level caught up, processNpcActors() " + catchup + " times");
+                        }
                         desiredTile = map.getCurrentLevel().getDownStairs();
                     }
                 }
@@ -761,9 +779,15 @@ public class Roguelike {
         ArrayList<Actor> actors = map.getCurrentLevel().getActors();
 
         for(Actor a : actors) {
-
+            int tRed, tGreen, tBlue;
+            Color pathColor;
             for(Tile t : a.getCurrentPath()) {
-                Color pathColor = a.getColor().darker();
+                tRed = t.getBackgroundColor().getRed();
+                tGreen = t.getBackgroundColor().getGreen();
+                tBlue = t.getBackgroundColor().getBlue();
+
+                int shimmer = Roguelike.rng.nextInt(20) + 100;
+                pathColor = new Color(tRed + shimmer, tGreen, tBlue).brighter();
                 mapConsole.setBgColor(t.getY(), t.getX(), pathColor);
             }
         }
@@ -832,7 +856,7 @@ public class Roguelike {
         lastRenderTime = 0;
 
         // Set seed
-        rng.setSeed(12345);
+        //rng.setSeed(12345);
 
 
         initTitleScreen();
