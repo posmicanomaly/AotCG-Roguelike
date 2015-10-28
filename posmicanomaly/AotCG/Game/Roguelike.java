@@ -32,6 +32,8 @@ public class Roguelike {
     int mapWidth;
     int mapDepth = 10;
     long lastRenderTime;
+    long defaultRefreshIntervalMs = 500;
+    long refreshIntervalMs;
     long minFrameSpeed = 40;
     int currentFrames;
     int lastFramesPerSecond;
@@ -58,9 +60,17 @@ public class Roguelike {
     private Actor player;
     private KeyEvent lastKeyEvent;
 
+    private int gameLoopsWithoutInput;
+
+    private long gameLoopRedrawTimeStart = 0;
+
+    boolean redrawGame;
+
     public static Random rng;
 
     public Roguelike() {
+
+        System.setProperty("sun.java2d.opengl", "true");
 
         this.window = new Window(this.windowHeight, this.windowWidth, "AotCG", fontSize);
         //this.window.getMainPanel().getRootConsole().setBorder(true);
@@ -74,9 +84,13 @@ public class Roguelike {
 
         rng = new Random();
 
-        initGame();
+        refreshIntervalMs = defaultRefreshIntervalMs;
+        gameLoopsWithoutInput = 0;
 
+        initGame();
+        redrawGame = true;
         startGame();
+        redrawGame = true;
 
         while (true) {
             gameLoop();
@@ -89,6 +103,7 @@ public class Roguelike {
 
     private void gameLoop() {
         long startTime = System.currentTimeMillis();
+
 
         // Check for key input
         if (!this.window.getLastKeyEvent().equals(this.lastKeyEvent)) {
@@ -187,15 +202,18 @@ public class Roguelike {
                             if (moveActor(player, direction)) {
                                 recalculateFOV = true;
                             }
+                            redrawGame = true;
                             turns++;
                             break;
 
                         case DEBUG:
                             processDebugCommand(key);
+                            redrawGame = true;
                             break;
 
                         case MENU:
                             processMenuCommand(key);
+                            redrawGame = true;
                             break;
 
                         default:
@@ -208,6 +226,7 @@ public class Roguelike {
                 if (recalculateFOV) {
                     //
                     calculateVision(player);
+                    redrawGame = true;
                 }
                 // Was there a turn just there?
                 if(prevTurns != turns) {
@@ -217,6 +236,7 @@ public class Roguelike {
 
                     // Following all the NPC movement, we need to recalculate player view to see any new NPC
                     calculateVision(player);
+                    redrawGame = true;
                 }
 
 
@@ -224,29 +244,57 @@ public class Roguelike {
 
             // Set lastKeyEent to this one that we just used, so we do not enter loop again
             this.lastKeyEvent = this.window.getLastKeyEvent();
+            gameLoopsWithoutInput = 0;
+            refreshIntervalMs = defaultRefreshIntervalMs;
+        } else {
+            gameLoopsWithoutInput++;
+            if(gameLoopsWithoutInput % 100 == 0) {
+                refreshIntervalMs *= 2;
+                if(refreshIntervalMs > 20000) {
+                    refreshIntervalMs = 20000;
+                }
+            }
         }
 
-        // Draw the game
-        // TODO: draw only if we need to, to improve CPU usage
-        this.drawGame(this.window.getMainPanel().getRootConsole());
+        if(redrawGame) {
+            // Draw the game
+            // TODO: draw only if we need to, to improve CPU usage
+            this.drawGame(this.window.getMainPanel().getRootConsole());
+            redrawGame = false;
+            gameLoopRedrawTimeStart = System.currentTimeMillis();
+            currentFrames++;
+            long remainingTime = minFrameSpeed - (System.currentTimeMillis() - startTime);
 
+            // During initialization, this time may go negative. Set to 0 if this happens to prevent exception.
+            if (remainingTime < 0) {
+                remainingTime = 0;
+            }
+
+            // Sleep for whatever time we have remaining to maintain the desired FPS
+            try {
+                Thread.sleep(remainingTime);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        } else {
+            try {
+                Thread.sleep(minFrameSpeed);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        if(System.currentTimeMillis() - gameLoopRedrawTimeStart > refreshIntervalMs) {
+            redrawGame = true;
+        }
+
+        /**
+         * Check if we need to force a redraw for next loop. Idle
+         */
         // Determine remaining time in frame based on when we started loop, to after we've drawn the game
-        long remainingTime = minFrameSpeed - (System.currentTimeMillis() - startTime);
 
-        // During initialization, this time may go negative. Set to 0 if this happens to prevent exception.
-        if (remainingTime < 0) {
-            remainingTime = 0;
-        }
-
-        // Sleep for whatever time we have remaining to maintain the desired FPS
-        try {
-            Thread.sleep(remainingTime);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
 
         // Increment our current frames
-        currentFrames++;
+
 
         // Determine FPS
         // .
@@ -718,11 +766,11 @@ public class Roguelike {
          */
 
         if (tile.getType() == Tile.Type.WATER) {
-            if (rng.nextInt(100) < 1) {
+            if (rng.nextInt(100) < 50) {
                 tile.setBackgroundColor(ColorTools.varyColor(Colors.WATER_BG, 0.7, 1.0, ColorTools.BaseColor.RGB));
 
             }
-            if (rng.nextInt(100) < 1) {
+            if (rng.nextInt(100) < 50) {
                 tile.setColor(ColorTools.varyColor(Colors.WATER, 0.7, 1.0, ColorTools.BaseColor.RGB));
                 if (tile.getSymbol() == Symbol.ALMOST_EQUAL_TO) {
                     tile.setSymbol('=');
