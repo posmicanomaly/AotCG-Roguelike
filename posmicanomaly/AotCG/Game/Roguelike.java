@@ -3,9 +3,7 @@ package posmicanomaly.AotCG.Game;
 import posmicanomaly.AotCG.Component.*;
 import posmicanomaly.AotCG.Gui.Component.EnhancedConsole;
 import posmicanomaly.AotCG.Gui.Component.GameInformationConsole;
-import posmicanomaly.AotCG.Gui.Component.InventorySideConsole;
 import posmicanomaly.AotCG.Gui.Component.MessageConsole;
-import posmicanomaly.AotCG.Gui.Gui;
 import posmicanomaly.AotCG.Screen.Title;
 import posmicanomaly.libjsrte.Console.Console;
 import posmicanomaly.libjsrte.Console.Symbol;
@@ -22,6 +20,14 @@ import java.util.Random;
  */
 public class Roguelike {
 
+    public static Random rng;
+    public static int turns;
+    protected Console victoryConsole;
+    protected Console defeatConsole;
+    protected MessageConsole messageConsole;
+    protected GameInformationConsole gameInformationConsole;
+    protected EnhancedConsole inventorySideConsole;
+    protected Console menuWindow;
     Window window;
     int fontSize = 24;
     int windowHeight = 40;
@@ -30,7 +36,6 @@ public class Roguelike {
     int messageWidth;
     int mapHeight;
     int mapWidth;
-    int mapDepth = 10;
     long lastRenderTime;
     long defaultRefreshIntervalMs = 500;
     long refreshIntervalMs;
@@ -46,33 +51,24 @@ public class Roguelike {
     boolean showVictoryConsole;
     boolean showDefeatConsole;
     Map map;
+    boolean redrawGame;
     private Console mapConsole;
-    public static int turns;
     private Gui gui;
-    private MessageConsole messageConsole;
-    private GameInformationConsole gameInformationConsole;
-    private EnhancedConsole inventorySideConsole;
-    private Console menuWindow;
+    private Input input;
+    private Process process;
     private Title title;
-    private Console victoryConsole;
-    private Console defeatConsole;
     private State currentState;
     private Actor player;
     private KeyEvent lastKeyEvent;
-
     private int gameLoopsWithoutInput;
-
     private long gameLoopRedrawTimeStart = 0;
-
-    boolean redrawGame;
-
-    public static Random rng;
+    private Console rootConsole;
 
     public Roguelike() {
-
         System.setProperty("sun.java2d.opengl", "true");
 
         this.window = new Window(this.windowHeight, this.windowWidth, "AotCG", fontSize);
+        rootConsole = this.window.getMainPanel().getRootConsole();
         //this.window.getMainPanel().getRootConsole().setBorder(true);
 
         this.messageWidth = this.windowWidth - gameInformationConsoleWidth;
@@ -80,9 +76,11 @@ public class Roguelike {
         this.mapWidth = this.windowWidth - 2 - gameInformationConsoleWidth;
         this.mapHeight = this.windowHeight - 1 - this.messageHeight;
 
-        this.gui = new Gui();
+        this.gui = new Gui(this);
 
         rng = new Random();
+        input = new Input(this);
+        process = new Process(this);
 
         refreshIntervalMs = defaultRefreshIntervalMs;
         gameLoopsWithoutInput = 0;
@@ -99,6 +97,10 @@ public class Roguelike {
 
     public static void main(String[] args) {
         new Roguelike();
+    }
+
+    public int getTurns() {
+        return turns;
     }
 
     private void gameLoop() {
@@ -120,12 +122,12 @@ public class Roguelike {
              If it is not null, then we've seen it and likely hit ESCAPE to keep playing
              */
             if (giantSlain && victoryConsole == null) {
-                initVictoryConsole();
+                gui.initVictoryConsole();
                 showVictoryConsole = true;
             }
 
             if (!player.isAlive()) {
-                initDefeatConsole();
+                gui.initDefeatConsole();
                 showDefeatConsole = true;
             }
 
@@ -190,7 +192,7 @@ public class Roguelike {
                 KeyEvent key = this.window.getLastKeyEvent();
 
                 // Obtain the command related to the keypress determined by game state
-                Input.Command command = Input.processKey(key);
+                Input.Command command = input.processKey(key);
 
                 // Check command and act upon it
                 int prevTurns = turns;
@@ -198,8 +200,8 @@ public class Roguelike {
                     switch (command) {
 
                         case MOVEMENT:
-                            Direction direction = getPlayerMovementDirection(key);
-                            if (moveActor(player, direction)) {
+                            Input.Direction direction = input.getPlayerMovementDirection(key);
+                            if (process.moveActor(player, direction)) {
                                 recalculateFOV = true;
                             }
                             redrawGame = true;
@@ -207,12 +209,12 @@ public class Roguelike {
                             break;
 
                         case DEBUG:
-                            processDebugCommand(key);
+                            input.processDebugCommand(key, this);
                             redrawGame = true;
                             break;
 
                         case MENU:
-                            processMenuCommand(key);
+                            input.processMenuCommand(key, this);
                             redrawGame = true;
                             break;
 
@@ -225,17 +227,17 @@ public class Roguelike {
                 // NPC need to know if they now see the player
                 if (recalculateFOV) {
                     //
-                    calculateVision(player);
+                    process.calculateVision(player);
                     redrawGame = true;
                 }
                 // Was there a turn just there?
                 if(prevTurns != turns) {
                     // Then we need to do the NPC moves
                     // if we do it in MOVEMENT, then we don't get a path immediately.
-                    processNpcActors();
+                    process.processNpcActors();
 
                     // Following all the NPC movement, we need to recalculate player view to see any new NPC
-                    calculateVision(player);
+                    process.calculateVision(player);
                     redrawGame = true;
                 }
 
@@ -310,445 +312,6 @@ public class Roguelike {
             // Reset fpsTimerStart
             fpsTimerStart = System.currentTimeMillis();
         }
-    }
-
-    private void processMenuCommand(KeyEvent key) {
-        switch (key.getKeyCode()) {
-
-            /*
-            Menu Toggle Input
-             */
-            case KeyEvent.VK_M:
-                if (this.showMenu) {
-                    this.showMenu = false;
-                } else {
-                    this.showMenu = true;
-                }
-                break;
-            case KeyEvent.VK_I:
-                if (showInventory) {
-                    showInventory = false;
-                } else {
-                    showInventory = true;
-                }
-                break;
-            default:
-                break;
-        }
-    }
-
-    private void processDebugCommand(KeyEvent key) {
-        switch (key.getKeyCode()) {
-
-            /*
-            DEBUG Input
-             */
-            case KeyEvent.VK_F:
-                LevelFactory.DEBUG_FLOOD_FILL(map.getCurrentLevel().getTileArray());
-                LevelFactory.DEBUG_PROCESS_MAP(map.getCurrentLevel().getTileArray());
-                messageConsole.addMessage("Level flood filled");
-                break;
-            case KeyEvent.VK_R:
-                initGame();
-                break;
-            case KeyEvent.VK_V:
-                map.getCurrentLevel().toggleAllTilesVisible(true);
-                messageConsole.addMessage("All tiles visible");
-                break;
-            case KeyEvent.VK_B:
-                if (window.getMainPanel().isDrawBackgroundGlyphs()) {
-                    messageConsole.addMessage("Background glyphs off");
-                    window.getMainPanel().setDrawBackgroundGlyphs(false);
-                } else {
-                    messageConsole.addMessage("Background glyphs on");
-                    window.getMainPanel().setDrawBackgroundGlyphs(true);
-                }
-                break;
-            case KeyEvent.VK_EQUALS:
-                minFrameSpeed++;
-                messageConsole.addMessage("minFrameSpeed: " + minFrameSpeed);
-                break;
-            case KeyEvent.VK_MINUS:
-                if (minFrameSpeed > 0) {
-                    minFrameSpeed--;
-                    messageConsole.addMessage("minFrameSpeed: " + minFrameSpeed);
-                }
-                break;
-        }
-    }
-
-    private Direction getPlayerMovementDirection(KeyEvent key) {
-        Direction direction = null;
-        switch (key.getKeyCode()) {
-            case KeyEvent.VK_W:
-            case KeyEvent.VK_UP:
-                direction = Direction.UP;
-                break;
-            case KeyEvent.VK_S:
-            case KeyEvent.VK_DOWN:
-                direction = Direction.DOWN;
-                break;
-            case KeyEvent.VK_A:
-            case KeyEvent.VK_LEFT:
-                direction = Direction.LEFT;
-                break;
-            case KeyEvent.VK_D:
-            case KeyEvent.VK_RIGHT:
-                direction = Direction.RIGHT;
-                break;
-            case KeyEvent.VK_Q:
-                direction = Direction.NW;
-                break;
-            case KeyEvent.VK_E:
-                direction = Direction.NE;
-                break;
-            case KeyEvent.VK_Z:
-                direction = Direction.SW;
-                break;
-            case KeyEvent.VK_C:
-                direction = Direction.SE;
-                break;
-        }
-        return direction;
-    }
-
-    private void calculateVision(Actor actor) {
-        if(actor.equals(player)) {
-            map.getCurrentLevel().toggleAllTilesVisible(false);
-        }
-        actor.clearVisibleTiles();
-        int y = actor.getTile().getY();
-        int x = actor.getTile().getX();
-
-        ArrayList<Tile> fieldOfVisionTiles = FieldOfVision.calculateRayCastingFOVVisibleTiles(y, x, map
-                .getCurrentLevel(), map.getWidth() / 2);
-
-
-        for (Tile t : fieldOfVisionTiles) {
-            if(actor.equals(player)) {
-                t.setVisible(true);
-                t.setExplored(true);
-            }
-            actor.addVisibleTile(t);
-        }
-    }
-
-    private void processNpcActors() {
-        ArrayList<Actor> npcActors = map.getCurrentLevel().getActors();
-        npcActors.remove(player);
-
-        for (Actor a : npcActors) {
-            // Check if player is dead
-            if(!player.isAlive()) {
-                continue;
-            }
-            // No zombies yet
-            if(!a.isAlive()) {
-                continue;
-            }
-            // Player in view
-            // (check both views, so we minimize "walking shadows")
-            // .
-            // .
-            if (actorCanSeeActor(a, player) && actorCanSeeActor(player, a)) {
-                // get a new AStar path to the player
-                a.setCurrentPath(map.getCurrentLevel().getAstar().getShortestPath(a.getTile(), player.getTile()));
-                if (a.getCurrentPath() != null) {
-                   if(moveActor(a, a.getCurrentPath().get(0))) {
-                       a.getCurrentPath().remove(0);
-                    }
-                }
-            }
-            // Player's not in npc's view, but has a current path to follow
-            // .
-            // .
-            else if(a.getCurrentPath().size() > 0) {
-                if(moveActor(a, a.getCurrentPath().get(0))) {
-                    a.getCurrentPath().remove(0);
-                }
-            }
-            // Not in player view
-            else {
-                moveActor(a, Direction.getRandomDirection());
-            }
-            if(a.isAlive()) {
-                calculateVision(a);
-            }
-        }
-    }
-
-    private boolean actorCanSeeActor(Actor source, Actor target) {
-        for(Tile t : source.getVisibleTiles()) {
-            if(t.hasActor()) {
-                if(t.getActor().equals(target)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    private boolean actorInPlayerView(Actor actor) {
-        return actorCanSeeActor(player, actor);
-    }
-
-    private void processCombat(Actor actor1, Actor actor2) {
-
-        // Determine who goes first
-
-        Actor firstAttacker = null;
-        Actor secondAttacker = null;
-
-        if (actor1.getSpeed() > actor2.getSpeed()) {
-            firstAttacker = actor1;
-            secondAttacker = actor2;
-        } else if (actor1.getSpeed() < actor2.getSpeed()) {
-            firstAttacker = actor2;
-            secondAttacker = actor1;
-        } else if (actor1.getSpeed() == actor2.getSpeed()) {
-            firstAttacker = actor1;
-            secondAttacker = actor2;
-        }
-
-        // get power
-        int firstAttackerDamage = firstAttacker.getPower();
-        int secondAttackerDamage = secondAttacker.getPower();
-        String combatMessage = "";
-
-
-        // firstAttacker attacks
-        combatMessage += firstAttacker.getName() + " hit " + secondAttacker.getName() + " for " + firstAttackerDamage;
-
-        secondAttacker.setCurrentHp(secondAttacker.getCurrentHp() - firstAttackerDamage);
-
-        // Check if secondAttacker was killed
-        if (secondAttacker.getCurrentHp() <= 0) {
-            secondAttacker.setAlive(false);
-        }
-
-        // If secondAttacker is still alive
-        if (secondAttacker.isAlive()) {
-            // secondAttacker attacks
-            combatMessage += ", " + secondAttacker.getName() + " hit " + firstAttacker.getName() + " for " + secondAttackerDamage;
-            firstAttacker.setCurrentHp(firstAttacker.getCurrentHp() - secondAttackerDamage);
-
-            // Check if firstAttacker was killed
-            if (firstAttacker.getCurrentHp() <= 0) {
-                firstAttacker.setAlive(false);
-            }
-        }
-
-        // If the player is watching, or is involved, show the message
-        // Otherwise, show some "noise" message
-        if(actor1.equals(player) || actor2.equals(player)) {
-            messageConsole.addMessage(combatMessage);
-        } else if(actorInPlayerView(actor1) || actorInPlayerView(actor2)) {
-            messageConsole.addMessage(combatMessage);
-        } else {
-            messageConsole.addMessage("You hear noise");
-        }
-    }
-
-    private boolean moveActor(Actor actor, Tile t) {
-        Tile currentTile = actor.getTile();
-        Tile desiredTile = t;
-        // If the tile is null, it is likely out of range
-        if (desiredTile == null) {
-            messageConsole.addMessage("Tile is null");
-            return false;
-        }
-
-        // If the tile is blocked(terrain), we can't go there, likely a wall at this point
-        else if (desiredTile.isBlocked()) {
-            if (actor.equals(player))
-                messageConsole.addMessage("You bumped into a wall");
-            return false;
-        }
-
-        // If the tile already has an actor, and the actor is alive, we need to do some combat
-        else if (desiredTile.hasActor() && desiredTile.getActor().isAlive()) {
-            processCombat(actor, desiredTile.getActor());
-
-            Actor winner = null;
-            Actor loser = null;
-            boolean bothDied = false;
-
-            if(actor.isAlive() && desiredTile.getActor().isAlive()) {
-                //messageConsole.addMessage("moveActor() :: both actors still alive");
-                return false;
-            }
-
-            if(actor.isAlive() && !desiredTile.getActor().isAlive()) {
-                winner = actor;
-                loser = desiredTile.getActor();
-                //messageConsole.addMessage("moveActor() :: W: " + winner.getName() + " L: " + loser.getName());
-            }
-            else if(!actor.isAlive() && desiredTile.getActor().isAlive()) {
-                winner = desiredTile.getActor();
-                loser = actor;
-               // messageConsole.addMessage("moveActor() :: W: " + winner.getName() + " L: " + loser.getName());
-            }
-            else if(!actor.isAlive() && !desiredTile.getActor().isAlive()) {
-                bothDied = true;
-                //messageConsole.addMessage("moveActor() :: Both died");
-            }
-
-            if(bothDied) {
-                //messageConsole.addMessage("Both died");
-                return false;
-            }
-
-            // Loser gets a corpse
-            Tile loserTile = loser.getTile();
-            loser.setAlive(false);
-            if(!loser.equals(player)) {
-                loser.setTile(null);
-            }
-            Item corpse = new Item ('%', Color.gray, loserTile);
-            corpse.setName(loser.getCorpseName());
-            loserTile.setItem(corpse);
-            if(!loser.equals(player)) {
-                loserTile.setActor(null);
-            }
-
-            // Winner gets reward, if player
-            if(winner.equals(player)) {
-                //messageConsole.addMessage("moveActor() :: W: " + winner.getName() + " (should be player)");
-                // Award exp
-                int baseExp = 10;
-                int expVariance = 3;
-                int randomExp = rng.nextInt((baseExp + expVariance) - (baseExp - expVariance) + 1) + (baseExp
-                        - expVariance);
-
-                winner.addExperience(randomExp);
-                messageConsole.addMessage(winner.getName() + " killed " + loser.getName() + " (" + randomExp +
-                        " exp)");
-
-
-                    if (loser.getName().equals("Giant")) {
-                        messageConsole.addMessage("Main quest complete: Slay Giant (350 exp)");
-                        winner.addExperience(350);
-                        giantSlain = true;
-                    }
-
-
-                int prevLevel = winner.getLevel();
-                winner.evaulateLevel();
-                if (prevLevel < winner.getLevel()) {
-                    messageConsole.addMessage(winner.getName() + " leveled up: " + winner.getLevel());
-                }
-                return false;
-            }
-
-        }
-        // The tile is valid, not blocked, and has no "living" actor
-        // We can move the actor there
-        else {
-                /*
-                I don't like this
-                 */
-            if (actor.equals(player)) {
-                if (desiredTile.getType() == Tile.Type.STAIRS_DOWN) {
-                    boolean levelChanged = map.goDeeper();
-                    if (levelChanged) {
-                        System.out.println("turnsExit: " + map.getCurrentLevel().getTurnExited());
-                        if(map.getCurrentLevel().getTurnExited() != -1) {
-                            int catchup = 0;
-                            for (int i = map.getCurrentLevel().getTurnExited(); i < Roguelike.turns; i++) {
-                                processNpcActors();
-                                catchup++;
-                            }
-                            System.out.println("level caught up, processNpcActors() " + catchup + " times");
-                        }
-                        desiredTile = map.getCurrentLevel().getUpStairs();
-                    }
-                } else if (desiredTile.getType() == Tile.Type.STAIRS_UP) {
-                    boolean levelChanged = map.goHigher();
-                    if (levelChanged) {
-                        System.out.println("turnsExit: " + map.getCurrentLevel().getTurnExited());
-                        if(map.getCurrentLevel().getTurnExited() != -1) {
-                            int catchup = 0;
-                            for (int i = map.getCurrentLevel().getTurnExited(); i < Roguelike.turns; i++) {
-                                processNpcActors();
-                                catchup++;
-                            }
-                            System.out.println("level caught up, processNpcActors() " + catchup + " times");
-                        }
-                        desiredTile = map.getCurrentLevel().getDownStairs();
-                    }
-                }
-            }
-            Tile previousTile = currentTile;
-
-            // set actor's tile
-            actor.setTile(desiredTile);
-            // set tile's actor
-            desiredTile.setActor(actor);
-
-            // Secret wall?
-            // .
-            // .
-
-            if (desiredTile.getType() == Tile.Type.WALL_SECRET) {
-                // Set type to DOOR
-                desiredTile.setType(Tile.Type.DOOR);
-                LevelFactory.initTile(desiredTile);
-            }
-
-            // remove actor from old tile
-
-            previousTile.setActor(null);
-
-            // Return true, a move was made
-            return true;
-
-        }
-        // Return false, no move was made
-        return false;
-    }
-
-    private boolean moveActor(Actor actor, Direction d) {
-        if(d == null) {
-            messageConsole.addMessage("moveActor(" + actor.hashCode() + ", " + d + ") error");
-            return false;
-        }
-        // Obtain the current tile the actor is on
-        Tile currentTile = actor.getTile();
-
-        // desiredTile is the tile we will try to move the actor to
-        Tile desiredTile;
-
-        // by default, the move will be true
-        // we will inhibit the move by setting this to false
-        boolean move = true;
-
-        // Get coordinates of the currentTile
-        int y = currentTile.getY();
-        int x = currentTile.getX();
-
-        // Determine coordinates of desired tile based on direction input
-        switch (d) {
-            case UP:    y--;        break;
-            case DOWN:  y++;        break;
-            case LEFT:  x--;        break;
-            case RIGHT: x++;        break;
-            case NW:    x--; y--;   break;
-            case NE:    x++; y--;   break;
-            case SW:    x--; y++;   break;
-            case SE:    x++; y++;   break;
-            default:
-                move = false;
-                break;
-        }
-
-        // If the input was good, move will still be true
-        if (move) {
-            // set desiredTile to the tile located at the y, x coordinates
-            desiredTile = map.getCurrentLevel().getTile(y, x);
-            return moveActor(actor, desiredTile);
-        }
-        // Move was false
-        return false;
     }
 
     /**
@@ -853,32 +416,8 @@ public class Roguelike {
 
             this.mapConsole.copyBufferTo(rootConsole, 0, gameInformationConsoleWidth);
 
+            gui.drawGUI();
 
-            this.messageConsole.copyBufferTo(rootConsole, this.mapHeight, gameInformationConsoleWidth);
-            gameInformationConsole.setTurns(turns);
-            gameInformationConsole.setCurrentFrames(currentFrames);
-            gameInformationConsole.setFps(lastFramesPerSecond);
-            gameInformationConsole.updateConsole();
-            gameInformationConsole.copyBufferTo(rootConsole, 0, 0);
-
-            if (this.showMenu) {
-                this.menuWindow.copyBufferTo(rootConsole, this.window.HEIGHT / 2 - 12, this.window.WIDTH / 2 - 12);
-            }
-
-            if (showInventory) {
-                inventorySideConsole.updateConsole();
-                inventorySideConsole.copyBufferTo(rootConsole, 0, rootConsole.getxBufferWidth() - inventorySideConsole.getxBufferWidth());
-            }
-
-            if(showVictoryConsole) {
-                victoryConsole.update();
-                victoryConsole.copyBufferTo(rootConsole, this.windowHeight / 2 - victoryConsole.getyBufferHeight() / 2, this.windowWidth / 2 - victoryConsole.getxBufferWidth() / 2);
-            }
-
-            if(showDefeatConsole) {
-                defeatConsole.update();
-                defeatConsole.copyBufferTo(rootConsole, this.windowHeight / 2 - defeatConsole.getyBufferHeight() / 2, this.windowWidth / 2 - defeatConsole.getxBufferWidth() / 2);
-            }
             this.window.refresh();
         } else if (currentState == State.TITLE) {
             title.update();
@@ -887,13 +426,7 @@ public class Roguelike {
         }
     }
 
-    private void initMessageConsole() {
-        this.messageConsole = new MessageConsole(this.messageHeight, this.messageWidth);
-        //this.messageConsole.setBorder(true);
-        this.messageConsole.addMessage("Welcome");
-    }
-
-    private void initGame() {
+    protected void initGame() {
         currentState = State.TITLE;
         giantSlain = false;
         victoryConsole = null;
@@ -918,55 +451,16 @@ public class Roguelike {
         initPlayer();
 
         for(Actor a : map.getCurrentLevel().getActors()) {
-            calculateVision(a);
+            process.calculateVision(a);
         }
 
 
 
         // Init the GUI
-        initGui();
+        gui.initGui();
     }
 
-    private void initVictoryConsole() {
-        victoryConsole = new Console(windowHeight / 2, windowWidth / 2);
-        victoryConsole.setBorder(true);
-        int row = 1;
-        ArrayList<String> victoryMessages = new ArrayList<String>();
-        victoryMessages.add("You Win!");
-        victoryMessages.add("");
-        victoryMessages.add("You have slain the Giant and saved everyone!");
-        victoryMessages.add("");
-        victoryMessages.add("Level Reached: " + player.getLevel());
-        victoryMessages.add("Turns taken: " + turns);
-        victoryMessages.add("Maximum HP: " + player.getMaxHp());
-        victoryMessages.add("");
-        victoryMessages.add("Press ESCAPE to keep playing");
-        victoryMessages.add("Press R to restart");
-        for(String s : victoryMessages) {
-            victoryConsole.writeCenteredString(s, row);
-            row++;
-        }
-    }
 
-    private void initDefeatConsole() {
-        defeatConsole = new Console(windowHeight / 2, windowWidth / 2);
-        defeatConsole.setBorder(true);
-        int row = 1;
-        ArrayList<String> defeatMessages = new ArrayList<String>();
-        defeatMessages.add("You Died!");
-        defeatMessages.add("");
-        defeatMessages.add("You were killed and now the Giant will destroy everyone!");
-        defeatMessages.add("");
-        defeatMessages.add("Level Reached: " + player.getLevel());
-        defeatMessages.add("Turns taken: " + turns);
-        defeatMessages.add("Maximum HP: " + player.getMaxHp());
-        defeatMessages.add("");
-        defeatMessages.add("Press R to restart");
-        for(String s : defeatMessages) {
-            defeatConsole.writeCenteredString(s, row);
-            row++;
-        }
-    }
 
     private void initTitleScreen() {
         title = new Title(windowHeight, windowWidth);
@@ -981,21 +475,7 @@ public class Roguelike {
         startingTile.setActor(player);
     }
 
-    private void initGui() {
-        initMessageConsole();
-        gameInformationConsole = new GameInformationConsole(gameInformationConsoleHeight,
-                gameInformationConsoleWidth, player, map);
-        //gameInformationConsole.setBorder(true);
 
-        inventorySideConsole = new InventorySideConsole(mapHeight, 20);
-        //inventorySideConsole.setBorder(true);
-
-        this.menuWindow = new Console(25, 25);
-        this.menuWindow.setBorder(true);
-        this.menuWindow.fillBgColor(new Color(0, 0, 0, 0.3f));
-        this.showMenu = false;
-        showInventory = false;
-    }
 
     private void startGame() {
         // Copy the map to mapConsole(buffer)
@@ -1019,51 +499,96 @@ public class Roguelike {
 
     }
 
-
-
-    private Direction getDirectionTowardsTile(Tile sourceTile, Tile targetTile) {
-        int yd = sourceTile.getY() - targetTile.getY();
-        int xd = sourceTile.getX() - targetTile.getX();
-
-        if(Math.abs(yd) > Math.abs(xd)) {
-            if(yd < 0) {
-                return Direction.DOWN;
-            } else {
-                return Direction.UP;
-            }
-        }
-        else if (Math.abs(yd) < Math.abs(xd)) {
-            if(xd < 0) {
-                return Direction.RIGHT;
-            } else {
-                return Direction.LEFT;
-            }
-        }
-        else if(Math.abs(yd) == Math.abs(xd)) {
-            if(yd < 0 && xd < 0) {
-                return Direction.SE;
-            } else if(yd > 0 && xd > 0) {
-                return Direction.NW;
-            } else if( yd < 0 && xd > 0) {
-                return Direction.SW;
-            } else if(yd > 0 && xd < 0) {
-                return Direction.NE;
-            }
-        }
-        return null;
-    }
-
-    private Direction getDirectionTowardsActor(Actor source, Actor target) {
+    private Input.Direction getDirectionTowardsActor(Actor source, Actor target) {
         Tile sourceTile = source.getTile();
         Tile targetTile = target.getTile();
         return getDirectionTowardsTile(sourceTile, targetTile);
     }
 
-    public enum Direction {UP, DOWN, LEFT, RIGHT, NW, NE, SW, SE;
-        public static Direction getRandomDirection() {
-            return values()[rng.nextInt(values().length)];
+    private Input.Direction getDirectionTowardsTile(Tile sourceTile, Tile targetTile) {
+        int yd = sourceTile.getY() - targetTile.getY();
+        int xd = sourceTile.getX() - targetTile.getX();
+
+        if(Math.abs(yd) > Math.abs(xd)) {
+            if(yd < 0) {
+                return Input.Direction.DOWN;
+            } else {
+                return Input.Direction.UP;
+            }
         }
+        else if (Math.abs(yd) < Math.abs(xd)) {
+            if(xd < 0) {
+                return Input.Direction.RIGHT;
+            } else {
+                return Input.Direction.LEFT;
+            }
+        }
+        else if(Math.abs(yd) == Math.abs(xd)) {
+            if(yd < 0 && xd < 0) {
+                return Input.Direction.SE;
+            } else if(yd > 0 && xd > 0) {
+                return Input.Direction.NW;
+            } else if( yd < 0 && xd > 0) {
+                return Input.Direction.SW;
+            } else if(yd > 0 && xd < 0) {
+                return Input.Direction.NE;
+            }
+        }
+        return null;
     }
+
+    public MessageConsole getMessageConsole() {
+        return messageConsole;
+    }
+
+    public Console getRootConsole() {
+        return rootConsole;
+    }
+
+    public int getGameInformationConsoleWidth() {
+        return gameInformationConsoleWidth;
+    }
+
+    public GameInformationConsole getGameInformationConsole() {
+        return gameInformationConsole;
+    }
+
+    public int getCurrentFrames() {
+        return currentFrames;
+    }
+
+    public int getLastFramesPerSecond() {
+        return lastFramesPerSecond;
+    }
+
+    public Console getMenuWindow() {
+        return menuWindow;
+    }
+
+    public EnhancedConsole getInventorySideConsole() {
+        return inventorySideConsole;
+    }
+
+    public Console getVictoryConsole() {
+        return victoryConsole;
+    }
+
+    public Console getDefeatConsole() {
+        return defeatConsole;
+    }
+
+    public Actor getPlayer() {
+        return player;
+    }
+
+    public Map getMap() {
+        return map;
+    }
+
+    public int getGameInformationConsoleHeight() {
+        return gameInformationConsoleHeight;
+    }
+
 
     public enum State {TITLE, PLAYING, VICTORY}
 }
