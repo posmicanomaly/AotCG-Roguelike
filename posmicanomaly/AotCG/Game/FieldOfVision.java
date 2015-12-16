@@ -47,6 +47,9 @@ public abstract class FieldOfVision {
             double ox = (double) x + 0.5f;
             for (int r = 0; r < VIEW_RADIUS; r++) {
                 Tile t = level.getTile((int) oy, (int) ox);
+                if(t == null) {
+                    break;
+                }
                 boolean exists = false;
                 for(Tile tile : visibleTiles) {
                     if(tile == t) {

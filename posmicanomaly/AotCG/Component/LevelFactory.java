@@ -14,12 +14,17 @@ import java.util.Random;
 public abstract class LevelFactory {
     static final int MAX_ROOM_SIZE = 11;
     static final int MIN_ROOM_SIZE = 3;
+    // Setting PERIMETER_THICKNESS to 0 gives me walls of 1. Bad math somewhere.
+    static final int PERIMETER_THICKNESS = 0;
 
     private static Tile[][] makeBlankMap(int height, int width) {
+        return makeMapFilledWithType(height, width, Tile.Type.WALL);
+    }
+    private static Tile[][] makeMapFilledWithType(int height, int width, Tile.Type fill) {
         Tile[][] result = new Tile[height][width];
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                Tile.Type type = Tile.Type.WALL;
+                Tile.Type type = fill;
                 Tile tile = new Tile(y, x);
                 tile.setType(type);
                 result[y][x] = tile;
@@ -93,7 +98,7 @@ public abstract class LevelFactory {
                 backgroundColor = ColorTools.varyColor(Colors.FLOOR_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
                 break;
             case WALL:
-                symbol = '\u2593';
+                symbol = '#';
                 isBlocked = true;
                 color = Colors.WALL;
                 backgroundColor = ColorTools.varyColor(Colors.WALL_BG, 0.7, 1.0, ColorTools.BaseColor.RGB);
@@ -149,6 +154,13 @@ public abstract class LevelFactory {
                 isBlocked = false;
                 color = Color.RED;
                 backgroundColor = ColorTools.varyColor(Colors.FLOOR_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
+                break;
+            case WORLD_GRASS:
+                symbol = '"';
+                isBlocked = false;
+                color = ColorTools.varyColor(Colors.CAVE_GRASS, 0.5, 1.0, ColorTools.BaseColor.RGB);
+                backgroundColor = ColorTools.varyColor(Colors.CAVE_GRASS_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
+                transparent = true;
                 break;
             default:
                 symbol = '?';
@@ -308,16 +320,16 @@ public abstract class LevelFactory {
      * @return
      */
     private static boolean canPlaceRoom(int yStart, int xStart, int width, int height, Tile[][] level) {
-        if (yStart == 0 || xStart == 0) {
+        if (yStart <= PERIMETER_THICKNESS || xStart <= PERIMETER_THICKNESS) {
             return false;
         }
-        if (yStart + height == level.length - 1) {
+        if (yStart + height == level.length - PERIMETER_THICKNESS) {
             return false;
         }
-        if (xStart + width == level[0].length - 1) {
+        if (xStart + width == level[0].length - PERIMETER_THICKNESS) {
             return false;
         }
-        if (yStart + height >= level.length || xStart + width >= level[0].length) {
+        if (yStart + height >= level.length - PERIMETER_THICKNESS || xStart + width >= level[0].length - PERIMETER_THICKNESS) {
             return false;
         }
 
@@ -458,6 +470,22 @@ public abstract class LevelFactory {
         for(Tile nextTile : tiles) {
             spreadPool(level, nextTile, feature, current + 1, max);
         }
+    }
+
+    public static Tile[][] makeWorldMap(int height, int width) {
+        System.out.println("makeWorldMap");
+        Tile[][] result = null;
+
+        result = makeMapFilledWithType(height, width, Tile.Type.WORLD_GRASS);
+
+        processMap(result);
+
+        Random rng = Roguelike.rng;
+        //addPoolFeature(result, rng.nextInt(10) + 5, Tile.Type.WATER);
+        addStairs(result);
+        processMap(result);
+        System.out.println("makeWorldMap done");
+        return result;
     }
 
     /**
@@ -753,6 +781,7 @@ public abstract class LevelFactory {
             switch(t.getType()) {
                 case FLOOR:
                 case CAVE_GRASS:
+                case WORLD_GRASS:
                     validTile = true;
                     break;
                 default:
@@ -768,6 +797,7 @@ public abstract class LevelFactory {
             switch(t.getType()) {
                 case FLOOR:
                 case CAVE_GRASS:
+                case WORLD_GRASS:
                     validTile = true;
                     break;
                 default:

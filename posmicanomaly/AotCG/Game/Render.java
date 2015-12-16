@@ -1,6 +1,11 @@
 package posmicanomaly.AotCG.Game;
 
+import posmicanomaly.AotCG.Component.Actor;
+import posmicanomaly.AotCG.Component.Tile;
 import posmicanomaly.libjsrte.Console.Console;
+
+import java.awt.*;
+import java.util.ArrayList;
 
 /**
  * Created by Jesse Pospisil on 12/16/2015.
@@ -33,9 +38,11 @@ public class Render implements Runnable {
             roguelike.copyMapToBuffer();
 
             // Debug
-            roguelike.showActorPaths();
+            showActorPaths();
+
 
             roguelike.getMapConsole().copyBufferTo(rootConsole, 0, roguelike.getGameInformationConsoleWidth());
+
 
             roguelike.gui.drawGUI();
 
@@ -53,6 +60,37 @@ public class Render implements Runnable {
             drawGame(roguelike.getRootConsole());
             roguelike.lastFrameDrawTime = System.currentTimeMillis();
             roguelike.redrawGame = false;
+    }
+
+    protected void showActorPaths() {
+        /**
+         * Debug
+         *
+         * Show paths
+         */
+        ArrayList<Actor> actors = roguelike.getMap().getCurrentLevel().getActors();
+
+        for (Actor a : actors) {
+            int tRed, tGreen, tBlue;
+            Color pathColor;
+            for (Tile t : a.getCurrentPath()) {
+                tRed = t.getBackgroundColor().getRed();
+                tGreen = t.getBackgroundColor().getGreen();
+                tBlue = t.getBackgroundColor().getBlue();
+
+                int shimmer = Roguelike.rng.nextInt(20) + 100;
+                pathColor = new Color(tRed + shimmer, tGreen, tBlue).brighter();
+
+                int y = t.getY();
+                int x = t.getX();
+                // TODO: get rid of these border hacks.
+                if(roguelike.getMapConsole().hasBorder()) {
+                    y++;
+                    x++;
+                }
+                roguelike.getMapConsole().setBgColor(y, x, pathColor);
+            }
+        }
     }
 
     @Override

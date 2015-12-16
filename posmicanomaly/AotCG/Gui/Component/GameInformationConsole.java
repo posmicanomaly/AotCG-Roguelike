@@ -111,7 +111,13 @@ public class GameInformationConsole extends EnhancedConsole {
         drawProgressBar(y, x, barWidth, player.getExperience(), player.getExperienceCap(player.getLevel()), Colors.EXPERIENCE.darker(), Colors.EXPERIENCE, expString);
     }
     private void drawHealthBar(int y, int x, Actor actor) {
-        String healthString = "HP: " + actor.getCurrentHp() + "/" + actor.getMaxHp();
+        String healthString;
+        if(actor.equals(player)) {
+            healthString = "HP: " + actor.getCurrentHp() + "/" + actor.getMaxHp();
+        } else {
+            healthString = actor.getName();
+        }
+
         drawProgressBar(y, x, barWidth, actor.getCurrentHp(), actor.getMaxHp(), Colors.HEALTH_DEFICIT, Colors.HEALTH_REMAINING, healthString);
     }
 
@@ -136,14 +142,6 @@ public class GameInformationConsole extends EnhancedConsole {
         for(int xLoc = x; xLoc < x + width; xLoc++) {
             setBgColor(y, xLoc, color);
         }
-    }
-
-    public void tickTurns() {
-        turns++;
-    }
-
-    public int getTurns() {
-        return turns;
     }
 
     public void setTurns(int turns) {
