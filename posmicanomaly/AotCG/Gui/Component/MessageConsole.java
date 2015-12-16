@@ -9,11 +9,10 @@ import java.util.ArrayList;
  */
 public class MessageConsole extends Console {
     private ArrayList<String> messageList;
-    private final int messageHeight = 10;
+    private int linesToDisplay;
 
-    public MessageConsole(int yBufferWidth, int xBufferWidth) {
-        super(yBufferWidth, xBufferWidth);
-
+    public MessageConsole(int height, int width) {
+        super(height, width);
         messageList = new ArrayList<String>();
     }
 
@@ -26,7 +25,13 @@ public class MessageConsole extends Console {
         this.clear();
         int y = 0;
         int x = 0;
-        for (int i = messageList.size() - 1; i > messageList.size() - 1 - messageHeight; i--) {
+        linesToDisplay = this.getyBufferHeight();
+        if(hasBorder()) {
+            y++;
+            x++;
+            linesToDisplay -= 2;
+        }
+        for (int i = messageList.size() - 1; i > messageList.size() - 1 - linesToDisplay; i--) {
             if (i >= 0) {
                 writeString(messageList.get(i), y, x);
                 y++;

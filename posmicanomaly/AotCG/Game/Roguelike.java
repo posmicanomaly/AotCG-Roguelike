@@ -19,6 +19,7 @@ import java.util.Random;
  * Created by Jesse Pospisil on 8/17/2015.
  */
 public class Roguelike {
+    public static boolean RENDER_BETWEEN_TURNS = false;
 
     public static Random rng;
     public static int turns;
@@ -29,17 +30,18 @@ public class Roguelike {
     protected EnhancedConsole inventorySideConsole;
     protected Console menuWindow;
     Window window;
-    int fontSize = 24;
+    int fontSize = 20;
     int windowHeight = 40;
     int windowWidth = 135;
-    int messageHeight = 6;
+    int messageHeight = 10;
     int messageWidth;
     int mapHeight;
     int mapWidth;
     long lastRenderTime;
-    long defaultRefreshIntervalMs = 500;
+    long defaultRefreshIntervalMs = 1000;
     long refreshIntervalMs;
     long minFrameSpeed = 40;
+    long lastFrameDrawTime;
     int currentFrames;
     int lastFramesPerSecond;
     long fpsTimerStart;
@@ -53,16 +55,17 @@ public class Roguelike {
     Map map;
     boolean redrawGame;
     private Console mapConsole;
-    private Gui gui;
+    protected Gui gui;
     private Input input;
     private Process process;
-    private Title title;
-    private State currentState;
+    protected Title title;
+    protected State currentState;
     private Actor player;
     private KeyEvent lastKeyEvent;
     private int gameLoopsWithoutInput;
-    private long gameLoopRedrawTimeStart = 0;
+    protected long gameLoopRedrawTimeStart = 0;
     private Console rootConsole;
+    private Render render;
 
     public Roguelike() {
         System.setProperty("sun.java2d.opengl", "true");
@@ -86,9 +89,12 @@ public class Roguelike {
         gameLoopsWithoutInput = 0;
 
         initGame();
-        redrawGame = true;
         startGame();
-        redrawGame = true;
+
+        render = new Render(this);
+        if(RENDER_BETWEEN_TURNS) {
+            render.start();
+        }
 
         while (true) {
             gameLoop();
@@ -104,85 +110,29 @@ public class Roguelike {
     }
 
     private void gameLoop() {
-        long startTime = System.currentTimeMillis();
-
-
         // Check for key input
+        try {
+            Thread.sleep(17);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         if (!this.window.getLastKeyEvent().equals(this.lastKeyEvent)) {
             /**
              * Check for game state or victory/defeat console displayed
              */
             checkWinConditions();
             processGameState(currentState);
+
             // Set lastKeyEvent to this one that we just used, so we do not enter loop again
             this.lastKeyEvent = this.window.getLastKeyEvent();
-            // Reset these values to allow the game to redraw itself (animation)
-            gameLoopsWithoutInput = 0;
-            refreshIntervalMs = defaultRefreshIntervalMs;
+
         } else {
             // No key input, increase the draw refresh time to reduce cpu usage when idle
-            gameLoopsWithoutInput++;
-            if(gameLoopsWithoutInput % 100 == 0) {
-                refreshIntervalMs *= 2;
-                if(refreshIntervalMs > 20000) {
-                    refreshIntervalMs = 20000;
-                }
-            }
         }
-
-        if(redrawGame) {
-            // Draw the game
-            // TODO: draw only if we need to, to improve CPU usage
-            this.drawGame(this.window.getMainPanel().getRootConsole());
-            redrawGame = false;
-            gameLoopRedrawTimeStart = System.currentTimeMillis();
-            currentFrames++;
-            long remainingTime = minFrameSpeed - (System.currentTimeMillis() - startTime);
-
-            // During initialization, this time may go negative. Set to 0 if this happens to prevent exception.
-            if (remainingTime < 0) {
-                remainingTime = 0;
+        if(!RENDER_BETWEEN_TURNS) {
+            if(redrawGame) {
+                render.renderSingleFrame();
             }
-
-            // Sleep for whatever time we have remaining to maintain the desired FPS
-            try {
-                Thread.sleep(remainingTime);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        } else {
-            try {
-                Thread.sleep(minFrameSpeed);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-        if(System.currentTimeMillis() - gameLoopRedrawTimeStart > refreshIntervalMs) {
-            redrawGame = true;
-        }
-
-        /**
-         * Check if we need to force a redraw for next loop. Idle
-         */
-        // Determine remaining time in frame based on when we started loop, to after we've drawn the game
-
-
-        // Increment our current frames
-
-
-        // Determine FPS
-        // .
-        // .
-
-        // fpsTimerStart is initialized in startGame()
-        // if 1 second or more has passed, set the currentFrames to lastFramesPerSecond
-        if (System.currentTimeMillis() - fpsTimerStart >= 1000) {
-            lastFramesPerSecond = currentFrames;
-
-            // Reset currentFrames
-            currentFrames = 0;
-            // Reset fpsTimerStart
-            fpsTimerStart = System.currentTimeMillis();
         }
     }
 
@@ -192,6 +142,7 @@ public class Roguelike {
         // .
 
         if (currentState == State.TITLE) {
+            boolean shouldRedraw = true;
             switch (this.window.getLastKeyEvent().getKeyCode()) {
                 case KeyEvent.VK_UP:
                     title.scrollUp();
@@ -203,101 +154,108 @@ public class Roguelike {
                     if (title.getSelectedItem().equals("New Game")) {
                         this.currentState = State.PLAYING;
                     }
-            }
-        }
-        // Victory Achieved
-        // .
-        // .
-
-        if (showVictoryConsole) {
-            switch (this.window.getLastKeyEvent().getKeyCode()) {
-                // Player decides to keep playing
-                case KeyEvent.VK_ESCAPE:
-                    showVictoryConsole = false;
-                    break;
-                // Player decides to start new game
-                case KeyEvent.VK_R:
-                    initGame();
-                default:
-                    break;
-            }
-        }
-        // Defeated
-        // .
-        // .
-
-        else if (showDefeatConsole) {
-            switch (this.window.getLastKeyEvent().getKeyCode()) {
-                case KeyEvent.VK_R:
-                    initGame();
                     break;
                 default:
+                    shouldRedraw = false;
                     break;
             }
+            redrawGame = shouldRedraw;
         }
+        else if(currentState == State.PLAYING) {
+            // Victory Achieved
+            // .
+            // .
 
-
-        // Main portion of game loop
-        // .
-        // .
-
-        else {
-            // By default, do not recalculate field of vision unless we need to
-            boolean recalculateFOV = false;
-
-            KeyEvent key = this.window.getLastKeyEvent();
-
-            // Obtain the command related to the keypress determined by game state
-            Input.Command command = input.processKey(key);
-
-            // Check command and act upon it
-            int prevTurns = turns;
-            if (command != null) {
-                switch (command) {
-
-                    case MOVEMENT:
-                        Input.Direction direction = input.getPlayerMovementDirection(key);
-                        if (process.moveActor(player, direction)) {
-                            recalculateFOV = true;
-                        }
-                        redrawGame = true;
-                        turns++;
+            if (showVictoryConsole) {
+                switch (this.window.getLastKeyEvent().getKeyCode()) {
+                    // Player decides to keep playing
+                    case KeyEvent.VK_ESCAPE:
+                        showVictoryConsole = false;
                         break;
-
-                    case DEBUG:
-                        input.processDebugCommand(key, this);
-                        redrawGame = true;
-                        break;
-
-                    case MENU:
-                        input.processMenuCommand(key, this);
-                        redrawGame = true;
-                        break;
-
+                    // Player decides to start new game
+                    case KeyEvent.VK_R:
+                        initGame();
                     default:
                         break;
                 }
             }
-            // Recalculate field of vision if it was set to true
-            // This allows us to know what we're seeing next, since NPC turn is after player
-            // NPC need to know if they now see the player
-            if (recalculateFOV) {
-                //
-                process.calculateVision(player);
-                redrawGame = true;
-            }
-            // Was there a turn just there?
-            if(prevTurns != turns) {
-                // Then we need to do the NPC moves
-                // if we do it in MOVEMENT, then we don't get a path immediately.
-                process.processNpcActors();
+            // Defeated
+            // .
+            // .
 
-                // Following all the NPC movement, we need to recalculate player view to see any new NPC
-                process.calculateVision(player);
-                redrawGame = true;
+            else if (showDefeatConsole) {
+                switch (this.window.getLastKeyEvent().getKeyCode()) {
+                    case KeyEvent.VK_R:
+                        initGame();
+                        break;
+                    default:
+                        break;
+                }
             }
 
 
+            // Main portion of game loop
+            // .
+            // .
+
+            else {
+                // By default, do not recalculate field of vision unless we need to
+                boolean recalculateFOV = false;
+
+                KeyEvent key = this.window.getLastKeyEvent();
+
+                // Obtain the command related to the keypress determined by game state
+                Input.Command command = input.processKey(key);
+
+                // Check command and act upon it
+                int prevTurns = turns;
+                if (command != null) {
+                    switch (command) {
+
+                        case MOVEMENT:
+                            Input.Direction direction = input.getPlayerMovementDirection(key);
+                            if (process.moveActor(player, direction)) {
+                                recalculateFOV = true;
+                            }
+                            redrawGame = true;
+                            turns++;
+                            break;
+
+                        case DEBUG:
+                            input.processDebugCommand(key, this);
+                            redrawGame = true;
+                            break;
+
+                        case MENU:
+                            input.processMenuCommand(key, this);
+                            redrawGame = true;
+                            break;
+
+                        default:
+                            break;
+                    }
+                }
+                // Recalculate field of vision if it was set to true
+                // This allows us to know what we're seeing next, since NPC turn is after player
+                // NPC need to know if they now see the player
+                if (recalculateFOV) {
+                    //
+                    process.calculateVision(player);
+                    redrawGame = true;
+                }
+                // Was there a turn just there?
+                if (prevTurns != turns) {
+                    // Then we need to do the NPC moves
+                    // if we do it in MOVEMENT, then we don't get a path immediately.
+                    process.processNpcActors();
+
+                    // Following all the NPC movement, we need to recalculate player view to see any new NPC
+                    process.calculateVision(player);
+                    redrawGame = true;
+                }
+
+
+            }
         }
     }
 
@@ -319,6 +277,7 @@ public class Roguelike {
             showDefeatConsole = true;
         }
     }
+
     /**
      * refreshTile
      * <p/>
@@ -386,7 +345,7 @@ public class Roguelike {
         mapConsole.setChar(tile.getY(), tile.getX(), glyph);
     }
 
-    private void showActorPaths() {
+    protected void showActorPaths() {
         /**
          * Debug
          *
@@ -409,27 +368,7 @@ public class Roguelike {
         }
     }
 
-    private void drawGame(Console rootConsole) {
-        rootConsole.clear();
-        if (currentState == State.PLAYING) {
 
-            // Refresh the map buffer
-            copyMapToBuffer();
-
-            // Debug
-            showActorPaths();
-
-            this.mapConsole.copyBufferTo(rootConsole, 0, gameInformationConsoleWidth);
-
-            gui.drawGUI();
-
-            this.window.refresh();
-        } else if (currentState == State.TITLE) {
-            title.update();
-            this.title.getTitleConsole().copyBufferTo(rootConsole, 0, 0);
-            this.window.refresh();
-        }
-    }
 
     protected void initGame() {
         currentState = State.TITLE;
@@ -492,9 +431,10 @@ public class Roguelike {
         this.lastKeyEvent = this.window.getLastKeyEvent();
 
         fpsTimerStart = System.currentTimeMillis();
+        redrawGame = true;
     }
 
-    private void copyMapToBuffer() {
+    protected void copyMapToBuffer() {
         for (int y = 0; y < map.getCurrentLevel().getHeight(); ++y) {
             for (int x = 0; x < map.getCurrentLevel().getWidth(); ++x) {
                 Tile t = map.getCurrentLevel().getTile(y, x);
@@ -592,6 +532,10 @@ public class Roguelike {
 
     public int getGameInformationConsoleHeight() {
         return gameInformationConsoleHeight;
+    }
+
+    public Console getMapConsole() {
+        return mapConsole;
     }
 
 

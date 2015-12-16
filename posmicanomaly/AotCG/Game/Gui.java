@@ -27,7 +27,7 @@ public class Gui {
         initMessageConsole();
         roguelike.gameInformationConsole = new GameInformationConsole(roguelike.getGameInformationConsoleHeight(),
                 roguelike.getGameInformationConsoleWidth(), player, map);
-        //gameInformationConsole.setBorder(true);
+        roguelike.gameInformationConsole.setBorder(true);
 
         roguelike.inventorySideConsole = new InventorySideConsole(roguelike.mapHeight, 20);
         //inventorySideConsole.setBorder(true);
@@ -41,8 +41,8 @@ public class Gui {
 
     private void initMessageConsole() {
         roguelike.messageConsole = new MessageConsole(roguelike.messageHeight, roguelike.messageWidth);
-        //this.messageConsole.setBorder(true);
-        roguelike.messageConsole.addMessage("Welcome");
+        roguelike.messageConsole.setBorder(true);
+        //roguelike.messageConsole.addMessage("");
     }
 
     public void drawGUI() {

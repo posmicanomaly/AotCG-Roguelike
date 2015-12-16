@@ -7,6 +7,7 @@ import posmicanomaly.AotCG.Component.Tile;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.ConcurrentModificationException;
 
 /**
  * Created by Jesse Pospisil on 8/19/2015.
@@ -17,6 +18,7 @@ public class GameInformationConsole extends EnhancedConsole {
     private int currentFrames;
     private int fps;
     private Map map;
+    private int barWidth;
 
     public GameInformationConsole(int height, int width, Actor player, Map map) {
         super(height, width);
@@ -30,30 +32,30 @@ public class GameInformationConsole extends EnhancedConsole {
     @Override
     public void updateConsole() {
         clear();
-        int barWidth = getxBufferWidth();
-        if(barWidth > player.getMaxHp()) {
-            barWidth = player.getMaxHp();
+        barWidth = getxBufferWidth();
+
+
+        if(hasBorder()) {
+            barWidth -= 2;
         }
 
-        int healthPerChar = player.getMaxHp() / barWidth;
-        int expPerChar = player.getExperienceCap(player.getLevel()) / barWidth;
-
-        String healthString = "HP: " + player.getCurrentHp() + "/" + player.getMaxHp();
-        String expString = "EXP: " + player.getExperience() + "/" + player.getExperienceCap(player.getLevel());
         String powerString = "PWR: " + player.getPower();
 
         ArrayList<String> placeHolder = new ArrayList<String>();
         int row = 0;
-        writeString("@: " + player.getLevel() + " (Depth " + map.getCurrentDepth() + ")", row, 0);
+        int col = 0;
+        if(this.hasBorder()) {
+            row++;
+            col++;
+        }
+        writeString("@: " + player.getLevel() + " (Depth " + map.getCurrentDepth() + ")", row, col);
         row++;
-        drawBar(row, 0, barWidth, Colors.HEALTH_DEFICIT, "");
-        drawBar(row, 0, barWidth - ((player.getMaxHp() - player.getCurrentHp()) / healthPerChar), Colors.HEALTH_REMAINING, healthString);
+        drawHealthBar(row, col, player);
 
         row++;
-        drawBar(row, 0, barWidth - ((player.getExperienceCap(player.getLevel()) - player.getExperience()) /
-                expPerChar), Colors.EXPERIENCE, expString);
+        drawExpBar(row, col);
         row++;
-        writeString(powerString, row, 0);
+        writeString(powerString, row, col);
         row++;
         placeHolder.add("Well");
         placeHolder.add("Here:");
@@ -62,7 +64,7 @@ public class GameInformationConsole extends EnhancedConsole {
             placeHolder.add(player.getTile().getItem().getName());
         }
         for (String s : placeHolder) {
-            writeString(s, row, 0);
+            writeString(s, row, col);
             row++;
         }
 
@@ -73,36 +75,61 @@ public class GameInformationConsole extends EnhancedConsole {
 
         int maxTargets = 10;
         int targets = 0;
-        for(Tile t : player.getVisibleTiles()) {
-            if(t.hasActor() && t.getActor() != player) {
-                if(targets == maxTargets) {
-                    continue;
-                }
-                targets++;
-                barWidth = getxBufferWidth();
-                if(barWidth > t.getActor().getMaxHp()) {
-                    barWidth = t.getActor().getMaxHp();
-                }
 
-                healthPerChar = t.getActor().getMaxHp() / barWidth;
-                drawBar(row, 0, barWidth, Colors.HEALTH_DEFICIT, "");
-                drawBar(row, 0, barWidth - ((t.getActor().getMaxHp() - t.getActor().getCurrentHp()) / healthPerChar), Colors.HEALTH_REMAINING, t.getActor().getName());
-                row++;
-                row++;
+        try {
+            for (Tile t : player.getVisibleTiles()) {
+                if (t.hasActor() && t.getActor() != player) {
+                    if (targets == maxTargets) {
+                        continue;
+                    }
+                    targets++;
+
+                    drawHealthBar(row, col, t.getActor());
+
+                    row++;
+                    row++;
+                }
             }
+        } catch (ConcurrentModificationException e) {
+            System.out.println("List modified");
         }
 
         row = getyBufferHeight() - 1;
-        writeString("T: " + turns, row, 0);
+        if(hasBorder()) {
+            row--;
+        }
+        writeString("T: " + turns, row, col);
         row--;
-        writeString("CF: " + currentFrames, row, 0);
+        writeString("CF: " + currentFrames, row, col);
         row--;
-        writeString("FPS: " + fps, row, 0);
+        writeString("FPS: " + fps, row, col);
         row--;
+    }
+
+    private void drawExpBar(int y, int x) {
+        String expString = "EXP: " + player.getExperience() + "/" + player.getExperienceCap(player.getLevel());
+        drawProgressBar(y, x, barWidth, player.getExperience(), player.getExperienceCap(player.getLevel()), Colors.EXPERIENCE.darker(), Colors.EXPERIENCE, expString);
+    }
+    private void drawHealthBar(int y, int x, Actor actor) {
+        String healthString = "HP: " + actor.getCurrentHp() + "/" + actor.getMaxHp();
+        drawProgressBar(y, x, barWidth, actor.getCurrentHp(), actor.getMaxHp(), Colors.HEALTH_DEFICIT, Colors.HEALTH_REMAINING, healthString);
+    }
+
+    private void drawProgressBar(int y, int x, int maxWidth, int currentValue, int maxValue, Color backgroundColor, Color foregroundColor, String barString) {
+        int deficit = maxWidth;
+        double remaining = ((double)currentValue / maxValue * maxWidth);
+        //System.out.println("deficit: " + deficit + ", remaining: " + remaining);
+        drawBar(y, x, deficit, backgroundColor, "");
+        drawBar(y, x, (int)remaining, foregroundColor, barString);
     }
 
     private void drawBar(int y, int x, int width, Color color, String text) {
         if(y > getyBufferHeight() - 1) {
+            return;
+        }
+        if(x + width > this.getxBufferWidth()) {
+            System.out.println("Gui.drawBar() error: x + width > bufferWidth");
+            System.out.println("\tdrawBar(" + y + ", " + x + ", " + width + ", " + color + ", " + text + ")");
             return;
         }
         writeString(text, y, x);

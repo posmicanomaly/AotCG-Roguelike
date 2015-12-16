@@ -20,7 +20,7 @@ public class ActorFactory {
         switch(type) {
             case PLAYER:
                 level = 1;
-                mod = 20;
+                mod = 100;
                 speed = 1;
                 glyph = '@';
                 actorName = "you";
@@ -43,7 +43,7 @@ public class ActorFactory {
                 color = Color.green;
                 break;
             case GIANT:
-                level = 7;
+                level = 3;
                 mod = 8;
                 speed = 3;
                 glyph = 'G';

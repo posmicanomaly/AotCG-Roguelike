@@ -93,7 +93,7 @@ public abstract class LevelFactory {
                 backgroundColor = ColorTools.varyColor(Colors.FLOOR_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
                 break;
             case WALL:
-                symbol = '#';
+                symbol = '\u2593';
                 isBlocked = true;
                 color = Colors.WALL;
                 backgroundColor = ColorTools.varyColor(Colors.WALL_BG, 0.7, 1.0, ColorTools.BaseColor.RGB);
@@ -101,7 +101,7 @@ public abstract class LevelFactory {
                 transparent = false;
                 break;
             case WALL_SECRET:
-                symbol = '#';
+                symbol = ' ';
                 isBlocked = false;
                 color = Colors.WALL;
                 backgroundColor = ColorTools.varyColor(Colors.WALL_BG, 0.7, 1.0, ColorTools.BaseColor.RGB);
@@ -131,7 +131,8 @@ public abstract class LevelFactory {
                 backgroundColor = ColorTools.varyColor(Colors.CAVE_GRASS_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
                 break;
             case DOOR:
-                symbol ='+';
+                //symbol ='+';
+                symbol = '\u041f';
                 isBlocked = false;
                 color = ColorTools.varyColor(Colors.DOOR, 0.5, 1.0, ColorTools.BaseColor.RGB);
                 backgroundColor = ColorTools.varyColor(Colors.DOOR_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
