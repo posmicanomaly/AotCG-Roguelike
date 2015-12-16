@@ -23,16 +23,12 @@ public class Roguelike {
 
     public static Random rng;
     public static int turns;
-    protected Console victoryConsole;
-    protected Console defeatConsole;
-    protected MessageConsole messageConsole;
-    protected GameInformationConsole gameInformationConsole;
-    protected EnhancedConsole inventorySideConsole;
+
     protected Console menuWindow;
     protected Gui gui;
     protected Title title;
     protected State currentState;
-    protected long gameLoopRedrawTimeStart = 0;
+
     Window window;
     int fontSize = 20;
     int windowHeight = 40;
@@ -108,9 +104,7 @@ public class Roguelike {
     protected void initGame() {
         currentState = State.TITLE;
         giantSlain = false;
-        victoryConsole = null;
         showVictoryConsole = false;
-        defeatConsole = null;
         showDefeatConsole = false;
         turns = 0;
         lastRenderTime = 0;
@@ -140,6 +134,7 @@ public class Roguelike {
 
         // Init the GUI
         gui.initGui();
+        input.connectToGui(gui);
     }
 
     private void startGame() {
@@ -213,14 +208,16 @@ public class Roguelike {
 
          If it is not null, then we've seen it and likely hit ESCAPE to keep playing
          */
-        if (giantSlain && victoryConsole == null) {
+        if (giantSlain && gui.getVictoryConsole() == null) {
             gui.initVictoryConsole();
             showVictoryConsole = true;
+            redrawGame = true;
         }
 
         if (!player.isAlive()) {
             gui.initDefeatConsole();
             showDefeatConsole = true;
+            redrawGame = true;
         }
     }
 
@@ -462,9 +459,7 @@ public class Roguelike {
         return null;
     }
 
-    public MessageConsole getMessageConsole() {
-        return messageConsole;
-    }
+
 
     public Console getRootConsole() {
         return rootConsole;
@@ -478,9 +473,7 @@ public class Roguelike {
         return turns;
     }
 
-    public GameInformationConsole getGameInformationConsole() {
-        return gameInformationConsole;
-    }
+
 
     public int getCurrentFrames() {
         return currentFrames;
@@ -492,18 +485,6 @@ public class Roguelike {
 
     public Console getMenuWindow() {
         return menuWindow;
-    }
-
-    public EnhancedConsole getInventorySideConsole() {
-        return inventorySideConsole;
-    }
-
-    public Console getVictoryConsole() {
-        return victoryConsole;
-    }
-
-    public Console getDefeatConsole() {
-        return defeatConsole;
     }
 
     public Actor getPlayer() {
@@ -520,6 +501,10 @@ public class Roguelike {
 
     public Console getMapConsole() {
         return mapConsole;
+    }
+
+    public Gui getGui() {
+        return gui;
     }
 
 

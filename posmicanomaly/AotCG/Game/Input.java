@@ -1,6 +1,7 @@
 package posmicanomaly.AotCG.Game;
 
 import posmicanomaly.AotCG.Component.LevelFactory;
+import posmicanomaly.AotCG.Gui.Component.MessageConsole;
 
 import java.awt.event.KeyEvent;
 
@@ -10,10 +11,16 @@ import java.awt.event.KeyEvent;
 public class Input {
 
     private final Roguelike roguelike;
+    private MessageConsole messageConsole;
 
     public Input(Roguelike roguelike) {
         this.roguelike = roguelike;
     }
+
+    public void connectToGui(Gui gui) {
+        messageConsole = gui.getMessageConsole();
+    }
+
     public Command processKey(KeyEvent key) {
         switch (key.getKeyCode()) {
                     /*
@@ -81,6 +88,7 @@ public class Input {
     }
 
     public void processDebugCommand(KeyEvent key, Roguelike roguelike) {
+
         switch (key.getKeyCode()) {
 
             /*
@@ -89,32 +97,32 @@ public class Input {
             case KeyEvent.VK_F:
                 LevelFactory.DEBUG_FLOOD_FILL(roguelike.map.getCurrentLevel().getTileArray());
                 LevelFactory.DEBUG_PROCESS_MAP(roguelike.map.getCurrentLevel().getTileArray());
-                roguelike.getMessageConsole().addMessage("Level flood filled");
+                messageConsole.addMessage("Level flood filled");
                 break;
             case KeyEvent.VK_R:
                 roguelike.initGame();
                 break;
             case KeyEvent.VK_V:
                 roguelike.map.getCurrentLevel().toggleAllTilesVisible(true);
-                roguelike.getMessageConsole().addMessage("All tiles visible");
+                messageConsole.addMessage("All tiles visible");
                 break;
             case KeyEvent.VK_B:
                 if (roguelike.window.getMainPanel().isDrawBackgroundGlyphs()) {
-                    roguelike.getMessageConsole().addMessage("Background glyphs off");
+                    messageConsole.addMessage("Background glyphs off");
                     roguelike.window.getMainPanel().setDrawBackgroundGlyphs(false);
                 } else {
-                    roguelike.getMessageConsole().addMessage("Background glyphs on");
+                    messageConsole.addMessage("Background glyphs on");
                     roguelike.window.getMainPanel().setDrawBackgroundGlyphs(true);
                 }
                 break;
             case KeyEvent.VK_EQUALS:
                 roguelike.minFrameSpeed++;
-                roguelike.getMessageConsole().addMessage("minFrameSpeed: " + roguelike.minFrameSpeed);
+                messageConsole.addMessage("minFrameSpeed: " + roguelike.minFrameSpeed);
                 break;
             case KeyEvent.VK_MINUS:
                 if (roguelike.minFrameSpeed > 0) {
                     roguelike.minFrameSpeed--;
-                    roguelike.getMessageConsole().addMessage("minFrameSpeed: " + roguelike.minFrameSpeed);
+                    messageConsole.addMessage("minFrameSpeed: " + roguelike.minFrameSpeed);
                 }
                 break;
         }

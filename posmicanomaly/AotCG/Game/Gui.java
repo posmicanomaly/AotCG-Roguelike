@@ -15,6 +15,11 @@ import java.util.ArrayList;
  */
 public class Gui {
     private final Roguelike roguelike;
+    private GameInformationConsole gameInformationConsole;
+    private InventorySideConsole inventorySideConsole;
+    private MessageConsole messageConsole;
+    private Console victoryConsole;
+    private Console defeatConsole;
 
     public Gui(Roguelike roguelike) {
         this.roguelike = roguelike;
@@ -25,11 +30,11 @@ public class Gui {
         Map map = roguelike.getMap();
 
         initMessageConsole();
-        roguelike.gameInformationConsole = new GameInformationConsole(roguelike.getGameInformationConsoleHeight(),
+        gameInformationConsole = new GameInformationConsole(roguelike.getGameInformationConsoleHeight(),
                 roguelike.getGameInformationConsoleWidth(), player, map);
-        roguelike.gameInformationConsole.setBorder(true);
+        gameInformationConsole.setBorder(true);
 
-        roguelike.inventorySideConsole = new InventorySideConsole(roguelike.mapHeight, 20);
+        inventorySideConsole = new InventorySideConsole(roguelike.mapHeight, 20);
         //inventorySideConsole.setBorder(true);
 
         roguelike.menuWindow = new Console(25, 25);
@@ -37,46 +42,51 @@ public class Gui {
         roguelike.menuWindow.fillBgColor(new Color(0, 0, 0, 0.3f));
         roguelike.showMenu = false;
         roguelike.showInventory = false;
+
+        victoryConsole = null;
+        defeatConsole = null;
     }
 
     private void initMessageConsole() {
-        roguelike.messageConsole = new MessageConsole(roguelike.messageHeight, roguelike.messageWidth);
-        roguelike.messageConsole.setBorder(true);
+        messageConsole = new MessageConsole(roguelike.messageHeight, roguelike.messageWidth);
+        messageConsole.setBorder(true);
         //roguelike.messageConsole.addMessage("");
     }
 
     public void drawGUI() {
-        roguelike.getMessageConsole().copyBufferTo(roguelike.getRootConsole(), roguelike.mapHeight, roguelike.getGameInformationConsoleWidth());
-        roguelike.getGameInformationConsole().setTurns(roguelike.getTurns());
-        roguelike.getGameInformationConsole().setCurrentFrames(roguelike.getCurrentFrames());
-        roguelike.getGameInformationConsole().setFps(roguelike.getLastFramesPerSecond());
-        roguelike.getGameInformationConsole().updateConsole();
-        roguelike.getGameInformationConsole().copyBufferTo(roguelike.getRootConsole(), 0, 0);
+        messageConsole.copyBufferTo(roguelike.getRootConsole(), roguelike.mapHeight, roguelike
+                .getGameInformationConsoleWidth());
+        gameInformationConsole.setTurns(roguelike.getTurns());
+        gameInformationConsole.setCurrentFrames(roguelike.getCurrentFrames());
+        gameInformationConsole.setFps(roguelike.getLastFramesPerSecond());
+        gameInformationConsole.updateConsole();
+        gameInformationConsole.copyBufferTo(roguelike.getRootConsole(), 0, 0);
 
         if (roguelike.showMenu) {
             roguelike.getMenuWindow().copyBufferTo(roguelike.getRootConsole(), roguelike.window.HEIGHT / 2 - 12, roguelike.window.WIDTH / 2 - 12);
         }
 
         if (roguelike.showInventory) {
-            roguelike.getInventorySideConsole().updateConsole();
-            roguelike.getInventorySideConsole().copyBufferTo(roguelike.getRootConsole(), 0, roguelike.getRootConsole().getxBufferWidth() -
-                    roguelike.getInventorySideConsole().getxBufferWidth());
+            inventorySideConsole.updateConsole();
+            inventorySideConsole.copyBufferTo(roguelike.getRootConsole(), 0, roguelike.getRootConsole()
+                    .getxBufferWidth() -
+                    inventorySideConsole.getxBufferWidth());
         }
 
         if(roguelike.showVictoryConsole) {
-            roguelike.getVictoryConsole().update();
-            roguelike.getVictoryConsole().copyBufferTo(roguelike.getRootConsole(), roguelike.windowHeight / 2 - roguelike.getVictoryConsole().getyBufferHeight() / 2, roguelike.windowWidth / 2 - roguelike.getVictoryConsole().getxBufferWidth() / 2);
+            victoryConsole.update();
+            victoryConsole.copyBufferTo(roguelike.getRootConsole(), roguelike.windowHeight / 2 - victoryConsole.getyBufferHeight() / 2, roguelike.windowWidth / 2 - victoryConsole.getxBufferWidth() / 2);
         }
 
         if(roguelike.showDefeatConsole) {
-            roguelike.getDefeatConsole().update();
-            roguelike.getDefeatConsole().copyBufferTo(roguelike.getRootConsole(), roguelike.windowHeight / 2 - roguelike.getDefeatConsole().getyBufferHeight() / 2, roguelike.windowWidth / 2 - roguelike.getDefeatConsole().getxBufferWidth() / 2);
+            defeatConsole.update();
+            defeatConsole.copyBufferTo(roguelike.getRootConsole(), roguelike.windowHeight / 2 - defeatConsole.getyBufferHeight() / 2, roguelike.windowWidth / 2 - defeatConsole.getxBufferWidth() / 2);
         }
     }
 
     protected void initVictoryConsole() {
-        roguelike.victoryConsole = new Console(roguelike.windowHeight / 2, roguelike.windowWidth / 2);
-        roguelike.getVictoryConsole().setBorder(true);
+        victoryConsole = new Console(roguelike.windowHeight / 2, roguelike.windowWidth / 2);
+        victoryConsole.setBorder(true);
         int row = 1;
         ArrayList<String> victoryMessages = new ArrayList<String>();
         victoryMessages.add("You Win!");
@@ -90,14 +100,14 @@ public class Gui {
         victoryMessages.add("Press ESCAPE to keep playing");
         victoryMessages.add("Press R to restart");
         for(String s : victoryMessages) {
-            roguelike.getVictoryConsole().writeCenteredString(s, row);
+            victoryConsole.writeCenteredString(s, row);
             row++;
         }
     }
 
     protected void initDefeatConsole() {
-        roguelike.defeatConsole = new Console(roguelike.windowHeight / 2, roguelike.windowWidth / 2);
-        roguelike.getDefeatConsole().setBorder(true);
+        defeatConsole = new Console(roguelike.windowHeight / 2, roguelike.windowWidth / 2);
+        defeatConsole.setBorder(true);
         int row = 1;
         ArrayList<String> defeatMessages = new ArrayList<String>();
         defeatMessages.add("You Died!");
@@ -110,8 +120,16 @@ public class Gui {
         defeatMessages.add("");
         defeatMessages.add("Press R to restart");
         for(String s : defeatMessages) {
-            roguelike.getDefeatConsole().writeCenteredString(s, row);
+            defeatConsole.writeCenteredString(s, row);
             row++;
         }
+    }
+
+    public MessageConsole getMessageConsole() {
+        return messageConsole;
+    }
+
+    public Console getVictoryConsole() {
+        return victoryConsole;
     }
 }

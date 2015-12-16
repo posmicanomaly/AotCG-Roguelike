@@ -65,7 +65,7 @@ public class Process {
     }
 
     private boolean moveActor(Actor actor, Tile t) {
-        MessageConsole messageConsole = roguelike.getMessageConsole();
+        MessageConsole messageConsole = roguelike.getGui().getMessageConsole();
         Actor player = roguelike.getPlayer();
         Random rng = Roguelike.rng;
         Map map = roguelike.getMap();
@@ -229,7 +229,7 @@ public class Process {
     }
 
     protected boolean moveActor(Actor actor, Input.Direction d) {
-        MessageConsole messageConsole = roguelike.getMessageConsole();
+        MessageConsole messageConsole = roguelike.getGui().getMessageConsole();
         Map map = roguelike.getMap();
 
         if(d == null) {
@@ -276,7 +276,7 @@ public class Process {
     }
 
     private void processCombat(Actor actor1, Actor actor2) {
-        MessageConsole messageConsole = roguelike.getMessageConsole();
+        MessageConsole messageConsole = roguelike.getGui().getMessageConsole();
         Actor player = roguelike.getPlayer();
 
         // Determine who goes first
