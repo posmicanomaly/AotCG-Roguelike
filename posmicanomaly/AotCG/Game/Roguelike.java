@@ -109,146 +109,18 @@ public class Roguelike {
 
         // Check for key input
         if (!this.window.getLastKeyEvent().equals(this.lastKeyEvent)) {
-
             /**
              * Check for game state or victory/defeat console displayed
              */
-
-            /**
-             Check win condition
-             if giant was killed
-             and victoryConsole is null(not initialized yet)
-
-             If it is not null, then we've seen it and likely hit ESCAPE to keep playing
-             */
-            if (giantSlain && victoryConsole == null) {
-                gui.initVictoryConsole();
-                showVictoryConsole = true;
-            }
-
-            if (!player.isAlive()) {
-                gui.initDefeatConsole();
-                showDefeatConsole = true;
-            }
-
-            // Title Screen
-            // .
-            // .
-
-            if (currentState == State.TITLE) {
-                switch (this.window.getLastKeyEvent().getKeyCode()) {
-                    case KeyEvent.VK_UP:
-                        title.scrollUp();
-                        break;
-                    case KeyEvent.VK_DOWN:
-                        title.scrollDown();
-                        break;
-                    case KeyEvent.VK_ENTER:
-                        if (title.getSelectedItem().equals("New Game")) {
-                            currentState = State.PLAYING;
-                        }
-                }
-            }
-            // Victory Achieved
-            // .
-            // .
-
-            if (showVictoryConsole) {
-                switch (this.window.getLastKeyEvent().getKeyCode()) {
-                    // Player decides to keep playing
-                    case KeyEvent.VK_ESCAPE:
-                        showVictoryConsole = false;
-                        break;
-                    // Player decides to start new game
-                    case KeyEvent.VK_R:
-                        initGame();
-                    default:
-                        break;
-                }
-            }
-            // Defeated
-            // .
-            // .
-
-            else if (showDefeatConsole) {
-                switch (this.window.getLastKeyEvent().getKeyCode()) {
-                    case KeyEvent.VK_R:
-                        initGame();
-                        break;
-                    default:
-                        break;
-                }
-            }
-
-
-            // Main portion of game loop
-            // .
-            // .
-
-            else {
-                // By default, do not recalculate field of vision unless we need to
-                boolean recalculateFOV = false;
-
-                KeyEvent key = this.window.getLastKeyEvent();
-
-                // Obtain the command related to the keypress determined by game state
-                Input.Command command = input.processKey(key);
-
-                // Check command and act upon it
-                int prevTurns = turns;
-                if (command != null) {
-                    switch (command) {
-
-                        case MOVEMENT:
-                            Input.Direction direction = input.getPlayerMovementDirection(key);
-                            if (process.moveActor(player, direction)) {
-                                recalculateFOV = true;
-                            }
-                            redrawGame = true;
-                            turns++;
-                            break;
-
-                        case DEBUG:
-                            input.processDebugCommand(key, this);
-                            redrawGame = true;
-                            break;
-
-                        case MENU:
-                            input.processMenuCommand(key, this);
-                            redrawGame = true;
-                            break;
-
-                        default:
-                            break;
-                    }
-                }
-                // Recalculate field of vision if it was set to true
-                // This allows us to know what we're seeing next, since NPC turn is after player
-                // NPC need to know if they now see the player
-                if (recalculateFOV) {
-                    //
-                    process.calculateVision(player);
-                    redrawGame = true;
-                }
-                // Was there a turn just there?
-                if(prevTurns != turns) {
-                    // Then we need to do the NPC moves
-                    // if we do it in MOVEMENT, then we don't get a path immediately.
-                    process.processNpcActors();
-
-                    // Following all the NPC movement, we need to recalculate player view to see any new NPC
-                    process.calculateVision(player);
-                    redrawGame = true;
-                }
-
-
-            }
-
-            // Set lastKeyEent to this one that we just used, so we do not enter loop again
+            checkWinConditions();
+            processGameState(currentState);
+            // Set lastKeyEvent to this one that we just used, so we do not enter loop again
             this.lastKeyEvent = this.window.getLastKeyEvent();
+            // Reset these values to allow the game to redraw itself (animation)
             gameLoopsWithoutInput = 0;
             refreshIntervalMs = defaultRefreshIntervalMs;
         } else {
+            // No key input, increase the draw refresh time to reduce cpu usage when idle
             gameLoopsWithoutInput++;
             if(gameLoopsWithoutInput % 100 == 0) {
                 refreshIntervalMs *= 2;
@@ -314,6 +186,139 @@ public class Roguelike {
         }
     }
 
+    private void processGameState(State currentState) {
+        // Title Screen
+        // .
+        // .
+
+        if (currentState == State.TITLE) {
+            switch (this.window.getLastKeyEvent().getKeyCode()) {
+                case KeyEvent.VK_UP:
+                    title.scrollUp();
+                    break;
+                case KeyEvent.VK_DOWN:
+                    title.scrollDown();
+                    break;
+                case KeyEvent.VK_ENTER:
+                    if (title.getSelectedItem().equals("New Game")) {
+                        this.currentState = State.PLAYING;
+                    }
+            }
+        }
+        // Victory Achieved
+        // .
+        // .
+
+        if (showVictoryConsole) {
+            switch (this.window.getLastKeyEvent().getKeyCode()) {
+                // Player decides to keep playing
+                case KeyEvent.VK_ESCAPE:
+                    showVictoryConsole = false;
+                    break;
+                // Player decides to start new game
+                case KeyEvent.VK_R:
+                    initGame();
+                default:
+                    break;
+            }
+        }
+        // Defeated
+        // .
+        // .
+
+        else if (showDefeatConsole) {
+            switch (this.window.getLastKeyEvent().getKeyCode()) {
+                case KeyEvent.VK_R:
+                    initGame();
+                    break;
+                default:
+                    break;
+            }
+        }
+
+
+        // Main portion of game loop
+        // .
+        // .
+
+        else {
+            // By default, do not recalculate field of vision unless we need to
+            boolean recalculateFOV = false;
+
+            KeyEvent key = this.window.getLastKeyEvent();
+
+            // Obtain the command related to the keypress determined by game state
+            Input.Command command = input.processKey(key);
+
+            // Check command and act upon it
+            int prevTurns = turns;
+            if (command != null) {
+                switch (command) {
+
+                    case MOVEMENT:
+                        Input.Direction direction = input.getPlayerMovementDirection(key);
+                        if (process.moveActor(player, direction)) {
+                            recalculateFOV = true;
+                        }
+                        redrawGame = true;
+                        turns++;
+                        break;
+
+                    case DEBUG:
+                        input.processDebugCommand(key, this);
+                        redrawGame = true;
+                        break;
+
+                    case MENU:
+                        input.processMenuCommand(key, this);
+                        redrawGame = true;
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+            // Recalculate field of vision if it was set to true
+            // This allows us to know what we're seeing next, since NPC turn is after player
+            // NPC need to know if they now see the player
+            if (recalculateFOV) {
+                //
+                process.calculateVision(player);
+                redrawGame = true;
+            }
+            // Was there a turn just there?
+            if(prevTurns != turns) {
+                // Then we need to do the NPC moves
+                // if we do it in MOVEMENT, then we don't get a path immediately.
+                process.processNpcActors();
+
+                // Following all the NPC movement, we need to recalculate player view to see any new NPC
+                process.calculateVision(player);
+                redrawGame = true;
+            }
+
+
+        }
+    }
+
+    private void checkWinConditions() {
+        /**
+         Check win condition
+         if giant was killed
+         and victoryConsole is null(not initialized yet)
+
+         If it is not null, then we've seen it and likely hit ESCAPE to keep playing
+         */
+        if (giantSlain && victoryConsole == null) {
+            gui.initVictoryConsole();
+            showVictoryConsole = true;
+        }
+
+        if (!player.isAlive()) {
+            gui.initDefeatConsole();
+            showDefeatConsole = true;
+        }
+    }
     /**
      * refreshTile
      * <p/>
