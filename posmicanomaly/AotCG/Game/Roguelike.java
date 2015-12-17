@@ -30,7 +30,7 @@ public class Roguelike {
     protected State currentState;
 
     Window window;
-    int fontSize = 20;
+    int fontSize = 24;
     int windowHeight = 40;
     int windowWidth = 135;
     int messageHeight = 10;
@@ -46,7 +46,7 @@ public class Roguelike {
     int lastFramesPerSecond;
     long fpsTimerStart;
     int gameInformationConsoleHeight = windowHeight;
-    int gameInformationConsoleWidth = 20;
+    int gameInformationConsoleWidth = 18;
     boolean showMenu;
     boolean showInventory;
     boolean giantSlain;
@@ -118,6 +118,8 @@ public class Roguelike {
         this.mapConsole = new Console(this.mapHeight, this.mapWidth);
         // Map console border doesn't play nice, need to fix this either in libjstre or make it an enhancedconsole
         mapConsole.setBorder(true);
+        mapConsole.setBorderColor(Color.gray);
+        mapConsole.setBorderStyle(Console.BorderStyle.DOUBLE);
 
         if(mapConsole.hasBorder()) {
             this.map = new Map(mapHeight - 2, mapWidth - 2);
@@ -472,8 +474,6 @@ public class Roguelike {
     public int getTurns() {
         return turns;
     }
-
-
 
     public int getCurrentFrames() {
         return currentFrames;
