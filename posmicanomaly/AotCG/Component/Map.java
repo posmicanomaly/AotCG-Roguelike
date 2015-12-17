@@ -11,6 +11,7 @@ import java.util.ArrayList;
 public class Map {
     private int height, width, depth;
     private Level currentLevel;
+    public enum LevelStyle {WORLD, DEFAULT}
 
     private ArrayList<Level> levelList;
 
@@ -19,7 +20,7 @@ public class Map {
         this.width = width;
         this.depth = depth;
         levelList = new ArrayList<>();
-        Level firstLevel = makeMap(height, width);
+        Level firstLevel = makeMap(height, width, LevelStyle.WORLD);
         levelList.add(firstLevel);
         currentLevel = levelList.get(0);
     }
@@ -27,7 +28,7 @@ public class Map {
     public boolean goDeeper() {
         if(getCurrentDepth() == levelList.size() - 1) {
             System.out.println("Making new level to go deeper");
-            levelList.add(makeMap(height, width));
+            levelList.add(makeMap(height, width, LevelStyle.DEFAULT));
         }
         currentLevel.setTurnExited(Roguelike.turns);
         currentLevel = levelList.get(getCurrentDepth() + 1);
@@ -45,8 +46,9 @@ public class Map {
         }
     }
 
-    private Level makeMap(int height, int width) {
-            return new Level(height, width);
+    private Level makeMap(int height, int width, LevelStyle levelStyle) {
+
+        return new Level(height, width, levelStyle);
     }
 
     public int getHeight() {

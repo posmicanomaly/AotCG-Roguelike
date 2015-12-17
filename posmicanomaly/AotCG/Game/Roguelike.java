@@ -32,7 +32,8 @@ public class Roguelike {
     Window window;
     int fontSize = 24;
     int windowHeight = 40;
-    int windowWidth = 135;
+    //int windowWidth = 135;
+    int windowWidth = 125;
     int messageHeight = 10;
     int messageWidth;
     int mapHeight;

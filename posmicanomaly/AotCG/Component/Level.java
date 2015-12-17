@@ -15,12 +15,12 @@ public class Level {
     private Tile[][] tileArray;
     private int turnExited;
 
-    public Level(int height, int width) {
+    public Level(int height, int width, Map.LevelStyle levelStyle) {
         this.height = height;
         this.width = width;
         astar = new AStar(this);
         turnExited = -1;
-        init();
+        init(levelStyle);
     }
 
     public ArrayList<Tile> getNearbyTiles(int y, int x) {
@@ -74,9 +74,7 @@ public class Level {
     DEBUG FUNCTIONS
      */
 
-    public void DEBUG_INIT() {
-        init();
-    }
+
 
     /*
 
@@ -91,11 +89,14 @@ public class Level {
         }
     }
 
-    private void init() {
-        this.tileArray = makeMap(height, width);
+    private void init(Map.LevelStyle levelStyle) {
+        this.tileArray = makeMap(height, width, levelStyle);
     }
 
-    private Tile[][] makeMap(int height, int width) {
+    private Tile[][] makeMap(int height, int width, Map.LevelStyle levelStyle) {
+        if(levelStyle == Map.LevelStyle.WORLD) {
+            return LevelFactory.makeWorldMap(height, width);
+        }
         return LevelFactory.makeDefaultLevel(height, width);
     }
 
