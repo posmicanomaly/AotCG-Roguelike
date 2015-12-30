@@ -31,10 +31,10 @@ public class Roguelike {
     protected State currentState;
 
     Window window;
-    int fontSize = 24;
-    int windowHeight = 40;
+    int fontSize = 16;
+    int windowHeight = 60;
     //int windowWidth = 135;
-    int windowWidth = 125;
+    int windowWidth = 90;
     int messageHeight = 10;
     int messageWidth;
     int mapHeight;
