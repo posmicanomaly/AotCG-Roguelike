@@ -176,6 +176,18 @@ public abstract class LevelFactory {
                 color =  ColorTools.varyColor(Colors.FOREST, 0.7, 1.0, ColorTools.BaseColor.RGB);
                 backgroundColor = ColorTools.varyColor(Colors.CAVE_GRASS_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
                 break;
+            case MOUNTAIN:
+                symbol = '\u25B2';
+                isBlocked = false;
+                color =  ColorTools.varyColor(Colors.MOUNTAIN, 0.9, 1.0, ColorTools.BaseColor.RGB);
+                backgroundColor = ColorTools.varyColor(Colors.CAVE_GRASS_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
+                break;
+            case SAND:
+                symbol = '\u2591';
+                isBlocked = false;
+                color = ColorTools.varyColor(Colors.SAND, 0.7, .8, ColorTools.BaseColor.RGB);
+                backgroundColor = ColorTools.varyColor(Colors.CAVE_GRASS_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
+                break;
             default:
                 symbol = '?';
                 isBlocked = false;
@@ -494,9 +506,11 @@ public abstract class LevelFactory {
         Random rng = Roguelike.rng;
         //addPoolFeature(result, rng.nextInt(10) + 5, Tile.Type.WATER);
         //addStairs(result);
-        addPoolFeature(result, rng.nextInt(20) + 5, Tile.Type.WATER);
         addPoolFeature(result, rng.nextInt(20) + 5, Tile.Type.FOREST);
+        addPoolFeature(result, rng.nextInt(20) + 5, Tile.Type.MOUNTAIN);
+        addPoolFeature(result, rng.nextInt(20) + 5, Tile.Type.WATER);
         addCaveOpenings(result);
+        addShores(result);
         processMap(result);
         System.out.println("makeWorldMap done");
         return result;
@@ -745,6 +759,75 @@ public abstract class LevelFactory {
         return tiles;
     }
 
+    private static void addShores(Tile[][] result) {
+        for(int y = 0; y < result.length; y++) {
+            for(int x = 0; x < result[y].length; x++) {
+                Tile t = result[y][x];
+                if(t.getType() == Tile.Type.WATER) {
+                    continue;
+                }
+                for(Tile nextTile : getNearbyTiles(t, result)) {
+                    if(nextTile == null)
+                        continue;
+                    if(nextTile.getType() == Tile.Type.WATER) {
+                        t.setType(Tile.Type.SAND);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    private static ArrayList<Tile> getNearbyTiles(Tile t, Tile[][] result) {
+        // Get the surrounding tiles
+        int width = result[0].length;
+        int height = result.length;
+        int x = t.getX();
+        int y = t.getY();
+        Tile tLeft = null;
+        Tile tRight = null;
+        Tile tUp = null;
+        Tile tDown = null;
+        Tile ULeft = null;
+        Tile URight = null;
+        Tile DLeft = null;
+        Tile DRight = null;
+
+        if (x > 0)
+            tLeft = result[y][x - 1];
+        if (x < width - 1)
+            tRight = result[y][x + 1];
+
+        if (y > 0) {
+            tUp = result[y - 1][x];
+            if (x > 0)
+                ULeft = result[y - 1][x - 1];
+            if (x < width - 1)
+                URight = result[y - 1][x + 1];
+        }
+
+        if (y < height - 1) {
+            tDown = result[y + 1][x];
+            if (x > 0)
+                DLeft = result[y + 1][x - 1];
+            if (x < width - 1)
+                DRight = result[y + 1][x + 1];
+        }
+
+        ArrayList<Tile> tiles = new ArrayList<Tile>();
+
+        tiles.add(tLeft);
+        tiles.add(tRight);
+        tiles.add(tUp);
+        tiles.add(tDown);
+        tiles.add(ULeft);
+        tiles.add(URight);
+        tiles.add(DLeft);
+        tiles.add(DRight);
+
+        return tiles;
+    }
+
     private static boolean hasFloodAndFloorNeighborTiles(Tile t, Tile[][] result, int height, int width) {
         // Get the surrounding tiles
         int x = t.getX();
@@ -753,11 +836,11 @@ public abstract class LevelFactory {
         Tile tRight = null;
         Tile tUp = null;
         Tile tDown = null;
-        if (x > 1)
+        if (x > 0)
             tLeft = result[y][x - 1];
         if (x < width - 1)
             tRight = result[y][x + 1];
-        if (y > 1)
+        if (y > 0)
             tUp = result[y - 1][x];
         if (y < height - 1)
             tDown = result[y + 1][x];
