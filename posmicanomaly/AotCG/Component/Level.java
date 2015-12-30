@@ -14,13 +14,19 @@ public class Level {
     private AStar astar;
     private Tile[][] tileArray;
     private int turnExited;
+    int rootY, rootX;
 
-    public Level(int height, int width, Map.LevelStyle levelStyle) {
+    private Map.LevelStyle levelStyle;
+
+    public Level(int height, int width, Map.LevelStyle levelStyle, int rootY, int rootX) {
         this.height = height;
         this.width = width;
+        this.rootY = rootY;
+        this.rootX = rootX;
         astar = new AStar(this);
         turnExited = -1;
-        init(levelStyle);
+        this.levelStyle = levelStyle;
+        init(this.levelStyle);
     }
 
     public ArrayList<Tile> getNearbyTiles(int y, int x) {
@@ -163,9 +169,9 @@ public class Level {
         return y >= 0 && y < height && x >= 0 && x < width;
     }
 
-    public Tile getUpStairs() {
-        return getRandomTile(Tile.Type.STAIRS_UP);
-    }
+//    public Tile getUpStairs() {
+//        return getRandomTile(Tile.Type.STAIRS_UP);
+//    }
 
     public Tile getDownStairs() {
         return getRandomTile(Tile.Type.STAIRS_DOWN);
@@ -181,5 +187,16 @@ public class Level {
 
     public int getTurnExited() {
         return turnExited;
+    }
+
+    public Tile getEntryTile() {
+        switch(this.levelStyle) {
+            case WORLD:
+                return getRandomTile(Tile.Type.WORLD_GRASS);
+            case DEFAULT:
+                return getRandomTile(Tile.Type.STAIRS_UP);
+        }
+        System.out.println("getEntryTile() :: There is no entry tile");
+        return null;
     }
 }

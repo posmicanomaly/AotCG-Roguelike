@@ -141,7 +141,7 @@ public class Tile {
     }
 
     public static enum Type {
-        DEFAULT, WALL, FLOOR, WATER, PATH, BUILD_FLOOD, DOOR, WALL_SECRET, STAIRS_UP, STAIRS_DOWN, CAVE_GRASS, WORLD_GRASS
+        DEFAULT, WALL, FLOOR, WATER, PATH, BUILD_FLOOD, DOOR, WALL_SECRET, STAIRS_UP, STAIRS_DOWN, CAVE_GRASS, WORLD_GRASS, FOREST, CAVE_OPENING
     }
 //    public Tile(int y, int x, char symbol, Color color) {
 //        this.y = y;

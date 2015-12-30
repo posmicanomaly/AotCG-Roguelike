@@ -165,40 +165,75 @@ public class Process {
         // The tile is valid, not blocked, and has no "living" actor
         // We can move the actor there
         else {
-                /*
-                I don't like this
-                 */
+            // First check if we're changing levels
+            /**
+             * About level changing:
+             *
+             * The "world map" is modal, and each move updates roguelike.playerMapY and X respectively.
+             *
+             * The "levels" are stored in map.level3dArray[][][].
+             * Moving "deeper" increases the depth by 1, and "higher" decreases it.
+             * Levels are vertically stacked, and at this time do not horizontally connect.
+             * We utilize the playerMapY and X coordinates to determine where the next or previous level is.
+             *
+             * todo:
+             * Levels can be horizontally connected as long as the playerMapY and X get updated when that occurs.
+             * Abstract much of this to the map to figure out.
+             * There are root coordinate variables in the levels, work to utilize those coordinates in the future if needed.
+             */
+            boolean levelChanged = false;
+
+            // For now, only the player can change levels
             if (actor.equals(player)) {
-                if (desiredTile.getType() == Tile.Type.STAIRS_DOWN) {
-                    boolean levelChanged = map.goDeeper();
-                    if (levelChanged) {
-                        System.out.println("turnsExit: " + map.getCurrentLevel().getTurnExited());
-                        if(map.getCurrentLevel().getTurnExited() != -1) {
-                            int catchup = 0;
-                            for (int i = map.getCurrentLevel().getTurnExited(); i < Roguelike.turns; i++) {
-                                processNpcActors();
-                                catchup++;
-                            }
-                            System.out.println("level caught up, processNpcActors() " + catchup + " times");
+
+                switch(desiredTile.getType()) {
+                    case CAVE_OPENING:
+                    case STAIRS_DOWN:
+                        // Save the map coordinates if we're on the world map
+                        if(map.getCurrentDepth() == 0) {
+                            roguelike.setPlayerMapY(desiredTile.getY());
+                            roguelike.setPlayerMapX(desiredTile.getX());
                         }
-                        desiredTile = map.getCurrentLevel().getUpStairs();
-                    }
-                } else if (desiredTile.getType() == Tile.Type.STAIRS_UP) {
-                    boolean levelChanged = map.goHigher();
-                    if (levelChanged) {
-                        System.out.println("turnsExit: " + map.getCurrentLevel().getTurnExited());
-                        if(map.getCurrentLevel().getTurnExited() != -1) {
-                            int catchup = 0;
-                            for (int i = map.getCurrentLevel().getTurnExited(); i < Roguelike.turns; i++) {
-                                processNpcActors();
-                                catchup++;
-                            }
-                            System.out.println("level caught up, processNpcActors() " + catchup + " times");
+
+                        // Get the result of our attempt to change levels
+                        levelChanged = map.goDeeper(roguelike.getPlayerMapY(), roguelike.getPlayerMapX());
+                        if (levelChanged) {
+                            desiredTile = map.getCurrentLevel().getEntryTile();
                         }
-                        desiredTile = map.getCurrentLevel().getDownStairs();
-                    }
+                        break;
+
+                    case STAIRS_UP:
+                        levelChanged = map.goHigher(roguelike.getPlayerMapY(), roguelike.getPlayerMapX());
+                        if (levelChanged) {
+                            // If we are going to the world map, then we place the player back at the last known world map coordinates.
+                            if(map.getCurrentDepth() == 0) {
+                                desiredTile = map.getCurrentLevel().getTile(roguelike.getPlayerMapY(), roguelike.getPlayerMapX());
+                            }
+                            // Otherwise, we place them on the down-stairs for the previous level, like they climbed them.
+                            else {
+                                desiredTile = map.getCurrentLevel().getDownStairs();
+                            }
+                        }
+                        break;
+
+                    default:
+                        break;
                 }
             }
+
+            // If the level was changed, check and perform catch up if needed based on when we last left it.
+            if (levelChanged) {
+                System.out.println("turnsExit: " + map.getCurrentLevel().getTurnExited());
+                if(map.getCurrentLevel().getTurnExited() != -1) {
+                    int catchup = 0;
+                    for (int i = map.getCurrentLevel().getTurnExited(); i < Roguelike.turns; i++) {
+                        processNpcActors();
+                        catchup++;
+                    }
+                    System.out.println("level caught up, processNpcActors() " + catchup + " times");
+                }
+            }
+
             Tile previousTile = currentTile;
 
             // set actor's tile
@@ -220,6 +255,11 @@ public class Process {
 
             previousTile.setActor(null);
 
+            // More hacks for map x,y
+            if(actor.equals(player) && map.getCurrentDepth() == 0) {
+                roguelike.setPlayerMapY(actor.getTile().getY());
+                roguelike.setPlayerMapX(actor.getTile().getX());
+            }
             // Return true, a move was made
             return true;
 
@@ -357,15 +397,24 @@ public class Process {
         Map map = roguelike.getMap();
 
         if(actor.equals(player)) {
-            map.getCurrentLevel().toggleAllTilesVisible(false);
+            // If on the world map, skip FOV, all visible
+            // todo: visible by height, realism
+            if(roguelike.map.getCurrentDepth() == 0) {
+                map.getCurrentLevel().toggleAllTilesVisible(true);
+                return;
+            } else {
+                map.getCurrentLevel().toggleAllTilesVisible(false);
+            }
         }
         actor.clearVisibleTiles();
         int y = actor.getTile().getY();
         int x = actor.getTile().getX();
 
-        ArrayList<Tile> fieldOfVisionTiles = FieldOfVision.calculateRayCastingFOVVisibleTiles(y, x, map
-                .getCurrentLevel(), map.getWidth() / 2);
+        ArrayList<Tile> fieldOfVisionTiles = null;
 
+        int radius = map.getWidth();
+        fieldOfVisionTiles = FieldOfVision.calculateRayCastingFOVVisibleTiles(y, x, map
+                    .getCurrentLevel(), radius);
 
         for (Tile t : fieldOfVisionTiles) {
             if(actor.equals(player)) {

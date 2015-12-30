@@ -156,11 +156,25 @@ public abstract class LevelFactory {
                 backgroundColor = ColorTools.varyColor(Colors.FLOOR_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
                 break;
             case WORLD_GRASS:
-                symbol = '"';
+                symbol = Symbol.ALMOST_EQUAL_TO;
                 isBlocked = false;
                 color = ColorTools.varyColor(Colors.CAVE_GRASS, 0.5, 1.0, ColorTools.BaseColor.RGB);
                 backgroundColor = ColorTools.varyColor(Colors.CAVE_GRASS_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
-                transparent = true;
+                break;
+            case CAVE_OPENING:
+                symbol = 'o';
+                isBlocked = false;
+                color = Color.WHITE;
+                backgroundColor = ColorTools.varyColor(Colors.CAVE_GRASS_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
+                break;
+            case FOREST:
+                symbol = '\u2663';
+                if(Roguelike.rng.nextInt(100) < 30) {
+                    symbol = '\u2660';
+                }
+                isBlocked = false;
+                color =  ColorTools.varyColor(Colors.FOREST, 0.7, 1.0, ColorTools.BaseColor.RGB);
+                backgroundColor = ColorTools.varyColor(Colors.CAVE_GRASS_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
                 break;
             default:
                 symbol = '?';
@@ -433,18 +447,15 @@ public abstract class LevelFactory {
         Tile tDown = null;
 
         // Check bounds to avoid nullReferences
-        if (x > 1)
+        if (x > 0)
             tLeft = level[y][x - 1];
         if (x < level[0].length - 1)
             tRight = level[y][x + 1];
-        if (y > 1)
+        if (y > 0)
             tUp = level[y - 1][x];
         if (y < level.length - 1)
             tDown = level[y + 1][x];
 
-        // the return result, init to false
-        // If we can spread, we will change this to true
-        boolean canSpread = false;
         ArrayList<Tile> tiles = new ArrayList<Tile>();
                     /*
                     For each case, if the tile != null, isBlocked == false, type != WATER
@@ -482,7 +493,10 @@ public abstract class LevelFactory {
 
         Random rng = Roguelike.rng;
         //addPoolFeature(result, rng.nextInt(10) + 5, Tile.Type.WATER);
-        addStairs(result);
+        //addStairs(result);
+        addPoolFeature(result, rng.nextInt(20) + 5, Tile.Type.WATER);
+        addPoolFeature(result, rng.nextInt(20) + 5, Tile.Type.FOREST);
+        addCaveOpenings(result);
         processMap(result);
         System.out.println("makeWorldMap done");
         return result;
@@ -767,6 +781,36 @@ public abstract class LevelFactory {
         }
 
         return nearFloor && nearFlood;
+    }
+
+
+    private static void addCaveOpenings(Tile[][] result) {
+        Random rng = Roguelike.rng;
+        int y, x;
+        Tile t;
+
+        int openingsToAdd = 50;
+        int openingsAdded = 0;
+        boolean validTile = false;
+
+        do {
+            y = rng.nextInt(result.length);
+            x = rng.nextInt(result[0].length);
+            t = result[y][x];
+            switch(t.getType()) {
+                case WORLD_GRASS:
+                    validTile = true;
+                    break;
+                default:
+                    break;
+            }
+
+            if(validTile) {
+                t.setType(Tile.Type.CAVE_OPENING);
+                openingsAdded++;
+            }
+        } while (openingsAdded < openingsToAdd);
+
     }
 
     private static void addStairs(Tile[][] result) {

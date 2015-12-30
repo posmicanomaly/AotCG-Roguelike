@@ -19,6 +19,7 @@ import java.util.Random;
  * Created by Jesse Pospisil on 8/17/2015.
  */
 public class Roguelike {
+    private static final int MAP_DEPTH = 20;
     public static boolean RENDER_BETWEEN_TURNS = false;
 
     public static Random rng;
@@ -59,6 +60,11 @@ public class Roguelike {
     private Input input;
     private Process process;
     private Actor player;
+
+    private int playerMapX;
+    private int playerMapY;
+    private int playerMapZ;
+
     private KeyEvent lastKeyEvent;
     private int gameLoopsWithoutInput;
     private Console rootConsole;
@@ -123,9 +129,9 @@ public class Roguelike {
         mapConsole.setBorderStyle(Console.BorderStyle.DOUBLE);
 
         if(mapConsole.hasBorder()) {
-            this.map = new Map(mapHeight - 2, mapWidth - 2);
+            this.map = new Map(mapHeight - 2, mapWidth - 2, Roguelike.MAP_DEPTH);
         } else {
-            this.map = new Map(mapHeight, mapWidth);
+            this.map = new Map(mapHeight, mapWidth, Roguelike.MAP_DEPTH);
         }
 
         initPlayer();
@@ -186,7 +192,7 @@ public class Roguelike {
 
     private void initPlayer() {
         // Set up starting tile for player
-        Tile startingTile = map.getCurrentLevel().getUpStairs();
+        Tile startingTile = map.getCurrentLevel().getEntryTile();
 
         // Create player at that tile and set them up
         player = ActorFactory.createActor(ActorFactory.TYPE.PLAYER, startingTile);
@@ -506,6 +512,22 @@ public class Roguelike {
 
     public Gui getGui() {
         return gui;
+    }
+
+    public int getPlayerMapY() {
+        return playerMapY;
+    }
+
+    public int getPlayerMapX() {
+        return playerMapX;
+    }
+
+    public void setPlayerMapY(int playerMapY) {
+        this.playerMapY = playerMapY;
+    }
+
+    public void setPlayerMapX(int playerMapX) {
+        this.playerMapX = playerMapX;
     }
 
 

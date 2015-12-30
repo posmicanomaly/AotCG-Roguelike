@@ -31,7 +31,7 @@ public class Gui {
 
         initMessageConsole();
         gameInformationConsole = new GameInformationConsole(roguelike.getGameInformationConsoleHeight(),
-                roguelike.getGameInformationConsoleWidth(), player, map);
+                roguelike.getGameInformationConsoleWidth(), player, map, this.roguelike);
         gameInformationConsole.setBorder(true);
         gameInformationConsole.setBorderColor(Color.gray);
         gameInformationConsole.setBorderStyle(Console.BorderStyle.DOUBLE);

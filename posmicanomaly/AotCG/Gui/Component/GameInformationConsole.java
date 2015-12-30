@@ -4,6 +4,7 @@ import posmicanomaly.AotCG.Component.Actor;
 import posmicanomaly.AotCG.Component.Colors;
 import posmicanomaly.AotCG.Component.Map;
 import posmicanomaly.AotCG.Component.Tile;
+import posmicanomaly.AotCG.Game.Roguelike;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ import java.util.ConcurrentModificationException;
  * Created by Jesse Pospisil on 8/19/2015.
  */
 public class GameInformationConsole extends EnhancedConsole {
+    Roguelike roguelike;
     Actor player;
     private int turns;
     private int currentFrames;
@@ -20,9 +22,10 @@ public class GameInformationConsole extends EnhancedConsole {
     private Map map;
     private int barWidth;
 
-    public GameInformationConsole(int height, int width, Actor player, Map map) {
+    public GameInformationConsole(int height, int width, Actor player, Map map, Roguelike roguelike) {
         super(height, width);
         this.player = player;
+        this.roguelike = roguelike;
         turns = 0;
         currentFrames = 0;
         fps = 0;
@@ -49,6 +52,8 @@ public class GameInformationConsole extends EnhancedConsole {
             col++;
         }
         writeString("@: " + player.getLevel() + " (Depth " + map.getCurrentDepth() + ")", row, col);
+        row++;
+        writeString("WC: x: " + roguelike.getPlayerMapX() + " y: " + roguelike.getPlayerMapY(), row, col);
         row++;
         drawHealthBar(row, col, player);
 
