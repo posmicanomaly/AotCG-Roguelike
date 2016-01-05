@@ -20,7 +20,7 @@ public class ActorFactory {
         switch(type) {
             case PLAYER:
                 level = 1;
-                mod = 100;
+                mod = 20;
                 speed = 1;
                 glyph = '@';
                 actorName = "you";

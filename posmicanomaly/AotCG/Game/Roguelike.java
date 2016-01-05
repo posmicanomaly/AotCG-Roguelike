@@ -31,10 +31,10 @@ public class Roguelike {
     protected State currentState;
 
     Window window;
-    int fontSize = 16;
+    int fontSize = 24;
     int windowHeight = 60;
     //int windowWidth = 135;
-    int windowWidth = 90;
+    int windowWidth = 100;
     int messageHeight = 10;
     int messageWidth;
     int mapHeight;
@@ -80,7 +80,7 @@ public class Roguelike {
         this.messageWidth = this.windowWidth - gameInformationConsoleWidth;
 
         // HACK ADJUST
-        int MAP_WIDTH_ADJ = 2;
+        int MAP_WIDTH_ADJ = 0;
         int MAP_HEIGHT_ADJ = 0;
         this.mapWidth = this.windowWidth - MAP_WIDTH_ADJ - gameInformationConsoleWidth;
         this.mapHeight = this.windowHeight - MAP_HEIGHT_ADJ - this.messageHeight;
