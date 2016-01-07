@@ -46,10 +46,6 @@ public abstract class LevelFactory {
         floodFill(level);
     }
 
-    /*
-
-     */
-
 
     /**
      * Wrapper for processMap
@@ -90,23 +86,23 @@ public abstract class LevelFactory {
                  */
         boolean transparent = true;
         backgroundColor = Color.black;
+        MapSymbols ms = Roguelike.mapSymbols;
         switch (t.getType()) {
             case FLOOR:
-                symbol = Symbol.MIDDLE_DOT;
+                symbol = ms.FLOOR;
                 isBlocked = false;
                 color = ColorTools.varyColor(Colors.FLOOR, 0.8, 1.0, ColorTools.BaseColor.RGB);
                 backgroundColor = ColorTools.varyColor(Colors.FLOOR_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
                 break;
             case WALL:
-                symbol = '#';
+                symbol = ms.WALL;
                 isBlocked = true;
                 color = Colors.WALL;
                 backgroundColor = ColorTools.varyColor(Colors.WALL_BG, 0.7, 1.0, ColorTools.BaseColor.RGB);
-                //
                 transparent = false;
                 break;
             case WALL_SECRET:
-                symbol = ' ';
+                symbol = ms.WALL_SECRET;
                 isBlocked = false;
                 color = Colors.WALL;
                 backgroundColor = ColorTools.varyColor(Colors.WALL_BG, 0.7, 1.0, ColorTools.BaseColor.RGB);
@@ -114,82 +110,81 @@ public abstract class LevelFactory {
                 transparent = false;
                 break;
             case PATH:
-                symbol = Symbol.MIDDLE_DOT;
+                symbol = ms.PATH;
                 isBlocked = false;
                 color = Color.WHITE;
                 break;
             case BUILD_FLOOD:
-                symbol = Symbol.ALMOST_EQUAL_TO;
+                symbol = ms.BUILD_FLOOD;
                 isBlocked = false;
                 color = Color.ORANGE;
                 break;
             case WATER:
-                symbol = Symbol.ALMOST_EQUAL_TO;
+                symbol = ms.WATER;
                 isBlocked = false;
                 color = Colors.WATER;
                 backgroundColor = Colors.WATER_BG;
                 break;
             case CAVE_GRASS:
-                symbol = '"';
+                symbol = ms.CAVE_GRASS;
                 isBlocked = false;
                 color = ColorTools.varyColor(Colors.CAVE_GRASS, 0.5, 1.0, ColorTools.BaseColor.RGB);
                 backgroundColor = ColorTools.varyColor(Colors.CAVE_GRASS_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
                 break;
             case DOOR:
-                //symbol ='+';
-                symbol = '\u041f';
+                symbol = ms.DOOR;
                 isBlocked = false;
                 color = ColorTools.varyColor(Colors.DOOR, 0.5, 1.0, ColorTools.BaseColor.RGB);
                 backgroundColor = ColorTools.varyColor(Colors.DOOR_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
                 transparent = false;
                 break;
             case STAIRS_UP:
-                symbol = '<';
+                symbol = ms.STAIRS_UP;
                 isBlocked = false;
                 color = Color.GREEN;
                 backgroundColor = ColorTools.varyColor(Colors.FLOOR_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
                 break;
             case STAIRS_DOWN:
-                symbol = '>';
+                symbol = ms.STAIRS_DOWN;
                 isBlocked = false;
                 color = Color.RED;
                 backgroundColor = ColorTools.varyColor(Colors.FLOOR_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
                 break;
             case WORLD_GRASS:
-                symbol = Symbol.ALMOST_EQUAL_TO;
+                symbol = ms.WORLD_GRASS;
                 isBlocked = false;
                 color = ColorTools.varyColor(Colors.CAVE_GRASS, 0.5, 1.0, ColorTools.BaseColor.RGB);
-                backgroundColor = ColorTools.varyColor(Colors.CAVE_GRASS_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
+                backgroundColor = color.darker().darker();
                 break;
             case CAVE_OPENING:
-                symbol = 'o';
+                symbol = ms.CAVE_OPENING;
                 isBlocked = false;
-                color = Color.WHITE;
-                backgroundColor = ColorTools.varyColor(Colors.CAVE_GRASS_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
+                color = Colors.CAVE_OPENING;
+                backgroundColor = color.darker().darker();
                 break;
             case FOREST:
-                symbol = '\u2663';
+                symbol = ms.FOREST;
                 if(Roguelike.rng.nextInt(100) < 30) {
                     symbol = '\u2660';
                 }
                 isBlocked = false;
                 color =  ColorTools.varyColor(Colors.FOREST, 0.7, 1.0, ColorTools.BaseColor.RGB);
-                backgroundColor = ColorTools.varyColor(Colors.CAVE_GRASS_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
+                backgroundColor = color.darker().darker();
                 break;
             case MOUNTAIN:
-                symbol = '\u25B2';
+                symbol = ms.MOUNTAIN;
                 isBlocked = false;
                 color =  ColorTools.varyColor(Colors.MOUNTAIN, 0.9, 1.0, ColorTools.BaseColor.RGB);
-                backgroundColor = ColorTools.varyColor(Colors.CAVE_GRASS_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
+                backgroundColor = color.darker().darker().darker().darker();
                 break;
             case SAND:
-                symbol = '\u2591';
+                symbol = ms.SAND;
                 isBlocked = false;
-                color = ColorTools.varyColor(Colors.SAND, 0.7, .8, ColorTools.BaseColor.RGB);
-                backgroundColor = ColorTools.varyColor(Colors.CAVE_GRASS_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
+                color = ColorTools.varyColor(Colors.SAND, 0.7, 0.8, ColorTools.BaseColor.RGB);
+                backgroundColor = color.darker().darker();
                 break;
             default:
-                symbol = '?';
+                symbol = ms.DEFAULT;
                 isBlocked = false;
                 color = Color.blue;
                 break;

@@ -10,6 +10,7 @@ public abstract class Colors {
     public static final Color FOREST = new Color(0.11372549f, 0.32941177f, 0.10980392f);
     public static final Color MOUNTAIN = new Color(0.25490198f, 0.25490198f, 0.25490198f);
     public static final Color SAND = new Color(0.5372549f, 0.5254902f, 0.44313726f);
+    public static final Color CAVE_OPENING = new Color(0.24705882f, 0.12156863f, 0.0f);
     public static Color WALL = new Color(0.0f, 0.0f, 0.0f);
     public static Color WALL_BG = new Color(0.12941177f, 0.13725491f, 0.3137255f, 1.0f);
     public static Color WATER = new Color(0.043137256f, 0.043137256f, 0.26666668f);

@@ -24,6 +24,8 @@ public class Roguelike {
 
     public static Random rng;
     public static int turns;
+    public static MapSymbols mapSymbols = new MapSymbols("config/symbols.txt");
+
 
     protected Console menuWindow;
     protected Gui gui;
