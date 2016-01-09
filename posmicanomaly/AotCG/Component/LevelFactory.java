@@ -165,7 +165,7 @@ public abstract class LevelFactory {
             case FOREST:
                 symbol = ms.FOREST;
                 if(Roguelike.rng.nextInt(100) < 30) {
-                    symbol = '\u2660';
+                    symbol = ms.FOREST_ALT;
                 }
                 isBlocked = false;
                 color =  ColorTools.varyColor(Colors.FOREST, 0.7, 1.0, ColorTools.BaseColor.RGB);

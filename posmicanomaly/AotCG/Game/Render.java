@@ -31,7 +31,7 @@ public class Render implements Runnable {
     }
 
     protected void drawGame(Console rootConsole) {
-        rootConsole.clear();
+        //rootConsole.clear();
         if (roguelike.currentState == Roguelike.State.PLAYING) {
 
             // Refresh the map buffer

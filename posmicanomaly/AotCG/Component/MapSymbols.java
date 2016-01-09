@@ -16,22 +16,22 @@ import java.util.Scanner;
  */
 public class MapSymbols {
     // Defaults
-    char FLOOR = Symbol.MIDDLE_DOT;
+    char FLOOR = 249;
     char WALL = '#';
     char WALL_SECRET = '*';
-    char PATH = Symbol.MIDDLE_DOT;
-    char BUILD_FLOOD = Symbol.ALMOST_EQUAL_TO;
-    char WATER = Symbol.ALMOST_EQUAL_TO;
+    char PATH = 249;
+    char BUILD_FLOOD = 247;
+    char WATER = 247;
     char CAVE_GRASS = '"';
-    char DOOR = '\u041f';
+    char DOOR = 239;
     char STAIRS_UP = '<';
     char STAIRS_DOWN = '>';
-    char WORLD_GRASS = Symbol.ALMOST_EQUAL_TO;
-    char CAVE_OPENING = 'O';
-    char FOREST = '\u2663';
-    char FOREST_ALT = '\u2660';
-    char MOUNTAIN = '\u25B2';
-    char SAND = '\u2261';
+    char WORLD_GRASS = 247;
+    char CAVE_OPENING = 15;
+    char FOREST = 5;
+    char FOREST_ALT = 6;
+    char MOUNTAIN = 30;
+    char SAND = 247;
     char DEFAULT = '?';
 
     public MapSymbols(String fileName) {
@@ -39,7 +39,7 @@ public class MapSymbols {
             Scanner scanner = new Scanner(new File(fileName));
             while(scanner.hasNextLine()) {
                 String line = scanner.nextLine();
-                loadSymbol(line);
+                //loadSymbol(line);
             }
         } catch (FileNotFoundException e) {
             System.out.println("symbols not found");
