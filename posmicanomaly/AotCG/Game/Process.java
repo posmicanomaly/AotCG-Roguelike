@@ -75,14 +75,14 @@ public class Process {
         Tile desiredTile = t;
         // If the tile is null, it is likely out of range
         if (desiredTile == null) {
-            messageConsole.addMessage("Tile is null");
+            messageConsole.addMessage("Tile is null", Color.gray);
             return false;
         }
 
         // If the tile is blocked(terrain), we can't go there, likely a wall at this point
         else if (desiredTile.isBlocked()) {
             if (actor.equals(player))
-                messageConsole.addMessage("You bumped into a wall");
+                messageConsole.addMessage("You bumped into a wall", Color.gray);
             return false;
         }
 
@@ -143,7 +143,7 @@ public class Process {
 
                 winner.addExperience(randomExp);
                 messageConsole.addMessage(winner.getName() + " killed " + loser.getName() + " (" + randomExp +
-                        " exp)");
+                        " exp)", Colors.EXPERIENCE);
 
 
                 if (loser.getName().equals("Giant")) {
@@ -156,7 +156,7 @@ public class Process {
                 int prevLevel = winner.getLevel();
                 winner.evaulateLevel();
                 if (prevLevel < winner.getLevel()) {
-                    messageConsole.addMessage(winner.getName() + " leveled up: " + winner.getLevel());
+                    messageConsole.addMessage(winner.getName() + " leveled up: " + winner.getLevel(), Colors.EXPERIENCE);
                 }
                 return false;
             }
@@ -366,11 +366,11 @@ public class Process {
         // If the player is watching, or is involved, show the message
         // Otherwise, show some "noise" message
         if(actor1.equals(player) || actor2.equals(player)) {
-            messageConsole.addMessage(combatMessage);
+            messageConsole.addMessage(combatMessage, Color.cyan);
         } else if(actorInPlayerView(actor1) || actorInPlayerView(actor2)) {
-            messageConsole.addMessage(combatMessage);
+            messageConsole.addMessage(combatMessage, Color.cyan);
         } else {
-            messageConsole.addMessage("You hear noise");
+            messageConsole.addMessage("You hear noise", Color.gray);
         }
     }
 
@@ -400,8 +400,7 @@ public class Process {
             // If on the world map, skip FOV, all visible
             // todo: visible by height, realism
             if(roguelike.map.getCurrentDepth() == 0) {
-                map.getCurrentLevel().toggleAllTilesVisible(true);
-                return;
+                map.getCurrentLevel().toggleAllTilesVisible(false);
             } else {
                 map.getCurrentLevel().toggleAllTilesVisible(false);
             }
@@ -413,6 +412,9 @@ public class Process {
         ArrayList<Tile> fieldOfVisionTiles = null;
 
         int radius = map.getWidth();
+        if(map.getCurrentDepth() == 0) {
+            radius = 20;
+        }
         fieldOfVisionTiles = FieldOfVision.calculateRayCastingFOVVisibleTiles(y, x, map
                     .getCurrentLevel(), radius);
 

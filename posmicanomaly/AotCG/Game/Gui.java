@@ -41,6 +41,7 @@ public class Gui {
 
         roguelike.menuWindow = new Console(25, 25);
         roguelike.menuWindow.setBorder(true);
+        roguelike.menuWindow.setBorderStyle(Console.BorderStyle.DOUBLE);
         roguelike.menuWindow.fillBgColor(new Color(0, 0, 0, 0.3f));
         roguelike.showMenu = false;
         roguelike.showInventory = false;
@@ -93,11 +94,11 @@ public class Gui {
     protected void initVictoryConsole() {
         victoryConsole = new Console(roguelike.windowHeight / 2, roguelike.windowWidth / 2);
         victoryConsole.setBorder(true);
+        victoryConsole.setBorderStyle(Console.BorderStyle.DOUBLE);
+        victoryConsole.setBorderColor(Color.BLUE);
         int row = 1;
         ArrayList<String> victoryMessages = new ArrayList<String>();
         victoryMessages.add("You Win!");
-        victoryMessages.add("");
-        victoryMessages.add("You have slain the Giant and saved everyone!");
         victoryMessages.add("");
         victoryMessages.add("Level Reached: " + roguelike.getPlayer().getLevel());
         victoryMessages.add("Turns taken: " + roguelike.getTurns());
@@ -114,11 +115,12 @@ public class Gui {
     protected void initDefeatConsole() {
         defeatConsole = new Console(roguelike.windowHeight / 2, roguelike.windowWidth / 2);
         defeatConsole.setBorder(true);
+        defeatConsole.setBorderStyle(Console.BorderStyle.DOUBLE);
+        defeatConsole.setBorderColor(Color.RED);
+        defeatConsole.fillBgColor(new Color(0, 0, 0, 0.5f));
         int row = 1;
         ArrayList<String> defeatMessages = new ArrayList<String>();
         defeatMessages.add("You Died!");
-        defeatMessages.add("");
-        defeatMessages.add("You were killed and now the Giant will destroy everyone!");
         defeatMessages.add("");
         defeatMessages.add("Level Reached: " + roguelike.getPlayer().getLevel());
         defeatMessages.add("Turns taken: " + roguelike.getTurns());

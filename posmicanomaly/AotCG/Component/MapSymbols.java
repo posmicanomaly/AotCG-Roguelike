@@ -16,6 +16,7 @@ import java.util.Scanner;
  */
 public class MapSymbols {
     // Defaults
+    // Interior
     char FLOOR = 249;
     char WALL = '#';
     char WALL_SECRET = '*';
@@ -23,15 +24,23 @@ public class MapSymbols {
     char BUILD_FLOOD = 247;
     char WATER = 247;
     char CAVE_GRASS = '"';
+    char LOW_GRASS = ',';
     char DOOR = 239;
     char STAIRS_UP = '<';
     char STAIRS_DOWN = '>';
+
+    // Exterior
     char WORLD_GRASS = 247;
     char CAVE_OPENING = 15;
     char FOREST = 5;
     char FOREST_ALT = 6;
     char MOUNTAIN = 30;
     char SAND = 247;
+    char JUNGLE = 20;
+    char PLAINS = 247;
+    char BRUSH = '%';
+    char HILL = 239;
+    char TOWN = 4;
     char DEFAULT = '?';
 
     public MapSymbols(String fileName) {

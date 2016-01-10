@@ -44,16 +44,16 @@ public class GameInformationConsole extends EnhancedConsole {
 
         String powerString = "PWR: " + player.getPower();
 
-        ArrayList<String> placeHolder = new ArrayList<String>();
+
         int row = 0;
         int col = 0;
         if(this.hasBorder()) {
             row++;
             col++;
         }
-        writeString("@: " + player.getLevel() + " (Depth " + map.getCurrentDepth() + ")", row, col);
+        writeString("@: " + player.getLevel() + " Z:" + map.getCurrentDepth(), row, col);
         row++;
-        writeString("WC: x: " + roguelike.getPlayerMapX() + " y: " + roguelike.getPlayerMapY(), row, col);
+        writeString("WC: x:" + roguelike.getPlayerMapX() + " y:" + roguelike.getPlayerMapY(), row, col);
         row++;
         drawHealthBar(row, col, player);
 
@@ -62,18 +62,25 @@ public class GameInformationConsole extends EnhancedConsole {
         row++;
         writeString(powerString, row, col);
         row++;
-        placeHolder.add("Well");
-        placeHolder.add("Here:");
+        writeColoredString("S: Well", row, col, Colors.HEALTH_REMAINING);
+        row++;
+        row++;
+        Tile playerTile = player.getTile();
+        Color tileTypeForeground = playerTile.getColor().brighter().brighter().brighter().brighter().brighter();
+        Color tileTypeBackground = playerTile.getBackgroundColor().brighter().brighter().brighter();
+        if(playerTile.getType() == Tile.Type.WATER) {
+            tileTypeForeground = Color.white;
+        }
+        writeColoredString(player.getTile().getTypeString(), row, col, tileTypeForeground, tileTypeBackground);
+        row++;
+        row++;
 
+        writeString("On Ground:", row, col);
+        row++;
         if (player.getTile().hasItem()) {
-            placeHolder.add(player.getTile().getItem().getName());
+            writeString(player.getTile().getItem().getName(), row, col);
         }
-        for (String s : placeHolder) {
-            writeString(s, row, col);
-            row++;
-        }
-
-
+        row++;
         row++;
         writeCenteredString("Visible", row);
         row++;
@@ -103,11 +110,11 @@ public class GameInformationConsole extends EnhancedConsole {
         if(hasBorder()) {
             row--;
         }
-        writeString("T: " + turns, row, col);
+        //writeString("T: " + turns, row, col);
         row--;
-        writeString("CF: " + currentFrames, row, col);
+       // writeString("CF: " + currentFrames, row, col);
         row--;
-        writeString("FPS: " + fps, row, col);
+       // writeString("FPS: " + fps, row, col);
         row--;
     }
 

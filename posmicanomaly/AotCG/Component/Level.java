@@ -192,11 +192,27 @@ public class Level {
     public Tile getEntryTile() {
         switch(this.levelStyle) {
             case WORLD:
-                return getRandomTile(Tile.Type.WORLD_GRASS);
+                boolean validTile = false;
+                while(!validTile) {
+                    Tile t = getRandomTile();
+                    switch(t.getType()) {
+                        case FOREST:
+                        case JUNGLE:
+                        case PLAINS:
+                        case WORLD_GRASS:
+                            return t;
+                    }
+                }
             case DEFAULT:
                 return getRandomTile(Tile.Type.STAIRS_UP);
         }
         System.out.println("getEntryTile() :: There is no entry tile");
         return null;
+    }
+
+    private Tile getRandomTile() {
+        int y = Roguelike.rng.nextInt(height);
+        int x = Roguelike.rng.nextInt(width);
+        return tileArray[y][x];
     }
 }

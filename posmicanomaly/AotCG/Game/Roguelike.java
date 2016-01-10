@@ -33,11 +33,11 @@ public class Roguelike {
     protected State currentState;
 
     Window window;
-    int fontSize = 24;
-    int windowHeight = 60;
+    int fontSize = 12;
+    int windowHeight = 70;
     //int windowWidth = 135;
-    int windowWidth = 100;
-    int messageHeight = 10;
+    int windowWidth = 106;
+    int messageHeight = 18;
     int messageWidth;
     int mapHeight;
     int mapWidth;
@@ -50,7 +50,7 @@ public class Roguelike {
     int lastFramesPerSecond;
     long fpsTimerStart;
     int gameInformationConsoleHeight = windowHeight;
-    int gameInformationConsoleWidth = 18;
+    int gameInformationConsoleWidth = 14;
     boolean showMenu;
     boolean showInventory;
     boolean giantSlain;
@@ -98,7 +98,6 @@ public class Roguelike {
         gameLoopsWithoutInput = 0;
 
         initGame();
-        startGame();
 
         render = new Render(this);
         if (RENDER_BETWEEN_TURNS) {
@@ -146,9 +145,10 @@ public class Roguelike {
         // Init the GUI
         gui.initGui();
         input.connectToGui(gui);
+        startGame();
     }
 
-    private void startGame() {
+    protected void startGame() {
         // Copy the map to mapConsole(buffer)
         this.copyMapToBuffer();
         // Allow rendering
@@ -159,6 +159,30 @@ public class Roguelike {
 
         fpsTimerStart = System.currentTimeMillis();
         redrawGame = true;
+
+        // Welcome message
+        String welcome;
+        switch(player.getTile().getType()) {
+            case JUNGLE:
+                welcome = "You stand amongst the towering trees of a jungle, vines surrounding you at every turn.";
+                break;
+            case FOREST:
+                welcome = "The forest obscures your immediate vision.";
+                break;
+            case HILL:
+                welcome = "You stand on top of a hill, overlooking the land below.";
+                break;
+            case MOUNTAIN:
+                welcome = "Mountain start";
+                break;
+            case PLAINS:
+                welcome = "Vast plains stretch out as far as the eye can see. The world opens up before you.";
+                break;
+            default:
+                welcome = "I don't know where you are.";
+                break;
+        }
+        gui.getMessageConsole().addMessage(welcome, Colors.EXPERIENCE);
     }
 
     private void gameLoop() {
@@ -356,7 +380,7 @@ public class Roguelike {
 
     /**
      * refreshTile
-     * <p/>
+     *
      * calls mapConsole setChar and setColor at the tile's Y X location, using the tile's symbol and color
      *
      * @param tile
@@ -370,11 +394,11 @@ public class Roguelike {
 
         if(tile.isVisible()) {
             if (tile.getType() == Tile.Type.WATER) {
-                if (rng.nextInt(100) < 50) {
+                if (rng.nextInt(100) < 10) {
                     tile.setBackgroundColor(ColorTools.varyColor(Colors.WATER_BG, 0.7, 1.0, ColorTools.BaseColor.RGB));
 
                 }
-                if (rng.nextInt(100) < 50) {
+                if (rng.nextInt(100) < 10) {
                     tile.setColor(ColorTools.varyColor(Colors.WATER, 0.7, 1.0, ColorTools.BaseColor.RGB));
                     if (tile.getSymbol() == Symbol.ALMOST_EQUAL_TO) {
                         tile.setSymbol('=');

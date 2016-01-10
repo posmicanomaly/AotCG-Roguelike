@@ -3,6 +3,7 @@ package posmicanomaly.AotCG.Game;
 import posmicanomaly.AotCG.Component.LevelFactory;
 import posmicanomaly.AotCG.Gui.Component.MessageConsole;
 
+import java.awt.*;
 import java.awt.event.KeyEvent;
 
 /**
@@ -97,21 +98,21 @@ public class Input {
             case KeyEvent.VK_F:
                 LevelFactory.DEBUG_FLOOD_FILL(roguelike.map.getCurrentLevel().getTileArray());
                 LevelFactory.DEBUG_PROCESS_MAP(roguelike.map.getCurrentLevel().getTileArray());
-                messageConsole.addMessage("Level flood filled");
+                messageConsole.addMessage("Level flood filled", Color.yellow);
                 break;
             case KeyEvent.VK_R:
                 roguelike.initGame();
                 break;
             case KeyEvent.VK_V:
                 roguelike.map.getCurrentLevel().toggleAllTilesVisible(true);
-                messageConsole.addMessage("All tiles visible");
+                messageConsole.addMessage("All tiles visible", Color.yellow);
                 break;
             case KeyEvent.VK_B:
                 if (roguelike.window.getMainPanel().isDrawBackgroundGlyphs()) {
-                    messageConsole.addMessage("Background glyphs off");
+                    messageConsole.addMessage("Background glyphs off", Color.yellow);
                     roguelike.window.getMainPanel().setDrawBackgroundGlyphs(false);
                 } else {
-                    messageConsole.addMessage("Background glyphs on");
+                    messageConsole.addMessage("Background glyphs on", Color.yellow);
                     roguelike.window.getMainPanel().setDrawBackgroundGlyphs(true);
                 }
                 break;

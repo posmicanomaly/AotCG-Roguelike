@@ -15,6 +15,7 @@ public class Tile {
     private Color color;
     private Color backgroundColor;
     private boolean blocked;
+    private String typeString;
 
     public Actor getActor() {
         return actor;
@@ -140,8 +141,43 @@ public class Tile {
         return item != null;
     }
 
+    public String getTypeString() {
+        String s;
+        switch (type) {
+            // Interior
+            case DEFAULT: s = "DEFAULT"; break;
+            case WALL: s = "Wall"; break;
+            case FLOOR: s = "Floor"; break;
+            case WATER: s = "Water"; break;
+            case PATH: s = "Path"; break;
+            case BUILD_FLOOD: s = "BUILD_FLOOR"; break;
+            case DOOR: s = "Door"; break;
+            case WALL_SECRET: s = "Secret Wall"; break;
+            case STAIRS_UP: s = "Stairs Up"; break;
+            case STAIRS_DOWN: s = "Stairs Down"; break;
+            case CAVE_GRASS: s = "Cave Grass"; break;
+            case LOW_GRASS: s = "Low Grass"; break;
+                // Exterior
+            case WORLD_GRASS: s = "World Grass"; break;
+            case FOREST: s = "Forest"; break;
+            case MOUNTAIN: s = "Mountain"; break;
+            case SAND: s = "Sand"; break;
+            case CAVE_OPENING: s = "Cave Opening"; break;
+            case JUNGLE: s = "Jungle"; break;
+            case PLAINS: s = "Plains"; break;
+            case BRUSH: s = "Brush"; break;
+            case HILL: s = "Hill"; break;
+            case TOWN: s = "Town"; break;
+            default: s = "error"; break;
+        }
+        return s;
+    }
+
     public static enum Type {
-        DEFAULT, WALL, FLOOR, WATER, PATH, BUILD_FLOOD, DOOR, WALL_SECRET, STAIRS_UP, STAIRS_DOWN, CAVE_GRASS, WORLD_GRASS, FOREST, MOUNTAIN, SAND, CAVE_OPENING
+        // Interior
+        DEFAULT, WALL, FLOOR, WATER, PATH, BUILD_FLOOD, DOOR, WALL_SECRET, STAIRS_UP, STAIRS_DOWN, CAVE_GRASS, LOW_GRASS,
+        // Exterior
+        WORLD_GRASS, FOREST, MOUNTAIN, SAND, CAVE_OPENING, JUNGLE, PLAINS, BRUSH, HILL, TOWN
     }
 //    public Tile(int y, int x, char symbol, Color color) {
 //        this.y = y;

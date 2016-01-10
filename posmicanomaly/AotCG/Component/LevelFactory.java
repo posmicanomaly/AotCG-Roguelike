@@ -69,7 +69,7 @@ public abstract class LevelFactory {
         char symbol;
         boolean isBlocked;
         Color color;
-        Color backgroundColor;
+        Color backgroundColor = t.getBackgroundColor();
 
         if (!ignoreBuild) {
                 /*
@@ -85,9 +85,10 @@ public abstract class LevelFactory {
                 Process regular types
                  */
         boolean transparent = true;
-        backgroundColor = Color.black;
+        //backgroundColor = Color.black;
         MapSymbols ms = Roguelike.mapSymbols;
         switch (t.getType()) {
+            // Interior
             case FLOOR:
                 symbol = ms.FLOOR;
                 isBlocked = false;
@@ -129,7 +130,13 @@ public abstract class LevelFactory {
                 symbol = ms.CAVE_GRASS;
                 isBlocked = false;
                 color = ColorTools.varyColor(Colors.CAVE_GRASS, 0.5, 1.0, ColorTools.BaseColor.RGB);
-                backgroundColor = ColorTools.varyColor(Colors.CAVE_GRASS_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
+                backgroundColor = color.darker().darker().darker().darker();
+                break;
+            case LOW_GRASS:
+                symbol = ms.LOW_GRASS;
+                isBlocked = false;
+                color = ColorTools.varyColor(Colors.CAVE_GRASS, 0.5, 1.0, ColorTools.BaseColor.RGB);
+                backgroundColor = color.darker().darker().darker().darker().darker();
                 break;
             case DOOR:
                 symbol = ms.DOOR;
@@ -150,17 +157,19 @@ public abstract class LevelFactory {
                 color = Color.RED;
                 backgroundColor = ColorTools.varyColor(Colors.FLOOR_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
                 break;
+
+            // Exterior
             case WORLD_GRASS:
                 symbol = ms.WORLD_GRASS;
                 isBlocked = false;
-                color = ColorTools.varyColor(Colors.CAVE_GRASS, 0.5, 1.0, ColorTools.BaseColor.RGB);
+                color = ColorTools.varyColor(Colors.WORLD_GRASS, 0.7, 1.0, ColorTools.BaseColor.RGB);
                 backgroundColor = color.darker().darker();
                 break;
             case CAVE_OPENING:
                 symbol = ms.CAVE_OPENING;
                 isBlocked = false;
                 color = Colors.CAVE_OPENING;
-                backgroundColor = color.darker().darker();
+
                 break;
             case FOREST:
                 symbol = ms.FOREST;
@@ -170,18 +179,51 @@ public abstract class LevelFactory {
                 isBlocked = false;
                 color =  ColorTools.varyColor(Colors.FOREST, 0.7, 1.0, ColorTools.BaseColor.RGB);
                 backgroundColor = color.darker().darker();
+                transparent = false;
                 break;
             case MOUNTAIN:
                 symbol = ms.MOUNTAIN;
                 isBlocked = false;
                 color =  ColorTools.varyColor(Colors.MOUNTAIN, 0.9, 1.0, ColorTools.BaseColor.RGB);
                 backgroundColor = color.darker().darker().darker().darker();
+                transparent = false;
                 break;
             case SAND:
                 symbol = ms.SAND;
                 isBlocked = false;
                 color = ColorTools.varyColor(Colors.SAND, 0.7, 0.8, ColorTools.BaseColor.RGB);
                 backgroundColor = color.darker().darker();
+                break;
+            case JUNGLE:
+                symbol = ms.JUNGLE;
+                isBlocked = false;
+                color = ColorTools.varyColor(Colors.JUNGLE, 0.7, 1.0, ColorTools.BaseColor.RGB);
+                backgroundColor = color.darker().darker();
+                transparent = false;
+                break;
+            case PLAINS:
+                symbol = ms.PLAINS;
+                isBlocked = false;
+                color = ColorTools.varyColor(Colors.PLAINS, 0.7, 1.0, ColorTools.BaseColor.RGB);
+                backgroundColor = color.darker().darker();
+                break;
+            case BRUSH:
+                symbol = ms.BRUSH;
+                isBlocked = false;
+                color = ColorTools.varyColor(Colors.BRUSH, 0.7, 1.0, ColorTools.BaseColor.RGB);
+                backgroundColor = color.darker().darker();
+                break;
+            case HILL:
+                symbol = ms.HILL;
+                isBlocked = false;
+                color = ColorTools.varyColor(Colors.HILL, 0.9, 1.0, ColorTools.BaseColor.RGB);
+                backgroundColor = color.darker().darker();
+                break;
+            case TOWN:
+                symbol = ms.TOWN;
+                isBlocked = false;
+                color=ColorTools.varyColor(Colors.TOWN, 0.9, 1.0, ColorTools.BaseColor.RGB);
+                //backgroundColor = color.darker().darker();
                 break;
             default:
                 symbol = ms.DEFAULT;
@@ -494,18 +536,26 @@ public abstract class LevelFactory {
         System.out.println("makeWorldMap");
         Tile[][] result = null;
 
-        result = makeMapFilledWithType(height, width, Tile.Type.WORLD_GRASS);
+        result = makeMapFilledWithType(height, width, Tile.Type.PLAINS);
 
         processMap(result);
 
         Random rng = Roguelike.rng;
         //addPoolFeature(result, rng.nextInt(10) + 5, Tile.Type.WATER);
         //addStairs(result);
-        addPoolFeature(result, rng.nextInt(20) + 5, Tile.Type.FOREST);
         addPoolFeature(result, rng.nextInt(20) + 5, Tile.Type.MOUNTAIN);
-        addPoolFeature(result, rng.nextInt(20) + 5, Tile.Type.WATER);
-        addCaveOpenings(result);
+        //addPoolFeature(result, rng.nextInt(20) + 5, Tile.Type.WATER);
+        plantPerimeterWater(result);
+        plantWater(20, result);
+        plantTrees(rng.nextInt(20) + 10, result);
+        grow(100, result);
+        addBrush(result);
+        addHills(result);
         addShores(result);
+        // Process the map before placing towns, we use the existing tile bg color for a town.
+        processMap(result);
+        addCaveOpenings(result);
+        addTowns(result);
         processMap(result);
         System.out.println("makeWorldMap done");
         return result;
@@ -640,6 +690,7 @@ public abstract class LevelFactory {
         addMonsters(result);
         Random rng = Roguelike.rng;
         addPoolFeature(result, rng.nextInt(30) + 5, Tile.Type.CAVE_GRASS);
+        addPoolFeature(result, rng.nextInt(30) + 5, Tile.Type.LOW_GRASS);
         addPoolFeature(result, rng.nextInt(10) + 5, Tile.Type.WATER);
         addDoorways(result, 4);
         addStairs(result);
@@ -754,23 +805,340 @@ public abstract class LevelFactory {
         return tiles;
     }
 
+    private static void blendEdgeTilesTo(Tile.Type edge, Tile.Type blend, Tile[][] tileArray, Tile.Type[] skipList) {
+        for(int y = 0; y < tileArray.length; y++) {
+            for(int x = 0; x < tileArray[y].length; x++) {
+                Tile t = tileArray[y][x];
+                // Skip any tiles that are ineligible to change
+                for(Tile.Type type : skipList) {
+                    if(t.getType() == type) {
+                        continue;
+                    }
+                }
+
+                for(Tile nextTile : getNearbyTiles(t, tileArray)) {
+                    if(nextTile == null) {
+                        continue;
+                    }
+
+                    if(nextTile.getType() == edge) {
+                        t.setType(blend);
+                        break; // ?
+                    }
+                }
+            }
+        }
+    }
+
     private static void addShores(Tile[][] result) {
         for(int y = 0; y < result.length; y++) {
             for(int x = 0; x < result[y].length; x++) {
                 Tile t = result[y][x];
-                if(t.getType() == Tile.Type.WATER) {
+                boolean skip = false;
+                // What do we not want to change
+                switch(t.getType()) {
+                    case WATER:
+                    case MOUNTAIN:
+                    case BRUSH:
+                        skip = true;
+                        break;
+                    default:
+                        break;
+                }
+                if(skip) {
                     continue;
                 }
+
                 for(Tile nextTile : getNearbyTiles(t, result)) {
                     if(nextTile == null)
                         continue;
-                    if(nextTile.getType() == Tile.Type.WATER) {
+                    boolean set = false;
+                    // If our current tile is next to the following tiles, change current tile.
+                    switch(nextTile.getType()) {
+                        case WATER:
+                            set = true;
+                            break;
+                        default:
+                            break;
+                    }
+                    if(set) {
                         t.setType(Tile.Type.SAND);
                         break;
                     }
                 }
             }
         }
+    }
+
+    private static void addHills(Tile[][] result) {
+        for(int y = 0; y < result.length; y++) {
+            for(int x = 0; x < result[y].length; x++) {
+                Tile t = result[y][x];
+                boolean skip = false;
+                // What do we not want to change
+                switch(t.getType()) {
+                    case WATER:
+                    case MOUNTAIN:
+                    case JUNGLE:
+                    case FOREST:
+                        skip = true;
+                        break;
+                    default:
+                        break;
+                }
+                if(skip) {
+                    continue;
+                }
+                for(Tile nextTile : getNearbyTiles(t, result)) {
+                    if(nextTile == null)
+                        continue;
+                    boolean set = false;
+                    // If our current tile is next to the following tiles, change current tile.
+                    switch(nextTile.getType()) {
+                        case MOUNTAIN:
+                            set = true;
+                            break;
+                        default:
+                            break;
+                    }
+                    if(set) {
+                        t.setType(Tile.Type.HILL);
+                        break; // ?
+                    }
+                }
+            }
+        }
+    }
+
+    private static void addBrush(Tile[][] result) {
+        for(int y = 0; y < result.length; y++) {
+            for(int x = 0; x < result[y].length; x++) {
+                Tile t = result[y][x];
+                boolean skip = false;
+                // What do we not want to change
+                switch(t.getType()) {
+                    case MOUNTAIN:
+                    case WATER:
+                    case JUNGLE:
+                    case FOREST:
+                    case HILL:
+                        skip = true;
+                        break;
+                    default:
+                        break;
+                }
+                if(skip) {
+                    continue;
+                }
+                for(Tile nextTile : getNearbyTiles(t, result)) {
+                    if(nextTile == null)
+                        continue;
+                    boolean set = false;
+                    // If our current tile is next to the following tiles, change current tile.
+                    switch(nextTile.getType()) {
+                        case FOREST:
+                        case JUNGLE:
+                            set = true;
+                            break;
+                        default:
+                            break;
+                    }
+                    if(set) {
+                        t.setType(Tile.Type.BRUSH);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    private static void plantTrees(int seeds, Tile[][] tileArray) {
+        int seedsPlanted = 0;
+        do {
+            boolean validTile = false;
+            Tile t;
+            do {
+                t = getRandomTile(tileArray);
+                switch (t.getType()) {
+                    case PLAINS:
+                    case WORLD_GRASS:
+                        validTile = true;
+                }
+            } while(!validTile);
+            t.setType(Tile.Type.FOREST);
+            int jungleChance = Roguelike.rng.nextInt(100) - 50;
+            if(jungleChance > -1) {
+                t.setType(Tile.Type.JUNGLE);
+            }
+            seedsPlanted++;
+        } while(seedsPlanted < seeds);
+    }
+
+    private static void plantWater(int seeds, Tile[][] tileArray) {
+        int seedsPlanted = 0;
+        do {
+            boolean validTile = false;
+            Tile t;
+            do {
+                t = getRandomTile(tileArray);
+                switch (t.getType()) {
+                    case PLAINS:
+                    case WORLD_GRASS:
+                    case MOUNTAIN:
+                    case FOREST:
+                    case JUNGLE:
+                    case SAND:
+                        validTile = true;
+                }
+            } while(!validTile);
+            t.setType(Tile.Type.WATER);
+            seedsPlanted++;
+        } while(seedsPlanted < seeds);
+    }
+
+    private static void plantPerimeterWater(Tile[][] tileArray) {
+        for(int y = 0; y < tileArray.length; y++) {
+            for(int x = 0; x < tileArray[y].length; x++) {
+                Tile t = tileArray[y][x];
+                if(y == 0 || y == tileArray.length - 1) {
+                    t.setType(Tile.Type.WATER);
+                }
+                if(x == 0 || x == tileArray[y].length - 1) {
+                    t.setType(Tile.Type.WATER);
+                }
+            }
+        }
+    }
+
+    private static void grow(int cycles, Tile[][] tileArray) {
+        for(int i = 0; i < cycles; i++) {
+            ArrayList<Tile> forestEdges = new ArrayList<>();
+            ArrayList<Tile> waterEdges = new ArrayList<>();
+            for(int y = 0; y < tileArray.length; y++) {
+                for(int x = 0; x < tileArray[y].length; x++) {
+                    Tile t = tileArray[y][x];
+                    switch(t.getType()) {
+                        case FOREST:
+                        case JUNGLE:
+                            forestEdges.add(t);
+                            break;
+                        case WATER:
+                            waterEdges.add(t);
+                        default:
+                            break;
+                    }
+                }
+            }
+            for(Tile t : forestEdges) {
+                for(Tile nextTile : getNearbyTiles(t, tileArray)) {
+                    if(nextTile == null) {
+                        continue;
+                    }
+
+                    switch (nextTile.getType()) {
+                        case PLAINS:
+                        case WORLD_GRASS:
+                            int chanceToGrow = Roguelike.rng.nextInt(100) - 99;
+                            if(chanceToGrow > -1) {
+                                nextTile.setType(t.getType());
+                                break;
+                            }
+                    }
+                }
+            }
+            for(Tile t : waterEdges) {
+                for(Tile nextTile : getNearbyTiles(t, tileArray)) {
+                    if(nextTile == null) {
+                        continue;
+                    }
+
+                    switch (nextTile.getType()) {
+                        case PLAINS:
+                        case WORLD_GRASS:
+                        case MOUNTAIN:
+                        case HILL:
+                        case SAND:
+                        case FOREST:
+                        case JUNGLE:
+                            int chanceToGrow = Roguelike.rng.nextInt(200) - 198;
+                            if(chanceToGrow > -1) {
+                                nextTile.setType(t.getType());
+                                break;
+                            }
+                    }
+                }
+            }
+        }
+    }
+
+    private static void addCaveOpenings(Tile[][] result) {
+        int CAVES_TO_ADD = 10;
+        int cavesAdded = 0;
+        do {
+            Tile t = getRandomTileOfType(result, Tile.Type.MOUNTAIN);
+            for(Tile nextTile : getNearbyTiles(t, result)) {
+                if(nextTile == null) {
+                    continue;
+                }
+                if(nextTile.getType() != Tile.Type.MOUNTAIN
+                        && nextTile.getType() != Tile.Type.CAVE_OPENING) {
+                    t.setType(Tile.Type.CAVE_OPENING);
+                    cavesAdded++;
+                    break;
+                }
+            }
+        } while(cavesAdded < CAVES_TO_ADD);
+    }
+
+    private static void addTowns(Tile[][] result) {
+        int TOWN_TO_ADD = 10;
+        int townsAdded = 0;
+        do {
+            Tile t = getRandomTile(result);
+            // What tiles cannot have towns on them?
+            boolean canPlaceTown = true;
+            switch(t.getType()) {
+                case MOUNTAIN:
+                case WATER:
+                    canPlaceTown = false;
+                    break;
+                default:
+                    break;
+            }
+            if(!canPlaceTown) {
+                continue;
+            }
+
+            t.setType(Tile.Type.TOWN);
+            townsAdded++;
+        } while(townsAdded < TOWN_TO_ADD);
+    }
+
+    private static Tile getRandomTile(Tile[][] tileArray) {
+        Random rng = Roguelike.rng;
+        int y = rng.nextInt(tileArray.length);
+        int x = rng.nextInt(tileArray[y].length);
+        return tileArray[y][x];
+    }
+
+    private static Tile getRandomTileOfType(Tile[][] tileArray, Tile.Type type) {
+        Random rng = Roguelike.rng;
+        int y;
+        int x;
+        Tile result;
+
+        boolean validTile = false;
+
+        do{
+            y = rng.nextInt(tileArray.length);
+            x = rng.nextInt(tileArray[y].length);
+            result = tileArray[y][x];
+            if(result.getType() == type) {
+                validTile = true;
+            }
+        } while(!validTile);
+
+        return result;
     }
 
     private static ArrayList<Tile> getNearbyTiles(Tile t, Tile[][] result) {
@@ -862,34 +1230,7 @@ public abstract class LevelFactory {
     }
 
 
-    private static void addCaveOpenings(Tile[][] result) {
-        Random rng = Roguelike.rng;
-        int y, x;
-        Tile t;
 
-        int openingsToAdd = 50;
-        int openingsAdded = 0;
-        boolean validTile = false;
-
-        do {
-            y = rng.nextInt(result.length);
-            x = rng.nextInt(result[0].length);
-            t = result[y][x];
-            switch(t.getType()) {
-                case WORLD_GRASS:
-                    validTile = true;
-                    break;
-                default:
-                    break;
-            }
-
-            if(validTile) {
-                t.setType(Tile.Type.CAVE_OPENING);
-                openingsAdded++;
-            }
-        } while (openingsAdded < openingsToAdd);
-
-    }
 
     private static void addStairs(Tile[][] result) {
         Random rng = Roguelike.rng;
