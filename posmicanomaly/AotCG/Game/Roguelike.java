@@ -185,7 +185,7 @@ public class Roguelike {
 
         // Set lastKeyEvent so we can reference a change
         this.lastKeyEvent = this.window.getLastKeyEvent();
-        this.lastMouseEvent = this.window.getLastMouseEvent();
+        this.lastMouseEvent = this.window.getMainPanel().getLastMouseEvent();
 
         fpsTimerStart = System.currentTimeMillis();
         redrawGame = true;
@@ -236,7 +236,7 @@ public class Roguelike {
             this.lastKeyEvent = this.window.getLastKeyEvent();
 
         }
-        else if(!this.window.getLastMouseEvent().equals(this.lastMouseEvent)){
+        else if(!this.window.getMainPanel().getLastMouseEvent().equals(this.lastMouseEvent)){
             // mouse event? click?
             int y = lastMy;
             int x = lastMx;
@@ -247,7 +247,7 @@ public class Roguelike {
                 message += "map at ";
             }
             System.out.println(message + y + "x" + x);
-            this.lastMouseEvent = this.window.getLastMouseEvent();
+            this.lastMouseEvent = this.window.getMainPanel().getLastMouseEvent();
         }
         else if(mouseCoordinatesChanged) {
             render.drawGame(getRootConsole());
@@ -261,10 +261,10 @@ public class Roguelike {
     }
 
     private boolean updateMouseLocation() {
-        Point mouseCoordinates = getWindow().getMousePosition();
+        Point mouseCoordinates = getWindow().getMainPanel().getMousePosition();
         if(mouseCoordinates != null) {
-            mx = (int) ((mouseCoordinates.getX() - (getFontSize() * 1)) / getFontSize());
-            my = (int) ((mouseCoordinates.getY() - (getFontSize() * 3)) / getFontSize());
+            mx = (int) ((mouseCoordinates.getX()) / getFontSize());
+            my = (int) ((mouseCoordinates.getY()) / getFontSize());
         }
 
         boolean mouseCoordinatesChanged = false;
