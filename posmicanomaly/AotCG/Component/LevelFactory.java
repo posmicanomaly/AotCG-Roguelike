@@ -67,7 +67,7 @@ public abstract class LevelFactory {
 
     private static void initTile(Tile t, boolean ignoreBuild) {
         char symbol;
-        boolean isBlocked;
+
         Color color;
         Color backgroundColor = t.getBackgroundColor();
 
@@ -85,13 +85,13 @@ public abstract class LevelFactory {
                 Process regular types
                  */
         boolean transparent = true;
+        boolean isBlocked = false;
         //backgroundColor = Color.black;
         MapSymbols ms = Roguelike.mapSymbols;
         switch (t.getType()) {
             // Interior
             case FLOOR:
                 symbol = ms.FLOOR;
-                isBlocked = false;
                 color = ColorTools.varyColor(Colors.FLOOR, 0.8, 1.0, ColorTools.BaseColor.RGB);
                 backgroundColor = ColorTools.varyColor(Colors.FLOOR_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
                 break;
@@ -104,7 +104,6 @@ public abstract class LevelFactory {
                 break;
             case WALL_SECRET:
                 symbol = ms.WALL_SECRET;
-                isBlocked = false;
                 color = Colors.WALL;
                 backgroundColor = ColorTools.varyColor(Colors.WALL_BG, 0.7, 1.0, ColorTools.BaseColor.RGB);
                 //
@@ -112,48 +111,40 @@ public abstract class LevelFactory {
                 break;
             case PATH:
                 symbol = ms.PATH;
-                isBlocked = false;
                 color = Color.WHITE;
                 break;
             case BUILD_FLOOD:
                 symbol = ms.BUILD_FLOOD;
-                isBlocked = false;
                 color = Color.ORANGE;
                 break;
             case WATER:
                 symbol = ms.WATER;
-                isBlocked = false;
                 color = Colors.WATER;
                 backgroundColor = Colors.WATER_BG;
                 break;
             case CAVE_GRASS:
                 symbol = ms.CAVE_GRASS;
-                isBlocked = false;
                 color = ColorTools.varyColor(Colors.CAVE_GRASS, 0.5, 1.0, ColorTools.BaseColor.RGB);
                 backgroundColor = color.darker().darker().darker().darker();
                 break;
             case LOW_GRASS:
                 symbol = ms.LOW_GRASS;
-                isBlocked = false;
                 color = ColorTools.varyColor(Colors.CAVE_GRASS, 0.5, 1.0, ColorTools.BaseColor.RGB);
                 backgroundColor = color.darker().darker().darker().darker().darker();
                 break;
             case DOOR:
                 symbol = ms.DOOR;
-                isBlocked = false;
                 color = ColorTools.varyColor(Colors.DOOR, 0.5, 1.0, ColorTools.BaseColor.RGB);
                 backgroundColor = ColorTools.varyColor(Colors.DOOR_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
                 transparent = false;
                 break;
             case STAIRS_UP:
                 symbol = ms.STAIRS_UP;
-                isBlocked = false;
                 color = Color.GREEN;
                 backgroundColor = ColorTools.varyColor(Colors.FLOOR_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
                 break;
             case STAIRS_DOWN:
                 symbol = ms.STAIRS_DOWN;
-                isBlocked = false;
                 color = Color.RED;
                 backgroundColor = ColorTools.varyColor(Colors.FLOOR_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
                 break;
@@ -161,13 +152,11 @@ public abstract class LevelFactory {
             // Exterior
             case WORLD_GRASS:
                 symbol = ms.WORLD_GRASS;
-                isBlocked = false;
                 color = ColorTools.varyColor(Colors.WORLD_GRASS, 0.7, 1.0, ColorTools.BaseColor.RGB);
                 backgroundColor = color.darker().darker();
                 break;
             case CAVE_OPENING:
                 symbol = ms.CAVE_OPENING;
-                isBlocked = false;
                 color = Colors.CAVE_OPENING;
 
                 break;
@@ -176,58 +165,49 @@ public abstract class LevelFactory {
                 if(Roguelike.rng.nextInt(100) < 30) {
                     symbol = ms.FOREST_ALT;
                 }
-                isBlocked = false;
                 color =  ColorTools.varyColor(Colors.FOREST, 0.7, 1.0, ColorTools.BaseColor.RGB);
                 backgroundColor = color.darker().darker();
                 transparent = false;
                 break;
             case MOUNTAIN:
                 symbol = ms.MOUNTAIN;
-                isBlocked = false;
                 color =  ColorTools.varyColor(Colors.MOUNTAIN, 0.9, 1.0, ColorTools.BaseColor.RGB);
                 backgroundColor = color.darker().darker().darker().darker();
                 transparent = false;
                 break;
             case SAND:
                 symbol = ms.SAND;
-                isBlocked = false;
                 color = ColorTools.varyColor(Colors.SAND, 0.7, 0.8, ColorTools.BaseColor.RGB);
                 backgroundColor = color.darker().darker();
                 break;
             case JUNGLE:
                 symbol = ms.JUNGLE;
-                isBlocked = false;
                 color = ColorTools.varyColor(Colors.JUNGLE, 0.7, 1.0, ColorTools.BaseColor.RGB);
                 backgroundColor = color.darker().darker();
                 transparent = false;
                 break;
             case PLAINS:
                 symbol = ms.PLAINS;
-                isBlocked = false;
                 color = ColorTools.varyColor(Colors.PLAINS, 0.7, 1.0, ColorTools.BaseColor.RGB);
                 backgroundColor = color.darker().darker();
                 break;
             case BRUSH:
                 symbol = ms.BRUSH;
-                isBlocked = false;
                 color = ColorTools.varyColor(Colors.BRUSH, 0.7, 1.0, ColorTools.BaseColor.RGB);
                 backgroundColor = color.darker().darker();
                 break;
             case HILL:
                 symbol = ms.HILL;
-                isBlocked = false;
                 color = ColorTools.varyColor(Colors.HILL, 0.9, 1.0, ColorTools.BaseColor.RGB);
                 backgroundColor = color.darker().darker();
                 break;
             case TOWN:
                 symbol = ms.TOWN;
-                isBlocked = false;
                 color=ColorTools.varyColor(Colors.TOWN, 0.9, 1.0, ColorTools.BaseColor.RGB);
                 //backgroundColor = color.darker().darker();
                 break;
             default:
                 symbol = ms.DEFAULT;
-                isBlocked = false;
                 color = Color.blue;
                 break;
         }

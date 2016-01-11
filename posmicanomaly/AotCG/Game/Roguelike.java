@@ -12,11 +12,32 @@ import posmicanomaly.libjsrte.Window;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Random;
 
 /**
  * Created by Jesse Pospisil on 8/17/2015.
+ *
+ * TODO features:
+ * - Items, should be able to pick up if strength allows. Strength should be equal to lbs you can lift
+ * - Projectiles, should be able to throw things at least.
+ * - Towns, maybe rest here, shops
+ * - Merchants, should be able to buy stuff
+ * - How big is a world tile? 1 mile, 2 miles?
+ * - Time resolution
+ * - Energy per turn, so some things can move faster than you
+ * - Idle function
+ * - Horizontal dungeon movement
+ * - What is a dungeon anyway? Why is it here?
+ * - Get rid of the G
+ * - Get a real name, AotCG sucks
+ * - Drinking to stay hydrated
+ * - Eating to stay satiated
+ * - Should auto eat and drink from things marked as safe, like EQ2 where you had auto slot for desired drink/food?
+ * - Not eating/drinking leads to sickness?
+ * - HP should be a means of how healthy someone is. Lower HP, harder to do things
+ * - Mouse
  */
 public class Roguelike {
     private static final int MAP_DEPTH = 20;
@@ -41,6 +62,13 @@ public class Roguelike {
     int messageWidth;
     int mapHeight;
     int mapWidth;
+
+    // mouse testing
+    int mx;
+    int my;
+    int lastMx;
+    int lastMy;
+
     long lastRenderTime;
     long defaultRefreshIntervalMs = 1000;
     long refreshIntervalMs;
@@ -68,6 +96,7 @@ public class Roguelike {
     private int playerMapZ;
 
     private KeyEvent lastKeyEvent;
+    private MouseEvent lastMouseEvent;
     private int gameLoopsWithoutInput;
     private Console rootConsole;
     private Render render;
@@ -156,6 +185,7 @@ public class Roguelike {
 
         // Set lastKeyEvent so we can reference a change
         this.lastKeyEvent = this.window.getLastKeyEvent();
+        this.lastMouseEvent = this.window.getLastMouseEvent();
 
         fpsTimerStart = System.currentTimeMillis();
         redrawGame = true;
@@ -192,6 +222,9 @@ public class Roguelike {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        // Mouse testing
+        boolean mouseCoordinatesChanged = updateMouseLocation();
+
         if (!this.window.getLastKeyEvent().equals(this.lastKeyEvent)) {
             /**
              * Check for game state or victory/defeat console displayed
@@ -202,14 +235,64 @@ public class Roguelike {
             // Set lastKeyEvent to this one that we just used, so we do not enter loop again
             this.lastKeyEvent = this.window.getLastKeyEvent();
 
-        } else {
-            // No key input, increase the draw refresh time to reduce cpu usage when idle
+        }
+        else if(!this.window.getLastMouseEvent().equals(this.lastMouseEvent)){
+            // mouse event? click?
+            int y = lastMy;
+            int x = lastMx;
+            String message = "Clicked ";
+            if(isMouseOnMap()) {
+                x -= gameInformationConsoleWidth + 1;
+                y -= 1;
+                message += "map at ";
+            }
+            System.out.println(message + y + "x" + x);
+            this.lastMouseEvent = this.window.getLastMouseEvent();
+        }
+        else if(mouseCoordinatesChanged) {
+            render.drawGame(getRootConsole());
+            // Mouse
         }
         if (!RENDER_BETWEEN_TURNS) {
             if (redrawGame) {
                 render.renderSingleFrame();
             }
         }
+    }
+
+    private boolean updateMouseLocation() {
+        Point mouseCoordinates = getWindow().getMousePosition();
+        if(mouseCoordinates != null) {
+            mx = (int) ((mouseCoordinates.getX() - (getFontSize() * 1)) / getFontSize());
+            my = (int) ((mouseCoordinates.getY() - (getFontSize() * 3)) / getFontSize());
+        }
+
+        boolean mouseCoordinatesChanged = false;
+        if(mx != lastMx) {
+            if(mx < 0 || mx > windowWidth) {
+                // Outside of window
+            } else {
+                lastMx = mx;
+                mouseCoordinatesChanged = true;
+            }
+        }
+        if(my != lastMy) {
+            if(my < 0 || my > windowHeight) {
+                // Outside of window
+            } else {
+                lastMy = my;
+                mouseCoordinatesChanged = true;
+            }
+        }
+        return mouseCoordinatesChanged;
+    }
+
+    protected boolean isMouseOnMap() {
+        if(lastMx < windowWidth - 1 && lastMx > gameInformationConsoleWidth
+                && lastMy < windowHeight - messageHeight - 1 && lastMy > 0) {
+            return true;
+        }
+        return false;
     }
 
     private void initTitleScreen() {
@@ -554,6 +637,38 @@ public class Roguelike {
 
     public void setPlayerMapX(int playerMapX) {
         this.playerMapX = playerMapX;
+    }
+
+    public Window getWindow() {
+        return window;
+    }
+
+    public int getWindowWidth() {
+        return windowWidth;
+    }
+
+    public int getWindowHeight() {
+        return windowHeight;
+    }
+
+    public int getFontSize() {
+        return fontSize;
+    }
+
+    public int getMy() {
+        return my;
+    }
+
+    public int getMx() {
+        return mx;
+    }
+
+    public int getLastMy() {
+        return lastMy;
+    }
+
+    public int getLastMx() {
+        return lastMx;
     }
 
 

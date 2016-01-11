@@ -45,12 +45,44 @@ public class Render implements Runnable {
 
 
             roguelike.gui.drawGUI();
+            // Mouse testing
+            drawMouseToolTips(rootConsole);
 
             roguelike.window.refresh();
         } else if (roguelike.currentState == Roguelike.State.TITLE) {
             roguelike.title.update();
             roguelike.title.getTitleConsole().copyBufferTo(rootConsole, 0, 0);
             roguelike.window.refresh();
+        }
+    }
+
+    private void drawMouseToolTips(Console rootConsole) {
+        if(roguelike.isMouseOnMap()) {
+            rootConsole.setBgColor(roguelike.getLastMy(), roguelike.getLastMx(), Color.RED);
+            int transX = roguelike.getLastMx() - roguelike.getGameInformationConsoleWidth() - 1;
+            int transY = roguelike.getLastMy() - 1;
+            Tile t = roguelike.map.getCurrentLevel().getTile(transY, transX);
+            int y = roguelike.getLastMy() - 1;
+            int x = roguelike.getLastMx();
+            if(t == null) {
+                System.out.println("Mouse on map, but tile is null. Check the math!");
+            } else {
+                Color foreground = Color.gray;
+                Color background = new Color(0, 0, 0, 0.8f);
+                String tip = "?";
+                if(t.isVisible()) {
+                    if (t.hasActor()) {
+                        tip = t.getActor().getName();
+                        foreground = Color.red;
+                    } else {
+                        tip = t.getTypeString();
+                        foreground = Color.green;
+                    }
+                } else if(t.isExplored()) {
+                    tip = t.getTypeString() + "?";
+                }
+                rootConsole.writeColoredString(tip, y, x, foreground, background);
+            }
         }
     }
 
