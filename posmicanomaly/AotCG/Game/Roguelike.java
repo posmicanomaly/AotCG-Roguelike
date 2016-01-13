@@ -214,7 +214,7 @@ public class Roguelike {
         }
         gui.getMessageConsole().addMessage(welcome, Colors.EXPERIENCE);
     }
-
+    
     private void gameLoop() {
         // Check for key input
         try {
