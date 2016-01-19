@@ -214,7 +214,7 @@ public class Roguelike {
         }
         gui.getMessageConsole().addMessage(welcome, Colors.EXPERIENCE);
     }
-    
+
     private void gameLoop() {
         // Check for key input
         try {
@@ -493,30 +493,44 @@ public class Roguelike {
         }
 
         /*
-
+        Determine what is displayed for this tile:
+        Map, Item, Corpse, Player, Monster
          */
         char glyph;
         Color color;
         Color bgColor;
+
+        // Tile is visible to the player
         if (tile.isVisible()) {
+            // Tile has an actor(player/monster)
             if (tile.hasActor()) {
                 Actor actor = tile.getActor();
                 glyph = actor.getSymbol();
                 color = actor.getColor();
-            } else if (tile.hasItem()) {
+            }
+            // Tile has an item
+            else if (tile.hasItem()) {
                 Item item = tile.getItem();
                 glyph = item.getSymbol();
                 color = item.getColor();
-            } else {
+            }
+            // Tile has nothing, just show the map
+            else {
                 glyph = tile.getSymbol();
                 color = tile.getColor().brighter().brighter();
             }
             bgColor = tile.getBackgroundColor().brighter().brighter();
-        } else if (tile.isExplored()) {
+        }
+
+        // Tile is not visible, but has been explored by the player
+        else if (tile.isExplored()) {
             glyph = tile.getSymbol();
             color = tile.getColor().darker().darker();
             bgColor = tile.getBackgroundColor().darker().darker();
-        } else {
+        }
+
+        // Tile is not visible, and has not been explored by the player
+        else {
             glyph = ' ';
             color = Color.black;
             bgColor = Color.black;

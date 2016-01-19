@@ -128,6 +128,14 @@ public class Process {
             Item corpse = new Item ('%', Color.gray, loserTile);
             corpse.setName(loser.getCorpseName());
             loserTile.setItem(corpse);
+
+            // random item?
+            if(rng.nextInt(100) - 10 > 0) {
+                Item randomitem = new Item(')', Color.yellow, loserTile);
+                randomitem.setName("random item");
+                loserTile.setItem(randomitem);
+            }
+            
             if(!loser.equals(player)) {
                 loserTile.setActor(null);
             }
