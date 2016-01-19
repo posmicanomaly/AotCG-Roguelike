@@ -37,7 +37,10 @@ import java.util.Random;
  * - Should auto eat and drink from things marked as safe, like EQ2 where you had auto slot for desired drink/food?
  * - Not eating/drinking leads to sickness?
  * - HP should be a means of how healthy someone is. Lower HP, harder to do things
- * - Mouse
+ * - Mouse (in)
+ * - Multiple items on single tile
+ * - Player pick up items
+ * - Fix opacity problem with windows on redraw, clear console probably works best.
  */
 public class Roguelike {
     private static final int MAP_DEPTH = 20;

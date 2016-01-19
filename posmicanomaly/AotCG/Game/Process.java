@@ -135,7 +135,7 @@ public class Process {
                 randomitem.setName("random item");
                 loserTile.setItem(randomitem);
             }
-            
+
             if(!loser.equals(player)) {
                 loserTile.setActor(null);
             }
