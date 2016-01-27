@@ -103,6 +103,10 @@ public class Render implements Runnable {
         ArrayList<Actor> actors = roguelike.getMap().getCurrentLevel().getActors();
 
         for (Actor a : actors) {
+            // Check for a null path
+            if(a.getCurrentPath() == null) {
+                continue;
+            }
             int tRed, tGreen, tBlue;
             Color pathColor;
             for (Tile t : a.getCurrentPath()) {
@@ -111,7 +115,11 @@ public class Render implements Runnable {
                 tBlue = t.getBackgroundColor().getBlue();
 
                 int shimmer = Roguelike.rng.nextInt(20) + 100;
-                pathColor = new Color(tRed + shimmer, tGreen, tBlue).brighter();
+                if(a.equals(roguelike.getPlayer())) {
+                    pathColor = new Color(tRed, tGreen + shimmer, tBlue).brighter();
+                } else {
+                    pathColor = new Color(tRed + shimmer, tGreen, tBlue).brighter();
+                }
 
                 int y = t.getY();
                 int x = t.getX();

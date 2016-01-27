@@ -30,7 +30,7 @@ public class Map {
 
     public boolean goDeeper(int rootY, int rootX) {
         System.out.println("goDeeper(" + rootY + ", " + rootX + "); currentDepth = " + currentDepth);
-        if(currentDepth == this.depth) {
+        if(currentDepth == this.depth - 1) {
             System.out.println("can't go deeper, max depth reached");
             return false;
         }

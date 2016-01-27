@@ -53,7 +53,20 @@ public class AStar {
         }
 
         public void updateCost(Tile target) {
-            g_cost = g;
+            int mod = 0;
+            // Try to avoid stairs and caves unless that's what we want to go to
+            switch(this.tile.getType()) {
+                case STAIRS_DOWN:
+                case STAIRS_UP:
+                case CAVE_OPENING:
+                case WATER:
+                    mod = 5;
+                    break;
+                case WALL:
+                    mod = 9999;
+                    break;
+            }
+            g_cost = g + mod;
             h_cost = (Math.abs(x - target.getX()) + Math.abs(y - target.getY()));
             f_cost = g_cost + h_cost;
         }
@@ -123,8 +136,6 @@ public class AStar {
         Node current = null;
         // Loop
         while (!open.isEmpty()) {
-            //System.out.println("AStar.getShortestPath :: open.size() is " + open.size());
-            //System.out.println("AStar.getShortestPath :: closed.size() is " + closed.size());
             // Get tile in openTiles with the lowest f_cost
             current = getCheapestNode(open);
 
@@ -151,9 +162,8 @@ public class AStar {
             }
 
             ArrayList<Node> neighboringNodes = getNeighboringNodes(current);
-            //System.out.println("AStar.getShortestPath :: " + neighboringNodes.size() + " neighboringNodes");
             for (Node n : neighboringNodes) {
-                if (!n.isBlocked()) {
+                //if (!n.isBlocked()) {
                     if (hasNode(closed, n)) {
                         continue;
                     }
@@ -162,14 +172,15 @@ public class AStar {
                         n.setParent(current);
                         n.updateCost(target);
                     } else {
+                        n.updateCost(target);
                         if (current.getF_cost() < n.getF_cost()) {
                             n.setParent(current);
                         }
                     }
-                }
+                //}
             }
         }
-        //System.out.println("AStar.getShortestPath :: open.isEmpty()");
+        System.out.println("AStar.getShortestPath :: open.isEmpty()");
         // No path
         return null;
     }

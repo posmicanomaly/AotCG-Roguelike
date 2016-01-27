@@ -32,7 +32,7 @@ public class Actor extends Entity {
     public Actor(char symbol, Color color, Tile tile) {
         super(symbol, color, tile);
         visibleTiles = new ArrayList<Tile>();
-        currentPath = new ArrayList<>();
+        //currentPath = new ArrayList<>();
         setLevel(1);
         setMaxHp(1);
         setCurrentHp(getMaxHp());

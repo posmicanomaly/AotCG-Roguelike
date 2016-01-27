@@ -1,9 +1,6 @@
 package posmicanomaly.AotCG.Game;
 
 import posmicanomaly.AotCG.Component.*;
-import posmicanomaly.AotCG.Gui.Component.EnhancedConsole;
-import posmicanomaly.AotCG.Gui.Component.GameInformationConsole;
-import posmicanomaly.AotCG.Gui.Component.MessageConsole;
 import posmicanomaly.AotCG.Screen.Title;
 import posmicanomaly.libjsrte.Console.Console;
 import posmicanomaly.libjsrte.Console.Symbol;
@@ -43,7 +40,7 @@ import java.util.Random;
  * - Fix opacity problem with windows on redraw, clear console probably works best.
  */
 public class Roguelike {
-    private static final int MAP_DEPTH = 20;
+    private static final int MAP_DEPTH = 2000;
     public static boolean RENDER_BETWEEN_TURNS = false;
 
     public static Random rng;
@@ -93,6 +90,7 @@ public class Roguelike {
     private Input input;
     private Process process;
     private Actor player;
+    public boolean runPlayerBot = false;
 
     private int playerMapX;
     private int playerMapY;
@@ -146,6 +144,7 @@ public class Roguelike {
         giantSlain = false;
         showVictoryConsole = false;
         showDefeatConsole = false;
+        runPlayerBot = false;
         turns = 0;
         lastRenderTime = 0;
 
@@ -218,6 +217,9 @@ public class Roguelike {
         gui.getMessageConsole().addMessage(welcome, Colors.EXPERIENCE);
     }
 
+    //==========================================================================================================
+    //                                  gameLoop()
+    //==========================================================================================================
     private void gameLoop() {
         // Check for key input
         try {
@@ -227,8 +229,10 @@ public class Roguelike {
         }
         // Mouse testing
         boolean mouseCoordinatesChanged = updateMouseLocation();
-
-        if (!this.window.getLastKeyEvent().equals(this.lastKeyEvent)) {
+        if(runPlayerBot) {
+            makePlayerAIDecision();
+        }
+        if (!this.window.getLastKeyEvent().equals(this.lastKeyEvent) || player.getCurrentPath() != null) {
             /**
              * Check for game state or victory/defeat console displayed
              */
@@ -245,12 +249,30 @@ public class Roguelike {
             int x = lastMx;
             String message = "Clicked ";
             if(isMouseOnMap()) {
-                x -= gameInformationConsoleWidth + 1;
-                y -= 1;
+                x = getMouseOnMapX();
+                y = getMouseOnMapY();
                 message += "map at ";
+                boolean allowMoveIntoUnexplored = false;
+                boolean allowMove = false;
+                if(allowMoveIntoUnexplored) {
+                    allowMove = true;
+                } else {
+                    if(map.getCurrentLevel().getTile(y, x).isExplored()) {
+                        allowMove = true;
+                    } else {
+                        gui.getMessageConsole().addMessage("Can't move there", Color.red);
+                    }
+                }
+                if(allowMove) {
+                    player.setCurrentPath(map.getCurrentLevel().getAstar().getShortestPath(player.getTile(), map.getCurrentLevel().getTile(y, x)));
+                    if (player.getCurrentPath() == null) {
+                        gui.getMessageConsole().addMessage("Can't move there", Color.red);
+                    }
+                }
             }
             System.out.println(message + y + "x" + x);
             this.lastMouseEvent = this.window.getMainPanel().getLastMouseEvent();
+            render.drawGame(getRootConsole());
         }
         else if(mouseCoordinatesChanged) {
             render.drawGame(getRootConsole());
@@ -259,6 +281,233 @@ public class Roguelike {
         if (!RENDER_BETWEEN_TURNS) {
             if (redrawGame) {
                 render.renderSingleFrame();
+            }
+        }
+    }
+
+    //==========================================================================================================
+
+    private ArrayList<Tile> getEdgeOfExploredTiles(boolean allowBlockedTiles) {
+        ArrayList<Tile> edges = new ArrayList<>();
+        Level level = map.getCurrentLevel();
+        int tilesAdded = 0;
+        int tilesBlocked = 0;
+        for(Tile t : getExploredTiles()) {
+            for(Tile n : level.getNearbyTiles(t.getY(), t.getX())) {
+                if(!n.isExplored()) {
+                    if(allowBlockedTiles) {
+                        edges.add(n);
+                        tilesAdded++;
+                    }
+                    else {
+                        if(!n.isBlocked()) {
+                            edges.add(n);
+                            tilesAdded++;
+                        }
+                        else {
+                            tilesBlocked++;
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+        System.out.println("getEdgeOfExploredTiles() :: tileAdded: " + tilesAdded + " tilesBlocked: " + tilesBlocked);
+        return edges;
+    }
+
+    private ArrayList<Tile> getExploredTiles() {
+        ArrayList<Tile> explored = new ArrayList<>();
+        Level level = map.getCurrentLevel();
+        for(int y = 0; y < level.getTileArray().length; y++) {
+            for(int x = 0; x < level.getTileArray()[y].length; x++) {
+                Tile t = level.getTile(y, x);
+                if(t.isExplored()) {
+                    explored.add(t);
+                }
+            }
+        }
+        return explored;
+    }
+
+    private Tile getClosestTileFromList(Tile source, ArrayList<Tile> list, boolean allowBlockedTiles) {
+        Tile closest = null;
+        int closestDistance = 0;
+        for(Tile t : list) {
+            if(!allowBlockedTiles) {
+                if(t.isBlocked()) {
+                    continue;
+                }
+            }
+            if (t.equals(source)) {
+                continue;
+            }
+            if (closest == null) {
+                closest = t;
+                closestDistance = Math.abs(source.getX() - t.getX()) + Math.abs(source.getY() - t.getY());
+            }
+            else {
+                int newDistance = Math.abs(source.getX() - t.getX()) + Math.abs(source.getY() - t.getY());
+                if (newDistance < closestDistance) {
+                    closest = t;
+                    closestDistance = newDistance;
+                }
+            }
+        }
+        return closest;
+    }
+
+    private ArrayList<Tile> getShortestPathOfPaths(ArrayList<ArrayList<Tile>> pathList) {
+        ArrayList<Tile> shortestPath = null;
+        for(ArrayList<Tile> a : pathList) {
+            if(shortestPath == null) {
+                shortestPath = a;
+            } else {
+                if(a.size() < shortestPath.size()) {
+                    shortestPath = a;
+                }
+            }
+        }
+        return shortestPath;
+    }
+
+    private boolean isLevelExplored(Level level) {
+        for(int y = 0; y < level.getTileArray().length; y++) {
+            for(int x = 0; x < level.getTileArray()[y].length; x++) {
+                Tile t = level.getTile(y, x);
+                if(!t.isExplored()) {
+                    if(t.getType() != Tile.Type.WALL) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    private void makePlayerAIDecision() {
+        boolean exploreFullLevels = true;
+        AStar astar = map.getCurrentLevel().getAstar();
+        ArrayList<Tile> newPath = null;
+        Tile source = player.getTile();
+        Tile target = null;
+
+        // For random paths
+        boolean randomPath = false;
+        ArrayList<Tile> newRandomPath = null;
+        /////////////////////////////////////
+
+        if(player.getCurrentPath() == null) {
+            ArrayList<Tile> edgeOfExploredTiles = getEdgeOfExploredTiles(false);
+            // on world map?
+            if(map.getCurrentDepth() == 0) {
+                // see a cave?
+                if(isLevelExplored(map.getCurrentLevel())) {
+                    for (Tile t : getExploredTiles()) {
+                        if (t.equals(source)) {
+                            continue;
+                        }
+                        if (t.getType() == Tile.Type.CAVE_OPENING) {
+                            target = t;
+                            System.out.println("BOT: move to cave");
+                            break;
+                        }
+                    }
+                }
+            }
+            // in cave?
+            else {
+                // see stairs down?
+                if(isLevelExplored(map.getCurrentLevel())) {
+                    for (Tile t : getExploredTiles()) {
+                        if (t.equals(source)) {
+                            continue;
+                        }
+                        if (t.getType() == Tile.Type.STAIRS_DOWN) {
+                            target = t;
+                            System.out.println("BOT: move to stairs down");
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // no ideal target?
+            // pick a random tile you can see if all else fails
+            if(target == null) {
+                randomPath = true;
+                ArrayList<ArrayList<Tile>> paths = new ArrayList<>();
+                for(Tile t : edgeOfExploredTiles) {
+                    if(!t.isBlocked()) {
+                        paths.add(astar.getShortestPath(source, t));
+                    }
+                }
+                if(paths.size() == 0) {
+                    System.out.println("BOT: There are no paths.");
+                }
+                ArrayList<Tile> shortestPath = getShortestPathOfPaths(paths);
+                System.out.println("BOT: Evaluated " + paths.size() + " paths.");
+                if(shortestPath == null) {
+                    System.out.println("BOT: shortestPath: null");
+                    ArrayList<Tile> debugEdge = new ArrayList<>();
+                    for(Tile te : edgeOfExploredTiles) {
+                        debugEdge.add(te);
+                    }
+                    player.setCurrentPath(debugEdge);
+                    System.out.println("edge size: " + edgeOfExploredTiles.size());
+                    while(true) {
+                        map.getCurrentLevel().toggleAllTilesVisible(true);
+                        try {
+                            Thread.sleep(2000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        render.drawGame(getRootConsole());
+                        try {
+                            Thread.sleep(2000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+                else if(shortestPath.size() == 0) {
+                    System.out.println("BOT: shortestPath size: 0.");
+                    System.out.println("edge size: " + edgeOfExploredTiles.size());
+                    map.getCurrentLevel().toggleAllTilesVisible(true);
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    render.drawGame(getRootConsole());
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    newRandomPath = shortestPath;
+                    System.out.println("BOT: move to (random)");
+                }
+            }
+
+            // Set the new path
+            if(target != null) {
+                newPath = astar.getShortestPath(source, target);
+            }
+            else if(randomPath) {
+                newPath = newRandomPath;
+            }
+            if (newPath.size() == 0) {
+                System.out.println("newPath.size(): 0.");
+                if (target == null) {
+                    System.out.println("target is null");
+                } else {
+                    System.out.println("Target tile: " + target.getY() + " " + target.getX());
+                    System.out.println("Type: " + target.getTypeString());
+                }
+            } else {
+                player.setCurrentPath(newPath);
             }
         }
     }
@@ -296,6 +545,14 @@ public class Roguelike {
             return true;
         }
         return false;
+    }
+
+    protected int getMouseOnMapY() {
+        return lastMy - 1;
+    }
+
+    protected int getMouseOnMapX() {
+        return lastMx - gameInformationConsoleWidth - 1;
     }
 
     private void initTitleScreen() {
@@ -359,6 +616,8 @@ public class Roguelike {
                 case KeyEvent.VK_ENTER:
                     if (title.getSelectedItem().equals("New Game")) {
                         this.currentState = State.PLAYING;
+                        // start bot
+                        runPlayerBot = true;
                     }
                     break;
                 default:
@@ -440,6 +699,18 @@ public class Roguelike {
                             break;
                     }
                 }
+                else if(player.getCurrentPath() != null) {
+                    if(process.moveActor(player, player.getCurrentPath().get(0))) {
+                        player.getCurrentPath().remove(0);
+                        if(player.getCurrentPath().size() == 0) {
+                            player.setCurrentPath(null);
+                        }
+                        recalculateFOV = true;
+                    }
+                    redrawGame = true;
+                    turns++;
+                }
+
                 // Recalculate field of vision if it was set to true
                 // This allows us to know what we're seeing next, since NPC turn is after player
                 // NPC need to know if they now see the player
@@ -458,8 +729,6 @@ public class Roguelike {
                     process.calculateVision(player);
                     redrawGame = true;
                 }
-
-
             }
         }
     }

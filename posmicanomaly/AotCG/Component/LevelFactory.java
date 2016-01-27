@@ -699,7 +699,7 @@ public abstract class LevelFactory {
         int height = result.length;
         int width = result[0].length;
         boolean giantAdded = false;
-        int actorsToAdd = 10;
+        int actorsToAdd = 200;
         int actorsAdded = 0;
         do{
             Random rng = Roguelike.rng;

@@ -43,15 +43,21 @@ public class Process {
                 if (a.getCurrentPath() != null) {
                     if(moveActor(a, a.getCurrentPath().get(0))) {
                         a.getCurrentPath().remove(0);
+                        if(a.getCurrentPath().size() == 0) {
+                            a.setCurrentPath(null);
+                        }
                     }
                 }
             }
             // Player's not in npc's view, but has a current path to follow
             // .
             // .
-            else if(a.getCurrentPath().size() > 0) {
+            else if(a.getCurrentPath() != null) {
                 if(moveActor(a, a.getCurrentPath().get(0))) {
                     a.getCurrentPath().remove(0);
+                    if(a.getCurrentPath().size() == 0) {
+                        a.setCurrentPath(null);
+                    }
                 }
             }
             // Not in player view
@@ -64,7 +70,7 @@ public class Process {
         }
     }
 
-    private boolean moveActor(Actor actor, Tile t) {
+    protected boolean moveActor(Actor actor, Tile t) {
         MessageConsole messageConsole = roguelike.getGui().getMessageConsole();
         Actor player = roguelike.getPlayer();
         Random rng = Roguelike.rng;

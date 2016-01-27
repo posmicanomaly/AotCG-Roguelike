@@ -108,12 +108,10 @@ public class Input {
                 messageConsole.addMessage("All tiles visible", Color.yellow);
                 break;
             case KeyEvent.VK_B:
-                if (roguelike.window.getMainPanel().isDrawBackgroundGlyphs()) {
-                    messageConsole.addMessage("Background glyphs off", Color.yellow);
-                    roguelike.window.getMainPanel().setDrawBackgroundGlyphs(false);
+                if(roguelike.runPlayerBot) {
+                    roguelike.runPlayerBot = false;
                 } else {
-                    messageConsole.addMessage("Background glyphs on", Color.yellow);
-                    roguelike.window.getMainPanel().setDrawBackgroundGlyphs(true);
+                    roguelike.runPlayerBot = true;
                 }
                 break;
             case KeyEvent.VK_EQUALS:
