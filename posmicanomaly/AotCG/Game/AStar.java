@@ -59,12 +59,17 @@ public class AStar {
                 case STAIRS_DOWN:
                 case STAIRS_UP:
                 case CAVE_OPENING:
+                    mod = 50;
+                    break;
                 case WATER:
-                    mod = 5;
+                    mod = 10;
                     break;
                 case WALL:
                     mod = 9999;
                     break;
+            }
+            if(this.tile.hasActor()) {
+                mod = 10;
             }
             g_cost = g + mod;
             h_cost = (Math.abs(x - target.getX()) + Math.abs(y - target.getY()));

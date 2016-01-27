@@ -417,8 +417,37 @@ public class Roguelike {
             }
             // in cave?
             else {
+                // see a monster? kill it!
+                boolean monsterInView = false;
+                ArrayList<Actor> monsters = new ArrayList<>();
+                for(Tile t : player.getVisibleTiles()) {
+                    if(t.hasActor() && !t.getActor().equals(player)) {
+                        monsters.add(t.getActor());
+                    }
+                }
+                monsterInView = monsters.size() > 0;
+
+                if(monsterInView) {
+                    Actor closestMonster = null;
+                    int d = 0;
+                    for(Actor a : monsters) {
+                        if(closestMonster == null) {
+                            closestMonster = a;
+                            d = Math.abs(source.getX() - a.getTile().getX()) + Math.abs(source.getY() - a.getTile().getY());
+                        }
+                        else {
+                            int nd = Math.abs(source.getX() - a.getTile().getX()) + Math.abs(source.getY() - a.getTile().getY());
+                            if(nd < d) {
+                                closestMonster = a;
+                                d = nd;
+                            }
+                        }
+                    }
+                    target = closestMonster.getTile();
+                    System.out.println("BOT: move to " + closestMonster.getName());
+                }
                 // see stairs down?
-                if(isLevelExplored(map.getCurrentLevel())) {
+                else if(isLevelExplored(map.getCurrentLevel())) {
                     for (Tile t : getExploredTiles()) {
                         if (t.equals(source)) {
                             continue;
