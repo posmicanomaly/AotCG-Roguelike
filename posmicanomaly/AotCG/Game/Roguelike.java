@@ -398,6 +398,10 @@ public class Roguelike {
     private ArrayList<Tile> getShortestPathOfPaths(ArrayList<ArrayList<Tile>> pathList) {
         ArrayList<Tile> shortestPath = null;
         for(ArrayList<Tile> a : pathList) {
+            if(a == null) {
+                System.out.println("*****************************************************************A is null");
+                continue;
+            }
             if(shortestPath == null) {
                 shortestPath = a;
             } else {
@@ -424,6 +428,7 @@ public class Roguelike {
                     if(!pathHasExit) {
                         shortestPath = a;
                     } else {
+                        System.out.println("******************************************************************************");
                         System.out.println("getShortestPath() :: Rejected path for: Contains an exit before level explored");
                     }
                 }

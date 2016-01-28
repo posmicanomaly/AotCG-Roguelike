@@ -34,6 +34,17 @@ public class AStar {
             return tile.isBlocked();
         }
 
+        public boolean isExit() {
+            switch(tile.getType()) {
+                case STAIRS_DOWN:
+                case STAIRS_UP:
+                case CAVE_OPENING:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
         @Override
         public boolean equals(Object o) {
             Node targetNode = (Node) o;
@@ -179,21 +190,31 @@ public class AStar {
 
             ArrayList<Node> neighboringNodes = getNeighboringNodes(current);
             for (Node n : neighboringNodes) {
-                //if (!n.isBlocked()) {
-                    if (hasNode(closed, n)) {
+                // ** MOD **
+                // skip over exits
+                if(n.isExit()) {
+                    if (!(n.getY() == target.getY() && n.getX() == target.getX())) {
                         continue;
                     }
-                    if (!hasNode(open, n)) {
-                        open.add(n);
+                }
+                ////////////////////////////////////////////////////////////////////////
+
+                //if (!n.isBlocked()) {
+                if (hasNode(closed, n)) {
+                    continue;
+                }
+                if (!hasNode(open, n)) {
+                    open.add(n);
+                    n.setParent(current);
+                    n.updateCost(target);
+                } else {
+                    n.updateCost(target);
+                    if (current.getF_cost() < n.getF_cost()) {
                         n.setParent(current);
-                        n.updateCost(target);
-                    } else {
-                        n.updateCost(target);
-                        if (current.getF_cost() < n.getF_cost()) {
-                            n.setParent(current);
-                        }
                     }
+                }
                 //}
+
             }
         }
         System.out.println("AStar.getShortestPath :: open.isEmpty()");
