@@ -287,32 +287,56 @@ public class Roguelike {
 
     //==========================================================================================================
 
-    private ArrayList<Tile> getEdgeOfExploredTiles(boolean allowBlockedTiles) {
+    private ArrayList<Tile> getEdgeOfExploredTiles(int range, boolean allowBlockedTiles) {
         ArrayList<Tile> edges = new ArrayList<>();
         Level level = map.getCurrentLevel();
         int tilesAdded = 0;
         int tilesBlocked = 0;
+        int tilesOutOfRange = 0;
+        // Check all explored tiles
         for(Tile t : getExploredTiles()) {
+            // Check if its in range to check
+            // -1 bypasses range check, checks everything
+            if(range != -1) {
+                int d = Math.abs(player.getTile().getX() - t.getX()) + Math.abs(player.getTile().getY() - t.getY());
+                if (d > range) {
+                    tilesOutOfRange++;
+                    continue;
+                }
+            }
+            // Check if explored tile has an unexplored neighbor
             for(Tile n : level.getNearbyTiles(t.getY(), t.getX())) {
+                boolean add = false;
+                // If a neighbor is unexplored, this is an "edge" tile
                 if(!n.isExplored()) {
                     if(allowBlockedTiles) {
-                        edges.add(n);
-                        tilesAdded++;
+                        add = true;
                     }
                     else {
                         if(!n.isBlocked()) {
-                            edges.add(n);
-                            tilesAdded++;
-                        }
-                        else {
-                            tilesBlocked++;
+                           add = true;
                         }
                     }
-                    break;
+                    // We should add
+                    if(add) {
+                        // If it doesn't already have it
+                        if (!edges.contains(t)) {
+                            edges.add(t);
+                            tilesAdded++;
+                            // We only need to see one unexplored tile to consider it a neighbor
+                            break;
+                        }
+                    } else {
+                        // Sanity check
+                        if(edges.contains(t)) {
+                            System.out.println("A tile not added was previously added");
+                        }
+                        tilesBlocked++;
+                    }
                 }
             }
         }
-        System.out.println("getEdgeOfExploredTiles() :: tileAdded: " + tilesAdded + " tilesBlocked: " + tilesBlocked);
+        System.out.println("getEdgeOfExploredTiles() :: tileAdded: " + tilesAdded + " tilesBlocked: " + tilesBlocked + " tilesOutOfRange: " + tilesOutOfRange);
         return edges;
     }
 
@@ -328,6 +352,20 @@ public class Roguelike {
             }
         }
         return explored;
+    }
+
+    private ArrayList<Tile> getUnexploredTiles() {
+        ArrayList<Tile> unexplored = new ArrayList<>();
+        Level level = map.getCurrentLevel();
+        for(int y = 0; y < level.getTileArray().length; y++) {
+            for(int x = 0; x < level.getTileArray()[y].length; x++) {
+                Tile t = level.getTile(y, x);
+                if(!t.isExplored()) {
+                    unexplored.add(t);
+                }
+            }
+        }
+        return unexplored;
     }
 
     private Tile getClosestTileFromList(Tile source, ArrayList<Tile> list, boolean allowBlockedTiles) {
@@ -364,7 +402,30 @@ public class Roguelike {
                 shortestPath = a;
             } else {
                 if(a.size() < shortestPath.size()) {
-                    shortestPath = a;
+                    // Hack to prevent moving into an exit by the bot until the level is explored
+                    boolean pathHasExit = false;
+                    for(Tile t : a) {
+                        switch(t.getType()) {
+                            case CAVE_OPENING:
+                            case STAIRS_DOWN:
+                            case STAIRS_UP:
+                                if(!isLevelExplored(map.getCurrentLevel())) {
+                                    pathHasExit = true;
+                                }
+                                break;
+                            default:
+                                break;
+                        }
+                        if(t.getType() == Tile.Type.CAVE_OPENING && !isLevelExplored(map.getCurrentLevel())) {
+                            pathHasExit = true;
+                            break;
+                        }
+                    }
+                    if(!pathHasExit) {
+                        shortestPath = a;
+                    } else {
+                        System.out.println("getShortestPath() :: Rejected path for: Contains an exit before level explored");
+                    }
                 }
             }
         }
@@ -376,7 +437,7 @@ public class Roguelike {
             for(int x = 0; x < level.getTileArray()[y].length; x++) {
                 Tile t = level.getTile(y, x);
                 if(!t.isExplored()) {
-                    if(t.getType() != Tile.Type.WALL) {
+                    if(!t.isBlocked()) {
                         return false;
                     }
                 }
@@ -386,7 +447,6 @@ public class Roguelike {
     }
 
     private void makePlayerAIDecision() {
-        boolean exploreFullLevels = true;
         AStar astar = map.getCurrentLevel().getAstar();
         ArrayList<Tile> newPath = null;
         Tile source = player.getTile();
@@ -398,7 +458,6 @@ public class Roguelike {
         /////////////////////////////////////
 
         if(player.getCurrentPath() == null) {
-            ArrayList<Tile> edgeOfExploredTiles = getEdgeOfExploredTiles(false);
             // on world map?
             if(map.getCurrentDepth() == 0) {
                 // see a cave?
@@ -465,6 +524,7 @@ public class Roguelike {
             // pick a random tile you can see if all else fails
             if(target == null) {
                 randomPath = true;
+                ArrayList<Tile> edgeOfExploredTiles = getEdgeOfExploredTiles(10, false);
                 ArrayList<ArrayList<Tile>> paths = new ArrayList<>();
                 for(Tile t : edgeOfExploredTiles) {
                     if(!t.isBlocked()) {
@@ -472,25 +532,62 @@ public class Roguelike {
                     }
                 }
                 if(paths.size() == 0) {
-                    System.out.println("BOT: There are no paths.");
+                    for(int i = 12; i < 30; i+=2) {
+                        System.out.println("BOT: There are no paths. Expanding range");
+                        edgeOfExploredTiles = getEdgeOfExploredTiles(i, false);
+                        for(Tile t : edgeOfExploredTiles) {
+                            if(!t.isBlocked()) {
+                                paths.add(astar.getShortestPath(source, t));
+                            }
+                        }
+                        if(paths.size() > 0) {
+                            System.out.println("BOT: Found path at " + i + " range");
+                            break;
+                        }
+                    }
+                    // Is it still 0?
+                    if(paths.size() == 0) {
+                        System.out.println("BOT: There are no paths. Checking all explored edges");
+                        edgeOfExploredTiles = getEdgeOfExploredTiles(-1, false);
+                        for(Tile t : edgeOfExploredTiles) {
+                            if(!t.isBlocked()) {
+                                paths.add(astar.getShortestPath(source, t));
+                            }
+                        }
+                        // Final check
+                        if(paths.size() == 0) {
+                            System.out.println("BOT: There are no paths after expansion attempts");
+                        }
+                    }
+
                 }
                 ArrayList<Tile> shortestPath = getShortestPathOfPaths(paths);
                 System.out.println("BOT: Evaluated " + paths.size() + " paths.");
                 if(shortestPath == null) {
                     System.out.println("BOT: shortestPath: null");
                     ArrayList<Tile> debugEdge = new ArrayList<>();
-                    for(Tile te : edgeOfExploredTiles) {
+                    for(Tile te : getUnexploredTiles()) {
                         debugEdge.add(te);
                     }
                     player.setCurrentPath(debugEdge);
                     System.out.println("edge size: " + edgeOfExploredTiles.size());
                     while(true) {
+                        for(Tile te : getUnexploredTiles()) {
+                            debugEdge.add(te);
+                        }
+                        player.setCurrentPath(debugEdge);
                         map.getCurrentLevel().toggleAllTilesVisible(true);
+                        render.drawGame(getRootConsole());
                         try {
                             Thread.sleep(2000);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
+                        debugEdge = new ArrayList<>();
+                        for(Tile te : edgeOfExploredTiles) {
+                            debugEdge.add(te);
+                        }
+                        player.setCurrentPath(debugEdge);
                         render.drawGame(getRootConsole());
                         try {
                             Thread.sleep(2000);
@@ -536,6 +633,7 @@ public class Roguelike {
                     System.out.println("Type: " + target.getTypeString());
                 }
             } else {
+                // Todo, simulate mouse click
                 player.setCurrentPath(newPath);
             }
         }

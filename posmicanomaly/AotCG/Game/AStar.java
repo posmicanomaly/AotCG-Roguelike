@@ -58,11 +58,22 @@ public class AStar {
             switch(this.tile.getType()) {
                 case STAIRS_DOWN:
                 case STAIRS_UP:
+                    mod = 10;
+                    break;
                 case CAVE_OPENING:
-                    mod = 50;
+                    mod = 10;
                     break;
                 case WATER:
-                    mod = 10;
+                    mod = 9;
+                    break;
+                case FOREST:
+                    mod = 3;
+                    break;
+                case BRUSH:
+                    mod = 2;
+                    break;
+                case MOUNTAIN:
+                    mod = 8;
                     break;
                 case WALL:
                     mod = 9999;

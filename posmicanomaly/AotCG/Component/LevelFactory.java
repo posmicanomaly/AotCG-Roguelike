@@ -126,6 +126,7 @@ public abstract class LevelFactory {
                 symbol = ms.CAVE_GRASS;
                 color = ColorTools.varyColor(Colors.CAVE_GRASS, 0.5, 1.0, ColorTools.BaseColor.RGB);
                 backgroundColor = color.darker().darker().darker().darker();
+                transparent = false;
                 break;
             case LOW_GRASS:
                 symbol = ms.LOW_GRASS;
