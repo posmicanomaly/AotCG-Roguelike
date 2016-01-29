@@ -3,6 +3,7 @@ package posmicanomaly.AotCG.Game;
 import posmicanomaly.AotCG.Component.Level;
 import posmicanomaly.AotCG.Component.Tile;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -12,6 +13,7 @@ import java.util.Collections;
 public class AStar {
     private int g = 1;
     private Level level;
+    private Roguelike roguelike;
 
 
     private class Node {
@@ -69,13 +71,13 @@ public class AStar {
             switch(this.tile.getType()) {
                 case STAIRS_DOWN:
                 case STAIRS_UP:
-                    mod = 10;
+                    mod = 0;
                     break;
                 case CAVE_OPENING:
-                    mod = 10;
+                    mod = 0;
                     break;
                 case WATER:
-                    mod = 9;
+                    mod = 15;
                     break;
                 case FOREST:
                     mod = 3;
@@ -84,7 +86,7 @@ public class AStar {
                     mod = 2;
                     break;
                 case MOUNTAIN:
-                    mod = 8;
+                    mod = 10;
                     break;
                 case WALL:
                     mod = 9999;
@@ -113,8 +115,9 @@ public class AStar {
 
 
 
-    public AStar(Level level) {
+    public AStar(Level level, Roguelike roguelike) {
         this.level = level;
+        this.roguelike = roguelike;
     }
 
     public Node getCheapestNode(ArrayList<Node> nodes) {
@@ -149,6 +152,12 @@ public class AStar {
     }
 
     public ArrayList<Tile> getShortestPath(Tile source, Tile target) {
+        return getShortestPath(source, target, false);
+    }
+    public ArrayList<Tile> getShortestPath(Tile source, Tile target, boolean canCheckUnexplored) {
+        //roguelike.getRender().addHighlightedDebugTile(source, Color.blue);
+        //roguelike.getRender().addHighlightedDebugTile(target, Color.red);
+        //roguelike.getRender().drawGame(roguelike.getRootConsole());
         // Set of tiles to be evaluated
         ArrayList<Node> open = new ArrayList<>();
         // Set of tiles already evaluated
@@ -165,6 +174,7 @@ public class AStar {
         while (!open.isEmpty()) {
             // Get tile in openTiles with the lowest f_cost
             current = getCheapestNode(open);
+
 
             // Remove current from openTiles
             open.remove(current);
@@ -190,10 +200,14 @@ public class AStar {
 
             ArrayList<Node> neighboringNodes = getNeighboringNodes(current);
             for (Node n : neighboringNodes) {
+
                 // ** MOD **
                 // skip over exits
-                if(n.isExit()) {
-                    if (!(n.getY() == target.getY() && n.getX() == target.getX())) {
+                if(n.isExit() && !(n.getTile().getX() == target.getX() && n.getTile().getY() == target.getY())) {
+                    continue;
+                }
+                if(!canCheckUnexplored) {
+                    if (!n.getTile().isExplored()) {
                         continue;
                     }
                 }

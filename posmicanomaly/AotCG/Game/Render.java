@@ -14,9 +14,19 @@ public class Render implements Runnable {
     private Thread thread;
     private Roguelike roguelike;
     private boolean run;
+    private ArrayList<DebugTile> highlightedDebugTiles;
+    private class DebugTile {
+        Tile t;
+        Color c;
+        private DebugTile(Tile t, Color c) {
+            this.t = t;
+            this.c = c;
+        }
+    }
 
     public Render(Roguelike roguelike) {
         this.roguelike = roguelike;
+        highlightedDebugTiles = new ArrayList<>();
     }
 
     public void start() {
@@ -39,6 +49,7 @@ public class Render implements Runnable {
 
             // Debug
             showActorPaths();
+            showHighlightedDebugTiles();
 
 
             roguelike.getMapConsole().copyBufferTo(rootConsole, 0, roguelike.getGameInformationConsoleWidth());
@@ -54,6 +65,35 @@ public class Render implements Runnable {
             roguelike.title.getTitleConsole().copyBufferTo(rootConsole, 0, 0);
             roguelike.window.refresh();
         }
+    }
+
+    private void showHighlightedDebugTiles() {
+        for(DebugTile t : highlightedDebugTiles) {
+            roguelike.getMapConsole().setBgColor(t.t.getY(), t.t.getX(), t.c);
+        }
+    }
+
+    public boolean addHighlightedDebugTile(Tile t, Color c) {
+        for(DebugTile d : highlightedDebugTiles) {
+            if(d.t.getY() == t.getY() && d.t.getX() == t.getX()) {
+                return false;
+            }
+        }
+        highlightedDebugTiles.add(new DebugTile(t, c));
+        return true;
+    }
+
+    public void removeHighlightedDebugTile(Tile t) {
+        for(DebugTile d : highlightedDebugTiles) {
+            if(d.t.getX() == t.getX() && d.t.getY() == t.getY()) {
+                highlightedDebugTiles.remove(d);
+                return;
+            }
+        }
+    }
+
+    public void clearHighlightedDebugTiles() {
+        highlightedDebugTiles = new ArrayList<>();
     }
 
     private void drawMouseToolTips(Console rootConsole) {

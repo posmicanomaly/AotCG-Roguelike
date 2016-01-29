@@ -161,9 +161,9 @@ public class Roguelike {
         mapConsole.setBorderStyle(Console.BorderStyle.DOUBLE);
 
         if(mapConsole.hasBorder()) {
-            this.map = new Map(mapHeight - 2, mapWidth - 2, Roguelike.MAP_DEPTH);
+            this.map = new Map(mapHeight - 2, mapWidth - 2, Roguelike.MAP_DEPTH, this);
         } else {
-            this.map = new Map(mapHeight, mapWidth, Roguelike.MAP_DEPTH);
+            this.map = new Map(mapHeight, mapWidth, Roguelike.MAP_DEPTH, this);
         }
 
         initPlayer();
@@ -268,6 +268,10 @@ public class Roguelike {
                     if (player.getCurrentPath() == null) {
                         gui.getMessageConsole().addMessage("Can't move there", Color.red);
                     }
+                    if(player.getCurrentPath().size() == 0) {
+                        System.out.println("Player path is 0, setting to null");
+                        player.setCurrentPath(null);
+                    }
                 }
             }
             System.out.println(message + y + "x" + x);
@@ -336,7 +340,7 @@ public class Roguelike {
                 }
             }
         }
-        System.out.println("getEdgeOfExploredTiles() :: tileAdded: " + tilesAdded + " tilesBlocked: " + tilesBlocked + " tilesOutOfRange: " + tilesOutOfRange);
+        //System.out.println("getEdgeOfExploredTiles() :: tileAdded: " + tilesAdded + " tilesBlocked: " + tilesBlocked + " tilesOutOfRange: " + tilesOutOfRange);
         return edges;
     }
 
@@ -400,6 +404,11 @@ public class Roguelike {
         for(ArrayList<Tile> a : pathList) {
             if(a == null) {
                 System.out.println("*****************************************************************A is null");
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 continue;
             }
             if(shortestPath == null) {
@@ -430,6 +439,11 @@ public class Roguelike {
                     } else {
                         System.out.println("******************************************************************************");
                         System.out.println("getShortestPath() :: Rejected path for: Contains an exit before level explored");
+                        try {
+                            Thread.sleep(2000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
             }
@@ -508,7 +522,7 @@ public class Roguelike {
                         }
                     }
                     target = closestMonster.getTile();
-                    System.out.println("BOT: move to " + closestMonster.getName());
+                    //System.out.println("BOT: move to " + closestMonster.getName());
                 }
                 // see stairs down?
                 else if(isLevelExplored(map.getCurrentLevel())) {
@@ -529,45 +543,49 @@ public class Roguelike {
             // pick a random tile you can see if all else fails
             if(target == null) {
                 randomPath = true;
-                ArrayList<Tile> edgeOfExploredTiles = getEdgeOfExploredTiles(10, false);
+                int range;
+                switch(player.getTile().getType()) {
+                    case FOREST:
+                    case MOUNTAIN:
+                    case CAVE_GRASS:
+                        range = 4;
+                        break;
+                    default:
+                        range = 16;
+                }
+                ArrayList<Tile> edgeOfExploredTiles = null;
                 ArrayList<ArrayList<Tile>> paths = new ArrayList<>();
-                for(Tile t : edgeOfExploredTiles) {
-                    if(!t.isBlocked()) {
-                        paths.add(astar.getShortestPath(source, t));
+                for(int i = 0; i < 2; i++) {
+                    // If second run
+                    if (i > 0 && paths.size() == 0) {
+                        range = -1;
+                        System.out.println("Maxing range");
+                    }
+                    edgeOfExploredTiles = getEdgeOfExploredTiles(range, false);
+                    for (Tile t : edgeOfExploredTiles) {
+                        if (!t.isBlocked()) {
+                            switch (t.getType()) {
+                                case CAVE_OPENING:
+                                case STAIRS_DOWN:
+                                case STAIRS_UP:
+                                    continue;
+                            }
+                            paths.add(astar.getShortestPath(source, t));
+                        }
+                    }
+                    // We have paths;
+                    if(paths.size() > 0) {
+                        break;
                     }
                 }
-                if(paths.size() == 0) {
-                    for(int i = 12; i < 30; i+=2) {
-                        System.out.println("BOT: There are no paths. Expanding range");
-                        edgeOfExploredTiles = getEdgeOfExploredTiles(i, false);
-                        for(Tile t : edgeOfExploredTiles) {
-                            if(!t.isBlocked()) {
-                                paths.add(astar.getShortestPath(source, t));
-                            }
-                        }
-                        if(paths.size() > 0) {
-                            System.out.println("BOT: Found path at " + i + " range");
-                            break;
-                        }
-                    }
-                    // Is it still 0?
-                    if(paths.size() == 0) {
-                        System.out.println("BOT: There are no paths. Checking all explored edges");
-                        edgeOfExploredTiles = getEdgeOfExploredTiles(-1, false);
-                        for(Tile t : edgeOfExploredTiles) {
-                            if(!t.isBlocked()) {
-                                paths.add(astar.getShortestPath(source, t));
-                            }
-                        }
-                        // Final check
-                        if(paths.size() == 0) {
-                            System.out.println("BOT: There are no paths after expansion attempts");
-                        }
-                    }
 
+                if(paths.size() == 0) {
+                    System.out.println("BOT: There are no paths after expansion attempts");
                 }
+
+
                 ArrayList<Tile> shortestPath = getShortestPathOfPaths(paths);
-                System.out.println("BOT: Evaluated " + paths.size() + " paths.");
+                //System.out.println("BOT: Evaluated " + paths.size() + " paths.");
                 if(shortestPath == null) {
                     System.out.println("BOT: shortestPath: null");
                     ArrayList<Tile> debugEdge = new ArrayList<>();
@@ -618,7 +636,7 @@ public class Roguelike {
                     }
                 } else {
                     newRandomPath = shortestPath;
-                    System.out.println("BOT: move to (random)");
+                    //System.out.println("BOT: move to (random)");
                 }
             }
 
@@ -797,38 +815,40 @@ public class Roguelike {
             else {
                 // By default, do not recalculate field of vision unless we need to
                 boolean recalculateFOV = false;
-
-                KeyEvent key = this.window.getLastKeyEvent();
-
-                // Obtain the command related to the keypress determined by game state
-                Input.Command command = input.processKey(key);
-
-                // Check command and act upon it
                 int prevTurns = turns;
-                if (command != null) {
-                    switch (command) {
+                // double check the key event, because otherwise moving and mouse moving don't like each other
+                if(window.getLastKeyEvent() != lastKeyEvent) {
+                    KeyEvent key = this.window.getLastKeyEvent();
 
-                        case MOVEMENT:
-                            Input.Direction direction = input.getPlayerMovementDirection(key);
-                            if (process.moveActor(player, direction)) {
-                                recalculateFOV = true;
-                            }
-                            redrawGame = true;
-                            turns++;
-                            break;
+                    // Obtain the command related to the keypress determined by game state
+                    Input.Command command = input.processKey(key);
 
-                        case DEBUG:
-                            input.processDebugCommand(key, this);
-                            redrawGame = true;
-                            break;
+                    // Check command and act upon it
+                    if (command != null) {
+                        switch (command) {
 
-                        case MENU:
-                            input.processMenuCommand(key, this);
-                            redrawGame = true;
-                            break;
+                            case MOVEMENT:
+                                Input.Direction direction = input.getPlayerMovementDirection(key);
+                                if (process.moveActor(player, direction)) {
+                                    recalculateFOV = true;
+                                }
+                                redrawGame = true;
+                                turns++;
+                                break;
 
-                        default:
-                            break;
+                            case DEBUG:
+                                input.processDebugCommand(key, this);
+                                redrawGame = true;
+                                break;
+
+                            case MENU:
+                                input.processMenuCommand(key, this);
+                                redrawGame = true;
+                                break;
+
+                            default:
+                                break;
+                        }
                     }
                 }
                 else if(player.getCurrentPath() != null) {
@@ -1091,6 +1111,10 @@ public class Roguelike {
 
 
     public enum State {TITLE, PLAYING, VICTORY}
+
+    public Render getRender() {
+        return render;
+    }
 }
 
 

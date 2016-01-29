@@ -18,12 +18,12 @@ public class Level {
 
     private Map.LevelStyle levelStyle;
 
-    public Level(int height, int width, Map.LevelStyle levelStyle, int rootY, int rootX) {
+    public Level(int height, int width, Map.LevelStyle levelStyle, int rootY, int rootX, Roguelike roguelike) {
         this.height = height;
         this.width = width;
         this.rootY = rootY;
         this.rootX = rootX;
-        astar = new AStar(this);
+        astar = new AStar(this, roguelike);
         turnExited = -1;
         this.levelStyle = levelStyle;
         init(this.levelStyle);
