@@ -200,52 +200,6 @@ public class Process {
             // For now, only the player can change levels
             if (actor.equals(player)) {
 
-                switch(desiredTile.getType()) {
-                    case CAVE_OPENING:
-                    case STAIRS_DOWN:
-                        // Save the map coordinates if we're on the world map
-                        if(map.getCurrentDepth() == 0) {
-                            roguelike.setPlayerMapY(desiredTile.getY());
-                            roguelike.setPlayerMapX(desiredTile.getX());
-                        }
-
-                        // Get the result of our attempt to change levels
-                        levelChanged = map.goDeeper(roguelike.getPlayerMapY(), roguelike.getPlayerMapX());
-                        if (levelChanged) {
-                            desiredTile = map.getCurrentLevel().getEntryTile();
-                        }
-                        break;
-
-                    case STAIRS_UP:
-                        levelChanged = map.goHigher(roguelike.getPlayerMapY(), roguelike.getPlayerMapX());
-                        if (levelChanged) {
-                            // If we are going to the world map, then we place the player back at the last known world map coordinates.
-                            if(map.getCurrentDepth() == 0) {
-                                desiredTile = map.getCurrentLevel().getTile(roguelike.getPlayerMapY(), roguelike.getPlayerMapX());
-                            }
-                            // Otherwise, we place them on the down-stairs for the previous level, like they climbed them.
-                            else {
-                                desiredTile = map.getCurrentLevel().getDownStairs();
-                            }
-                        }
-                        break;
-
-                    default:
-                        break;
-                }
-            }
-
-            // If the level was changed, check and perform catch up if needed based on when we last left it.
-            if (levelChanged) {
-                System.out.println("turnsExit: " + map.getCurrentLevel().getTurnExited());
-                if(map.getCurrentLevel().getTurnExited() != -1) {
-                    int catchup = 0;
-                    for (int i = map.getCurrentLevel().getTurnExited(); i < Roguelike.turns; i++) {
-                        processNpcActors();
-                        catchup++;
-                    }
-                    System.out.println("level caught up, processNpcActors() " + catchup + " times");
-                }
             }
 
             Tile previousTile = currentTile;
@@ -439,5 +393,92 @@ public class Process {
             }
             actor.addVisibleTile(t);
         }
+    }
+
+    public boolean actuateTile(Actor actor) {
+        if(!actor.equals(roguelike.getPlayer())) {
+            System.out.println(actor.getName() + " tried to actuate tile, only players are allowed");
+            return false;
+        }
+        Tile desiredTile = actor.getTile();
+        boolean levelChanged = false;
+        switch(desiredTile.getType()) {
+            case CAVE_OPENING:
+            case STAIRS_DOWN:
+                // Save the map coordinates if we're on the world map
+                if (roguelike.map.getCurrentDepth() == 0) {
+                    roguelike.setPlayerMapY(desiredTile.getY());
+                    roguelike.setPlayerMapX(desiredTile.getX());
+                }
+
+                // Get the result of our attempt to change levels
+                levelChanged = roguelike.map.goDeeper(roguelike.getPlayerMapY(), roguelike.getPlayerMapX());
+                if (levelChanged) {
+                    desiredTile = roguelike.map.getCurrentLevel().getEntryTile();
+                }
+                break;
+
+            case STAIRS_UP:
+                // Change only if we're not on a path to another tile
+                levelChanged = roguelike.map.goHigher(roguelike.getPlayerMapY(), roguelike.getPlayerMapX());
+                if (levelChanged) {
+                    // If we are going to the world map, then we place the player back at the last known world map coordinates.
+
+                    if (roguelike.map.getCurrentDepth() == 0) {
+                        desiredTile = roguelike.map.getCurrentLevel().getTile(roguelike.getPlayerMapY(), roguelike.getPlayerMapX());
+                    }
+                    // Otherwise, we place them on the down-stairs for the previous level, like they
+                    // climbed them.
+                    else {
+                        desiredTile = roguelike.map.getCurrentLevel().getDownStairs();
+                    }
+                }
+                break;
+
+            default:
+                break;
+        }
+
+        // If the level was changed, check and perform catch up if needed based on when we last left it.
+        if (levelChanged) {
+            System.out.println("turnsExit: " + roguelike.map.getCurrentLevel().getTurnExited());
+            if(roguelike.map.getCurrentLevel().getTurnExited() != -1) {
+                int catchup = 0;
+                for (int i = roguelike.map.getCurrentLevel().getTurnExited(); i < Roguelike.turns; i++) {
+                    processNpcActors();
+                    catchup++;
+                }
+                System.out.println("level caught up, processNpcActors() " + catchup + " times");
+            }
+            Tile previousTile = actor.getTile();
+
+            // set actor's tile
+            actor.setTile(desiredTile);
+            // set tile's actor
+            desiredTile.setActor(actor);
+
+            // Secret wall?
+            // .
+            // .
+
+            if (desiredTile.getType() == Tile.Type.WALL_SECRET) {
+                // Set type to DOOR
+                desiredTile.setType(Tile.Type.DOOR);
+                LevelFactory.initTile(desiredTile);
+            }
+
+            // remove actor from old tile
+
+            previousTile.setActor(null);
+
+            // More hacks for map x,y
+            if(roguelike.map.getCurrentDepth() == 0) {
+                roguelike.setPlayerMapY(actor.getTile().getY());
+                roguelike.setPlayerMapX(actor.getTile().getX());
+            }
+            System.out.println(desiredTile.getTypeString());
+            return true;
+        }
+        return false;
     }
 }

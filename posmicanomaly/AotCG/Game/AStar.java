@@ -69,13 +69,6 @@ public class AStar {
             int mod = 0;
             // Try to avoid stairs and caves unless that's what we want to go to
             switch(this.tile.getType()) {
-                case STAIRS_DOWN:
-                case STAIRS_UP:
-                    mod = 0;
-                    break;
-                case CAVE_OPENING:
-                    mod = 0;
-                    break;
                 case WATER:
                     mod = 15;
                     break;
@@ -202,9 +195,14 @@ public class AStar {
             for (Node n : neighboringNodes) {
 
                 // ** MOD **
+                // skip blocked
+                if(n.isBlocked()) {
+                    continue;
+                }
+                // ** MOD **
                 // skip over exits
                 if(n.isExit() && !(n.getTile().getX() == target.getX() && n.getTile().getY() == target.getY())) {
-                    continue;
+                    //continue;
                 }
                 if(!canCheckUnexplored) {
                     if (!n.getTile().isExplored()) {

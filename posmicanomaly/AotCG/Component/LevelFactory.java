@@ -175,6 +175,7 @@ public abstract class LevelFactory {
                 color =  ColorTools.varyColor(Colors.MOUNTAIN, 0.9, 1.0, ColorTools.BaseColor.RGB);
                 backgroundColor = color.darker().darker().darker().darker();
                 transparent = false;
+                isBlocked = true;
                 break;
             case SAND:
                 symbol = ms.SAND;

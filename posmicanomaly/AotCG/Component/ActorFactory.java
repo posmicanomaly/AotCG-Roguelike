@@ -28,7 +28,7 @@ public class ActorFactory {
                 break;
             case RAT:
                 level = 1;
-                mod = 4;
+                mod = 40;
                 speed = 1;
                 glyph = 'r';
                 actorName = "rat";
@@ -36,7 +36,7 @@ public class ActorFactory {
                 break;
             case BAT:
                 level = 2;
-                mod = 4;
+                mod = 40;
                 speed = 2;
                 glyph = 'b';
                 actorName = "bat";
@@ -44,7 +44,7 @@ public class ActorFactory {
                 break;
             case GIANT:
                 level = 3;
-                mod = 8;
+                mod = 80;
                 speed = 3;
                 glyph = 'G';
                 actorName = "giant";

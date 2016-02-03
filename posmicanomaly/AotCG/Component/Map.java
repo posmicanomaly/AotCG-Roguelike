@@ -113,10 +113,20 @@ public class Map {
         return width;
     }
 
+    public Level getWorldMap() {
+        return worldMap;
+    }
 
+    public Level getLowestLevel(int y, int x) {
+        return level3dArray[y][x][depth - 1];
+    }
 
     public Level getCurrentLevel() {
         return currentLevel;
+    }
+
+    public Level getLevel(int y, int x, int z) {
+        return level3dArray[y][x][z];
     }
 
     public int getCurrentDepth() {

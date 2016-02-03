@@ -41,6 +41,9 @@ public class Input {
             case KeyEvent.VK_C:
                 return Command.MOVEMENT;
 
+            case KeyEvent.VK_PERIOD:
+                return Command.ACTUATE;
+
                     /*
                     DEBUG Input
                      */
@@ -168,5 +171,5 @@ public class Input {
         }
     }
 
-    public enum Command {MOVEMENT, DEBUG, MENU}
+    public enum Command {MOVEMENT, DEBUG, MENU, ACTUATE}
 }

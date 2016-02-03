@@ -1,6 +1,7 @@
 package posmicanomaly.AotCG.Game;
 
 import posmicanomaly.AotCG.Component.*;
+import posmicanomaly.AotCG.Gui.Component.MessageConsole;
 import posmicanomaly.AotCG.Screen.Title;
 import posmicanomaly.libjsrte.Console.Console;
 import posmicanomaly.libjsrte.Console.Symbol;
@@ -230,7 +231,14 @@ public class Roguelike {
         // Mouse testing
         boolean mouseCoordinatesChanged = updateMouseLocation();
         if(runPlayerBot) {
-            makePlayerAIDecision();
+            PlayerAIDecision playerAIDecision = makePlayerAIDecision();
+            switch(playerAIDecision) {
+                case ACTUATETILE:
+                    turns++;
+                    redrawGame = true;
+                    process.calculateVision(player);
+                    break;
+            }
         }
         if (!this.window.getLastKeyEvent().equals(this.lastKeyEvent) || player.getCurrentPath() != null) {
             /**
@@ -251,22 +259,29 @@ public class Roguelike {
             if(isMouseOnMap()) {
                 x = getMouseOnMapX();
                 y = getMouseOnMapY();
+                Tile clickedTile = map.getCurrentLevel().getTile(y, x);
                 message += "map at ";
                 boolean allowMoveIntoUnexplored = false;
                 boolean allowMove = false;
                 if(allowMoveIntoUnexplored) {
-                    allowMove = true;
-                } else {
-                    if(map.getCurrentLevel().getTile(y, x).isExplored()) {
+                    if(!clickedTile.isBlocked()) {
                         allowMove = true;
                     } else {
                         gui.getMessageConsole().addMessage("Can't move there", Color.red);
                     }
                 }
-                if(allowMove) {
-                    player.setCurrentPath(map.getCurrentLevel().getAstar().getShortestPath(player.getTile(), map.getCurrentLevel().getTile(y, x)));
-                    if (player.getCurrentPath() == null) {
+                else {
+                    if(clickedTile.isExplored() && !clickedTile.isBlocked()) {
+                        allowMove = true;
+                    }
+                    else {
                         gui.getMessageConsole().addMessage("Can't move there", Color.red);
+                    }
+                }
+                if(allowMove) {
+                    player.setCurrentPath(map.getCurrentLevel().getAstar().getShortestPath(player.getTile(), clickedTile));
+                    if (player.getCurrentPath() == null) {
+                        gui.getMessageConsole().addMessage("Can't move there: there is no path?", Color.red);
                     }
                     if(player.getCurrentPath().size() == 0) {
                         System.out.println("Player path is 0, setting to null");
@@ -415,36 +430,7 @@ public class Roguelike {
                 shortestPath = a;
             } else {
                 if(a.size() < shortestPath.size()) {
-                    // Hack to prevent moving into an exit by the bot until the level is explored
-                    boolean pathHasExit = false;
-                    for(Tile t : a) {
-                        switch(t.getType()) {
-                            case CAVE_OPENING:
-                            case STAIRS_DOWN:
-                            case STAIRS_UP:
-                                if(!isLevelExplored(map.getCurrentLevel())) {
-                                    pathHasExit = true;
-                                }
-                                break;
-                            default:
-                                break;
-                        }
-                        if(t.getType() == Tile.Type.CAVE_OPENING && !isLevelExplored(map.getCurrentLevel())) {
-                            pathHasExit = true;
-                            break;
-                        }
-                    }
-                    if(!pathHasExit) {
-                        shortestPath = a;
-                    } else {
-                        System.out.println("******************************************************************************");
-                        System.out.println("getShortestPath() :: Rejected path for: Contains an exit before level explored");
-                        try {
-                            Thread.sleep(2000);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
+                    shortestPath = a;
                 }
             }
         }
@@ -465,37 +451,33 @@ public class Roguelike {
         return true;
     }
 
-    private void makePlayerAIDecision() {
-        AStar astar = map.getCurrentLevel().getAstar();
-        ArrayList<Tile> newPath = null;
-        Tile source = player.getTile();
-        Tile target = null;
-
-        // For random paths
-        boolean randomPath = false;
-        ArrayList<Tile> newRandomPath = null;
-        /////////////////////////////////////
-
-        if(player.getCurrentPath() == null) {
-            // on world map?
-            if(map.getCurrentDepth() == 0) {
-                // see a cave?
-                if(isLevelExplored(map.getCurrentLevel())) {
-                    for (Tile t : getExploredTiles()) {
-                        if (t.equals(source)) {
-                            continue;
-                        }
-                        if (t.getType() == Tile.Type.CAVE_OPENING) {
-                            target = t;
-                            System.out.println("BOT: move to cave");
-                            break;
-                        }
-                    }
+    private boolean allCavesExplored() {
+        ArrayList<Tile> caveOpenings = new ArrayList<>();
+        for(int y = 0; y < map.getWorldMap().getTileArray().length; y++) {
+            for(int x = 0; x < map.getWorldMap().getTileArray()[y].length; x++) {
+                Tile t = map.getWorldMap().getTile(y, x);
+                if(t.getType() == Tile.Type.CAVE_OPENING) {
+                    caveOpenings.add(t);
                 }
             }
-            // in cave?
-            else {
-                // see a monster? kill it!
+        }
+        for(Tile t : caveOpenings) {
+            Level level = map.getLowestLevel(t.getY(), t.getX());
+            if(level == null) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public enum PlayerAIDecision {RANDOMPATH, CONTINUEPATH, ACTUATETILE, ERROR}
+
+    private enum PlayerAITask {KILL, EXPLORE, GO_DEEPER, GO_HIGHER, IDLE, CONTINUEPATH}
+
+    private boolean playerAICanPerformTask(PlayerAITask task) {
+        Tile source = player.getTile();
+        switch(task) {
+            case KILL:
                 boolean monsterInView = false;
                 ArrayList<Actor> monsters = new ArrayList<>();
                 for(Tile t : player.getVisibleTiles()) {
@@ -504,163 +486,290 @@ public class Roguelike {
                     }
                 }
                 monsterInView = monsters.size() > 0;
+                return monsterInView;
+            case CONTINUEPATH:
+                return player.getCurrentPath() != null;
+            case EXPLORE:
+                return !isLevelExplored(map.getCurrentLevel());
+            case GO_DEEPER:
+                return isLevelExplored(map.getCurrentLevel()) && !allCavesExplored();
+            case GO_HIGHER:
+                Level lowestLevel = map.getLowestLevel(getPlayerMapY(), getPlayerMapX());
+                if(lowestLevel != null) {
+                    return isLevelExplored(lowestLevel) && map.getCurrentDepth() > 0;
+                }
+                break;
+            case IDLE:
+                return true;
+        }
+        return false;
+    }
 
-                if(monsterInView) {
+    private PlayerAIDecision playerAIPerformTask(PlayerAITask task) {
+        Tile target = null;
+        Tile source = player.getTile();
+        AStar astar = map.getCurrentLevel().getAstar();
+        switch(task) {
+            case KILL:
+                System.out.println("BOT: Wants to kill");
+                if(playerAICanPerformTask(PlayerAITask.KILL)) {
                     Actor closestMonster = null;
                     int d = 0;
-                    for(Actor a : monsters) {
-                        if(closestMonster == null) {
+                    ArrayList<Actor> monsters = new ArrayList<>();
+                    for(Tile t : player.getVisibleTiles()) {
+                        if(t.hasActor() && !t.getActor().equals(player)) {
+                            monsters.add(t.getActor());
+                        }
+                    }
+                    for (Actor a : monsters) {
+                        if (closestMonster == null) {
                             closestMonster = a;
                             d = Math.abs(source.getX() - a.getTile().getX()) + Math.abs(source.getY() - a.getTile().getY());
-                        }
-                        else {
+                        } else {
                             int nd = Math.abs(source.getX() - a.getTile().getX()) + Math.abs(source.getY() - a.getTile().getY());
-                            if(nd < d) {
+                            if (nd < d) {
                                 closestMonster = a;
                                 d = nd;
                             }
                         }
                     }
                     target = closestMonster.getTile();
-                    //System.out.println("BOT: move to " + closestMonster.getName());
                 }
-                // see stairs down?
-                else if(isLevelExplored(map.getCurrentLevel())) {
-                    for (Tile t : getExploredTiles()) {
-                        if (t.equals(source)) {
-                            continue;
+                break;
+            case CONTINUEPATH:
+                //System.out.println("BOT: Continue path");
+                if(playerAICanPerformTask(PlayerAITask.CONTINUEPATH)) {
+                    return PlayerAIDecision.CONTINUEPATH;
+                }
+                break;
+            case EXPLORE:
+                //System.out.println("BOT: Wants to explore");
+                if(playerAICanPerformTask(PlayerAITask.EXPLORE)) {
+                    int range;
+                    switch (player.getTile().getType()) {
+                        case FOREST:
+                        case MOUNTAIN:
+                        case CAVE_GRASS:
+                            range = 4;
+                            break;
+                        default:
+                            range = 16;
+                    }
+                    ArrayList<Tile> edgeOfExploredTiles = null;
+                    ArrayList<ArrayList<Tile>> paths = new ArrayList<>();
+                    for (int i = 0; i < 2; i++) {
+                        // If second run
+                        if (i > 0 && paths.size() == 0) {
+                            range = -1;
                         }
-                        if (t.getType() == Tile.Type.STAIRS_DOWN) {
-                            target = t;
-                            System.out.println("BOT: move to stairs down");
+                        edgeOfExploredTiles = getEdgeOfExploredTiles(range, false);
+                        for (Tile t : edgeOfExploredTiles) {
+                            if (!t.isBlocked()) {
+                                switch (t.getType()) {
+                                    case CAVE_OPENING:
+                                    case STAIRS_DOWN:
+                                    case STAIRS_UP:
+                                        continue;
+                                }
+                                paths.add(astar.getShortestPath(source, t));
+                            }
+                        }
+                        // We have paths
+                        if (paths.size() > 0) {
                             break;
                         }
                     }
-                }
-            }
 
-            // no ideal target?
-            // pick a random tile you can see if all else fails
-            if(target == null) {
-                randomPath = true;
-                int range;
-                switch(player.getTile().getType()) {
-                    case FOREST:
-                    case MOUNTAIN:
-                    case CAVE_GRASS:
-                        range = 4;
-                        break;
-                    default:
-                        range = 16;
-                }
-                ArrayList<Tile> edgeOfExploredTiles = null;
-                ArrayList<ArrayList<Tile>> paths = new ArrayList<>();
-                for(int i = 0; i < 2; i++) {
-                    // If second run
-                    if (i > 0 && paths.size() == 0) {
-                        range = -1;
-                        System.out.println("Maxing range");
+                    if (paths.size() == 0) {
+                        System.out.println("BOT: There are no paths after expansion attempts");
                     }
-                    edgeOfExploredTiles = getEdgeOfExploredTiles(range, false);
-                    for (Tile t : edgeOfExploredTiles) {
-                        if (!t.isBlocked()) {
-                            switch (t.getType()) {
-                                case CAVE_OPENING:
-                                case STAIRS_DOWN:
-                                case STAIRS_UP:
-                                    continue;
+
+
+                    ArrayList<Tile> shortestPath = getShortestPathOfPaths(paths);
+                    //System.out.println("BOT: Evaluated " + paths.size() + " paths.");
+                    if (shortestPath == null) {
+                        System.out.println("BOT: shortestPath: null");
+                        ArrayList<Tile> debugEdge = new ArrayList<>();
+                        for (Tile te : getUnexploredTiles()) {
+                            debugEdge.add(te);
+                        }
+                        player.setCurrentPath(debugEdge);
+                        System.out.println("edge size: " + edgeOfExploredTiles.size());
+                        while (true) {
+                            for (Tile te : getUnexploredTiles()) {
+                                debugEdge.add(te);
                             }
-                            paths.add(astar.getShortestPath(source, t));
+                            player.setCurrentPath(debugEdge);
+                            map.getCurrentLevel().toggleAllTilesVisible(true);
+                            render.drawGame(getRootConsole());
+                            try {
+                                Thread.sleep(2000);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            debugEdge = new ArrayList<>();
+                            for (Tile te : edgeOfExploredTiles) {
+                                debugEdge.add(te);
+                            }
+                            player.setCurrentPath(debugEdge);
+                            render.drawGame(getRootConsole());
+                            try {
+                                Thread.sleep(2000);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
                         }
-                    }
-                    // We have paths;
-                    if(paths.size() > 0) {
-                        break;
-                    }
-                }
-
-                if(paths.size() == 0) {
-                    System.out.println("BOT: There are no paths after expansion attempts");
-                }
-
-
-                ArrayList<Tile> shortestPath = getShortestPathOfPaths(paths);
-                //System.out.println("BOT: Evaluated " + paths.size() + " paths.");
-                if(shortestPath == null) {
-                    System.out.println("BOT: shortestPath: null");
-                    ArrayList<Tile> debugEdge = new ArrayList<>();
-                    for(Tile te : getUnexploredTiles()) {
-                        debugEdge.add(te);
-                    }
-                    player.setCurrentPath(debugEdge);
-                    System.out.println("edge size: " + edgeOfExploredTiles.size());
-                    while(true) {
-                        for(Tile te : getUnexploredTiles()) {
-                            debugEdge.add(te);
-                        }
-                        player.setCurrentPath(debugEdge);
+                    } else if (shortestPath.size() == 0) {
+                        System.out.println("BOT: shortestPath size: 0.");
+                        System.out.println("edge size: " + edgeOfExploredTiles.size());
                         map.getCurrentLevel().toggleAllTilesVisible(true);
+                        try {
+                            Thread.sleep(2000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                         render.drawGame(getRootConsole());
                         try {
                             Thread.sleep(2000);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
-                        debugEdge = new ArrayList<>();
-                        for(Tile te : edgeOfExploredTiles) {
-                            debugEdge.add(te);
-                        }
-                        player.setCurrentPath(debugEdge);
-                        render.drawGame(getRootConsole());
-                        try {
-                            Thread.sleep(2000);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
+                    } else {
+                        target = shortestPath.get(shortestPath.size() - 1);
+                        //System.out.println("BOT: move to (random)");
                     }
                 }
-                else if(shortestPath.size() == 0) {
-                    System.out.println("BOT: shortestPath size: 0.");
-                    System.out.println("edge size: " + edgeOfExploredTiles.size());
-                    map.getCurrentLevel().toggleAllTilesVisible(true);
-                    try {
-                        Thread.sleep(2000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    render.drawGame(getRootConsole());
-                    try {
-                        Thread.sleep(2000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                } else {
-                    newRandomPath = shortestPath;
-                    //System.out.println("BOT: move to (random)");
-                }
-            }
+                break;
+            case GO_DEEPER:
+                System.out.println("BOT: Wants to go deeper");
+                if(playerAICanPerformTask(PlayerAITask.GO_DEEPER)) {
+                    if (map.getCurrentDepth() == 0) {
+                        // Standing on a cave with the map explored?
+                        // and
+                        // lowest level below is is not fully explored
+                        boolean skipThisCave = false;
+                        Level lowestLevel = map.getLowestLevel(playerMapY, playerMapX);
+                        if(lowestLevel != null) {
+                            if(isLevelExplored(lowestLevel)) {
+                                skipThisCave = true;
+                            }
+                        }
 
-            // Set the new path
-            if(target != null) {
-                newPath = astar.getShortestPath(source, target);
-            }
-            else if(randomPath) {
-                newPath = newRandomPath;
-            }
-            if (newPath.size() == 0) {
-                System.out.println("newPath.size(): 0.");
-                if (target == null) {
-                    System.out.println("target is null");
-                } else {
-                    System.out.println("Target tile: " + target.getY() + " " + target.getX());
-                    System.out.println("Type: " + target.getTypeString());
+                        if (player.getTile().getType() == Tile.Type.CAVE_OPENING && !skipThisCave) {
+                            process.actuateTile(player);
+                            return PlayerAIDecision.ACTUATETILE;
+                        }
+                        // Get a path to a cave
+                        else {
+                            ArrayList<Tile> caveOpenings = new ArrayList<>();
+                            for (Tile t : getExploredTiles()) {
+                                if (t.equals(source)) {
+                                    continue;
+                                }
+                                if (t.getType() == Tile.Type.CAVE_OPENING) {
+                                    caveOpenings.add(t);
+                                }
+                            }
+                            target = caveOpenings.get(rng.nextInt(caveOpenings.size()));
+                            System.out.println("BOT: move to cave");
+                            break;
+                        }
+                    }
+                    else {
+                        if(player.getTile().getType() == Tile.Type.STAIRS_DOWN) {
+                            process.actuateTile(player);
+                            return PlayerAIDecision.ACTUATETILE;
+                        }
+                        // get a path to a stairs down
+                        else {
+                            for(Tile t : getExploredTiles()) {
+                                if(t.equals(source)) {
+                                    continue;
+                                }
+                                if(t.getType() == Tile.Type.STAIRS_DOWN) {
+                                    target = t;
+                                    System.out.println("BOT: move to stairs down");
+                                    break;
+                                }
+                            }
+                        }
+                    }
                 }
+                break;
+            case GO_HIGHER:
+                System.out.println("BOT: Wants to go higher");
+                if(playerAICanPerformTask(PlayerAITask.GO_HIGHER)) {
+                    if(player.getTile().getType() == Tile.Type.STAIRS_UP) {
+                        process.actuateTile(player);
+                        return PlayerAIDecision.ACTUATETILE;
+                    }
+                    // get a path to a stairs down
+                    else {
+                        for(Tile t : getExploredTiles()) {
+                            if(t.equals(source)) {
+                                continue;
+                            }
+                            if(t.getType() == Tile.Type.STAIRS_UP) {
+                                target = t;
+                                System.out.println("BOT: move to stairs up");
+                                break;
+                            }
+                        }
+                    }
+                }
+                break;
+            case IDLE:
+                System.out.println("BOT: Wants to idle");
+                break;
+            default:
+                System.out.println("BOT: default (error)");
+                break;
+        }
+        // Set the new path
+        ArrayList<Tile> newPath = null;
+        if(target != null) {
+            newPath = astar.getShortestPath(source, target);
+        }
+
+        if (newPath == null) {
+            System.out.println("newPath is null");
+        }
+        else if (newPath.size() == 0) {
+            System.out.println("newPath.size(): 0.");
+            if (target == null) {
+                System.out.println("target is null");
             } else {
-                // Todo, simulate mouse click
-                player.setCurrentPath(newPath);
+                System.out.println("Target tile: " + target.getY() + " " + target.getX());
+                System.out.println("Type: " + target.getTypeString());
+            }
+        } else {
+            // Todo, simulate mouse click
+            player.setCurrentPath(newPath);
+            return PlayerAIDecision.RANDOMPATH;
+        }
+        return PlayerAIDecision.ERROR;
+    }
+
+    private PlayerAIDecision makePlayerAIDecision() {
+        ArrayList<PlayerAITask> priorityList = new ArrayList<>();
+        priorityList.add(PlayerAITask.KILL);
+        priorityList.add(PlayerAITask.CONTINUEPATH);
+        priorityList.add(PlayerAITask.GO_HIGHER);
+        priorityList.add(PlayerAITask.GO_DEEPER);
+        priorityList.add(PlayerAITask.EXPLORE);
+        priorityList.add(PlayerAITask.IDLE);
+
+        for (PlayerAITask task : priorityList) {
+            if (playerAICanPerformTask(task)) {
+                return playerAIPerformTask(task);
             }
         }
+
+        System.out.println("Error");
+        return PlayerAIDecision.ERROR;
     }
+
+
 
     private boolean updateMouseLocation() {
         Point mouseCoordinates = getWindow().getMainPanel().getMousePosition();
@@ -767,7 +876,7 @@ public class Roguelike {
                     if (title.getSelectedItem().equals("New Game")) {
                         this.currentState = State.PLAYING;
                         // start bot
-                        runPlayerBot = true;
+                        //runPlayerBot = true;
                     }
                     break;
                 default:
@@ -834,6 +943,17 @@ public class Roguelike {
                                 }
                                 redrawGame = true;
                                 turns++;
+                                break;
+
+                            case ACTUATE:
+                                boolean tileActuated = false;
+                                tileActuated = process.actuateTile(player);
+                                if(tileActuated) {
+                                    redrawGame = true;
+                                    turns++;
+                                } else {
+                                    gui.getMessageConsole().addMessage("Tile can't be actuated, try some stairs", Color.red);
+                                }
                                 break;
 
                             case DEBUG:
