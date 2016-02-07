@@ -16,8 +16,9 @@ public class Actor extends Entity {
 
     private int power;
     private int level;
-    private int speed;
+    private double speed;
     private int mod;
+    private int energy;
 
     private ArrayList<Tile> visibleTiles;
 
@@ -26,12 +27,14 @@ public class Actor extends Entity {
     }
 
     private ArrayList<Tile> currentPath;
+    private ArrayList<Item> inventory;
 
     private int experience;
 
     public Actor(char symbol, Color color, Tile tile) {
         super(symbol, color, tile);
         visibleTiles = new ArrayList<Tile>();
+        inventory = new ArrayList<>();
         //currentPath = new ArrayList<>();
         setLevel(1);
         setMaxHp(1);
@@ -40,6 +43,7 @@ public class Actor extends Entity {
         onCooldown = false;
         setSpeed(1);
         setPower(1);
+        energy = 1000;
 
         setName("Default Actor");
         setCorpseName(getName() + "'s corpse");
@@ -55,8 +59,66 @@ public class Actor extends Entity {
         maxHp = power * mod;
         currentHp = maxHp;
     }
-    public boolean isOnCooldown() {
-        return onCooldown;
+
+    public ArrayList<Item> getInventory() {
+        return inventory;
+    }
+
+    public boolean addInventoryItem(Item item) {
+        inventory.add(item);
+        return true;
+    }
+
+    public boolean removeInventoryItem(Item item) {
+        for(Item i : inventory) {
+            if(i.equals(item)) {
+                inventory.remove(i);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean useItem(Item item) {
+        for(Item i : inventory) {
+            if(i.equals(item)) {
+                if(item.use(this)) {
+                    inventory.remove(item);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean useItem(Item item, Actor target) {
+        for(Item i : inventory) {
+            if(i.equals(item)) {
+                if(item.use(target)) {
+                    inventory.remove(item);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean hasItemString(String itemName) {
+        for(Item i : inventory) {
+            if(i.getName().equals(itemName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public Item getItem(String itemName) {
+        for(Item i : inventory) {
+            if(i.getName().equals(itemName)) {
+                return i;
+            }
+        }
+        return null;
     }
 
     public void setMod(int mod) {
@@ -79,10 +141,10 @@ public class Actor extends Entity {
     }
 
 
-    public int getSpeed() {
+    public double getSpeed() {
         return this.speed;
     }
-    public void setSpeed(int speed) {
+    public void setSpeed(double speed) {
         this.speed = speed;
     }
 
@@ -173,5 +235,25 @@ public class Actor extends Entity {
 
     public ArrayList<Tile> getCurrentPath() {
         return currentPath;
+    }
+
+    public boolean canTakeTurn() {
+        return energy >= 1000 / speed;
+    }
+
+    public void recoverEnergy(int amount) {
+        energy += amount;
+        //System.out.println(name + " recoverEngery() current is " + energy);
+        if(energy > 1000) {
+            energy = 1000;
+        }
+    }
+
+    public void depleteEnergy(int amount) {
+        energy -= amount;
+        //System.out.println(name + " depleteEngery() current is " + energy);
+        if(energy < 0) {
+            energy = 0;
+        }
     }
 }

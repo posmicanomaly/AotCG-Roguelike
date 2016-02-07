@@ -1,5 +1,6 @@
 package posmicanomaly.AotCG.Game;
 
+import posmicanomaly.AotCG.Component.Item;
 import posmicanomaly.AotCG.Component.LevelFactory;
 import posmicanomaly.AotCG.Gui.Component.MessageConsole;
 
@@ -23,46 +24,60 @@ public class Input {
     }
 
     public Command processKey(KeyEvent key) {
-        switch (key.getKeyCode()) {
+        if(roguelike.showInventory && !key.isControlDown()) {
+                return Command.INVENTORY;
+        }
+        else {
+            switch (key.getKeyCode()) {
                     /*
                     Player Movement Input
                      */
-            case KeyEvent.VK_W:
-            case KeyEvent.VK_UP:
-            case KeyEvent.VK_S:
-            case KeyEvent.VK_DOWN:
-            case KeyEvent.VK_A:
-            case KeyEvent.VK_LEFT:
-            case KeyEvent.VK_D:
-            case KeyEvent.VK_RIGHT:
-            case KeyEvent.VK_Q:
-            case KeyEvent.VK_E:
-            case KeyEvent.VK_Z:
-            case KeyEvent.VK_C:
-                return Command.MOVEMENT;
+                case KeyEvent.VK_W:
+                case KeyEvent.VK_UP:
+                case KeyEvent.VK_S:
+                case KeyEvent.VK_DOWN:
+                case KeyEvent.VK_A:
+                case KeyEvent.VK_LEFT:
+                case KeyEvent.VK_D:
+                case KeyEvent.VK_RIGHT:
+                case KeyEvent.VK_Q:
+                case KeyEvent.VK_E:
+                case KeyEvent.VK_Z:
+                case KeyEvent.VK_C:
+                    return Command.MOVEMENT;
 
-            case KeyEvent.VK_PERIOD:
-                return Command.ACTUATE;
+                case KeyEvent.VK_PERIOD:
+                    return Command.ACTUATE;
 
                     /*
                     DEBUG Input
                      */
-            case KeyEvent.VK_F:
-            case KeyEvent.VK_R:
-            case KeyEvent.VK_V:
-            case KeyEvent.VK_B:
-            case KeyEvent.VK_MINUS:
-            case KeyEvent.VK_EQUALS:
-                return Command.DEBUG;
+                case KeyEvent.VK_F:
+                case KeyEvent.VK_R:
+                case KeyEvent.VK_V:
+                case KeyEvent.VK_B:
+                case KeyEvent.VK_MINUS:
+                case KeyEvent.VK_EQUALS:
+                    return Command.DEBUG;
 
                     /*
                     Menu Toggle Input
                      */
-            case KeyEvent.VK_M:
-            case KeyEvent.VK_I:
-                return Command.MENU;
-            default:
-                return null;
+                case KeyEvent.VK_M:
+                case KeyEvent.VK_I:
+                    return Command.MENU;
+                default:
+                    return null;
+            }
+        }
+    }
+
+    public void processInventoryCommand(KeyEvent key, Roguelike roguelike) {
+        if(key.getKeyChar() - 'a' > roguelike.getPlayer().getInventory().size() - 1) {
+            System.out.println("key input larger than inventory size");
+        } else {
+            Item item = roguelike.getPlayer().getInventory().get(key.getKeyChar() - 'a');
+            roguelike.useItem(item, roguelike.getPlayer(), roguelike.getPlayer());
         }
     }
 
@@ -80,10 +95,12 @@ public class Input {
                 }
                 break;
             case KeyEvent.VK_I:
-                if (roguelike.showInventory) {
-                    roguelike.showInventory = false;
-                } else {
-                    roguelike.showInventory = true;
+                if(key.isControlDown()) {
+                    if (roguelike.showInventory) {
+                        roguelike.showInventory = false;
+                    } else {
+                        roguelike.showInventory = true;
+                    }
                 }
                 break;
             default:
@@ -171,5 +188,5 @@ public class Input {
         }
     }
 
-    public enum Command {MOVEMENT, DEBUG, MENU, ACTUATE}
+    public enum Command {MOVEMENT, DEBUG, MENU, ACTUATE, INVENTORY}
 }

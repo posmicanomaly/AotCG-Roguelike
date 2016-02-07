@@ -13,39 +13,39 @@ public class ActorFactory {
         String actorName;
         int level;
         int mod;
-        int speed;
+        double speed;
         char glyph;
         Color color;
 
         switch(type) {
             case PLAYER:
                 level = 1;
-                mod = 2000;
-                speed = 1;
+                mod = 30;
+                speed = 1.1;
                 glyph = '@';
                 actorName = "you";
                 color = Color.PINK;
                 break;
             case RAT:
                 level = 1;
-                mod = 40;
-                speed = 1;
+                mod = 4;
+                speed = 1.2;
                 glyph = 'r';
                 actorName = "rat";
                 color = Color.yellow;
                 break;
             case BAT:
-                level = 2;
-                mod = 40;
-                speed = 2;
+                level = 1;
+                mod = 4;
+                speed = 1.4;
                 glyph = 'b';
                 actorName = "bat";
                 color = Color.green;
                 break;
             case GIANT:
                 level = 3;
-                mod = 80;
-                speed = 3;
+                mod = 4;
+                speed = 1.0;
                 glyph = 'G';
                 actorName = "giant";
                 color = Color.pink;

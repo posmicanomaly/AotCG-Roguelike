@@ -40,6 +40,44 @@ public class Render implements Runnable {
         run = false;
     }
 
+    protected void applyLightingToMap() {
+        for(Actor a : roguelike.getMap().getCurrentLevel().getActors()) {
+            for(Tile t : a.getVisibleTiles()) {
+                if(roguelike.getPlayer().getVisibleTiles().contains(t)) {
+                    if(t.hasActor()) {
+                        continue;
+                    }
+                    //roguelike.getMapConsole().setBgColor(t.getY(), t.getX(), roguelike.getMapConsole().getBgColor(t.getY(), t.getX()).brighter().brighter());
+                    int mapConsoleTileY = t.getY() + 1;
+                    int mapConsoleTileX = t.getX() + 1;
+                    Color bgColor = roguelike.getMapConsole().getBgColor(mapConsoleTileY, mapConsoleTileX);
+                    int r = bgColor.getRed();
+                    int g = bgColor.getGreen();
+                    int b = bgColor.getBlue();
+
+                    int d = Math.abs(a.getTile().getY() - t.getY()) + Math.abs(a.getTile().getX() - t.getX());
+                    r += 125 / (d + 2);
+                    if(r < 0)
+                        r = 0;
+                    if(r > 255)
+                        r = 255;
+                    g += 105 / (d + 2);
+                    if(g < 0)
+                        g = 0;
+                    if(g > 255)
+                        g = 255;
+                    b += 50 / (d + 2);
+                    if(b < 0)
+                        b = 0;
+                    if(b > 255)
+                        b = 255;
+
+                    roguelike.getMapConsole().setBgColor(mapConsoleTileY, mapConsoleTileX, new Color(r, g, b));
+                }
+            }
+        }
+    }
+
     protected void drawGame(Console rootConsole) {
         //rootConsole.clear();
         if (roguelike.currentState == Roguelike.State.PLAYING) {
@@ -47,10 +85,14 @@ public class Render implements Runnable {
             // Refresh the map buffer
             roguelike.copyMapToBuffer();
 
+            // Lighting test
+            if(roguelike.getMap().getCurrentDepth() > 0) {
+                applyLightingToMap();
+            }
+
             // Debug
             showActorPaths();
             showHighlightedDebugTiles();
-
 
             roguelike.getMapConsole().copyBufferTo(rootConsole, 0, roguelike.getGameInformationConsoleWidth());
 
@@ -156,9 +198,17 @@ public class Render implements Runnable {
 
                 int shimmer = Roguelike.rng.nextInt(20) + 100;
                 if(a.equals(roguelike.getPlayer())) {
-                    pathColor = new Color(tRed, tGreen + shimmer, tBlue).brighter();
+                    tGreen += shimmer;
+                    if(tGreen > 255) {
+                        tGreen = 255;
+                    }
+                    pathColor = new Color(tRed, tGreen, tBlue).brighter();
                 } else {
-                    pathColor = new Color(tRed + shimmer, tGreen, tBlue).brighter();
+                    tRed += shimmer;
+                    if(tRed > 255) {
+                        tRed = 255;
+                    }
+                    pathColor = new Color(tRed, tGreen, tBlue).brighter();
                 }
 
                 int y = t.getY();

@@ -15,10 +15,11 @@ public class Level {
     private Tile[][] tileArray;
     private int turnExited;
     int rootY, rootX;
+    int mapLevelDepth;
 
     private Map.LevelStyle levelStyle;
 
-    public Level(int height, int width, Map.LevelStyle levelStyle, int rootY, int rootX, Roguelike roguelike) {
+    public Level(int height, int width, int mapLevelDepth, Map.LevelStyle levelStyle, int rootY, int rootX, Roguelike roguelike) {
         this.height = height;
         this.width = width;
         this.rootY = rootY;
@@ -26,6 +27,7 @@ public class Level {
         astar = new AStar(this, roguelike);
         turnExited = -1;
         this.levelStyle = levelStyle;
+        this.mapLevelDepth = mapLevelDepth;
         init(this.levelStyle);
     }
 
@@ -103,7 +105,7 @@ public class Level {
         if(levelStyle == Map.LevelStyle.WORLD) {
             return LevelFactory.makeWorldMap(height, width);
         }
-        return LevelFactory.makeDefaultLevel(height, width);
+        return LevelFactory.makeDefaultLevel(height, width, mapLevelDepth);
     }
 
     public int getHeight() {
@@ -214,5 +216,14 @@ public class Level {
         int y = Roguelike.rng.nextInt(height);
         int x = Roguelike.rng.nextInt(width);
         return tileArray[y][x];
+    }
+
+    public boolean canNPCActorTakeTurn() {
+        for(Actor a : getActors()) {
+            if(a.canTakeTurn()) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -556,7 +556,7 @@ public abstract class LevelFactory {
      * @param width  width of map
      * @return
      */
-    public static Tile[][] makeDefaultLevel(int height, int width) {
+    public static Tile[][] makeDefaultLevel(int height, int width, int mapLevelDepth) {
         Tile[][] result = null;
         boolean playableMap = false;
 
@@ -668,7 +668,7 @@ public abstract class LevelFactory {
         System.out.println("Level took " + levelCreationTries + " tries");
         processMap(result);
 
-        addMonsters(result);
+        addMonsters(result, mapLevelDepth * 7);
         Random rng = Roguelike.rng;
         addPoolFeature(result, rng.nextInt(30) + 5, Tile.Type.CAVE_GRASS);
         addPoolFeature(result, rng.nextInt(30) + 5, Tile.Type.LOW_GRASS);
@@ -696,11 +696,11 @@ public abstract class LevelFactory {
         }
     }
 
-    private static void addMonsters(Tile[][] result) {
+    private static void addMonsters(Tile[][] result, int amount) {
         int height = result.length;
         int width = result[0].length;
         boolean giantAdded = false;
-        int actorsToAdd = 50;
+        int actorsToAdd = amount;
         int actorsAdded = 0;
         do{
             Random rng = Roguelike.rng;

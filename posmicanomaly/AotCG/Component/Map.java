@@ -23,7 +23,7 @@ public class Map {
         this.height = height;
         this.width = width;
         this.depth = depth;
-        worldMap = new Level(height, width, LevelStyle.WORLD, 0, 0, roguelike);
+        worldMap = new Level(height, width, currentDepth, LevelStyle.WORLD, 0, 0, roguelike);
 
         level3dArray = new Level[height][width][depth];
         currentLevel = worldMap;
@@ -40,7 +40,7 @@ public class Map {
         // Make a new level
         if(nextLevel == null) {
             System.out.println("nextLevel == null, making new level");
-            nextLevel = new Level(this.height, this.width, LevelStyle.DEFAULT, rootY, rootX, roguelike);
+            nextLevel = new Level(this.height, this.width, currentDepth + 1, LevelStyle.DEFAULT, rootY, rootX, roguelike);
             level3dArray[rootY][rootX][currentDepth + 1] = nextLevel;
         }
 
@@ -67,7 +67,7 @@ public class Map {
             // Make a new level
             if(prevLevel == null) {
                 System.out.println("prevLevel == null, making new level");
-                prevLevel = new Level(this.height, this.width, LevelStyle.DEFAULT, rootY, rootX, roguelike);
+                prevLevel = new Level(this.height, this.width, currentDepth - 1, LevelStyle.DEFAULT, rootY, rootX, roguelike);
             }
         }
 

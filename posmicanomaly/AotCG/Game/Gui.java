@@ -3,7 +3,7 @@ package posmicanomaly.AotCG.Game;
 import posmicanomaly.AotCG.Component.Actor;
 import posmicanomaly.AotCG.Component.Map;
 import posmicanomaly.AotCG.Gui.Component.GameInformationConsole;
-import posmicanomaly.AotCG.Gui.Component.InventorySideConsole;
+import posmicanomaly.AotCG.Gui.Component.InventoryConsole;
 import posmicanomaly.AotCG.Gui.Component.MessageConsole;
 import posmicanomaly.libjsrte.Console.Console;
 
@@ -16,7 +16,7 @@ import java.util.ArrayList;
 public class Gui {
     private final Roguelike roguelike;
     private GameInformationConsole gameInformationConsole;
-    private InventorySideConsole inventorySideConsole;
+    private InventoryConsole inventoryConsole;
     private MessageConsole messageConsole;
     private Console victoryConsole;
     private Console defeatConsole;
@@ -36,8 +36,10 @@ public class Gui {
         gameInformationConsole.setBorderColor(Color.gray);
         gameInformationConsole.setBorderStyle(Console.BorderStyle.DOUBLE);
 
-        inventorySideConsole = new InventorySideConsole(roguelike.mapHeight, 20);
-        //inventorySideConsole.setBorder(true);
+        inventoryConsole = new InventoryConsole(player, 25, 25);
+        inventoryConsole.setBorder(true);
+        inventoryConsole.setBorderColor(Color.gray);
+        inventoryConsole.setBorderStyle(Console.BorderStyle.DOUBLE);
 
         roguelike.menuWindow = new Console(25, 25);
         roguelike.menuWindow.setBorder(true);
@@ -55,7 +57,6 @@ public class Gui {
         messageConsole.setBorder(true);
         messageConsole.setBorderColor(Color.gray);
         messageConsole.setBorderStyle(Console.BorderStyle.DOUBLE);
-        //roguelike.messageConsole.addMessage("");
     }
 
     public void drawGUI() {
@@ -72,10 +73,9 @@ public class Gui {
         }
 
         if (roguelike.showInventory) {
-            inventorySideConsole.updateConsole();
-            inventorySideConsole.copyBufferTo(roguelike.getRootConsole(), 0, roguelike.getRootConsole()
-                    .getxBufferWidth() -
-                    inventorySideConsole.getxBufferWidth());
+            inventoryConsole.updateConsole();
+            inventoryConsole.copyBufferTo(roguelike.getRootConsole(), roguelike.windowHeight / 2 - inventoryConsole.getyBufferHeight() / 2,
+                    roguelike.windowWidth / 2 - inventoryConsole.getxBufferWidth() / 2);
         }
 
         if(roguelike.showVictoryConsole) {

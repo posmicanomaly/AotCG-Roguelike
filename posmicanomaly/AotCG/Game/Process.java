@@ -17,6 +17,68 @@ public class Process {
         this.roguelike = roguelike;
     }
 
+    protected boolean processNpcActor(Actor npcActor) {
+        Map map = roguelike.getMap();
+        Actor player = roguelike.getPlayer();
+
+        ArrayList<Actor> npcActors = map.getCurrentLevel().getActors();
+        npcActors.remove(player);
+
+        Actor a = npcActor;
+
+        // Check if player is dead
+        if(!player.isAlive()) {
+            return false;
+        }
+        if(!a.canTakeTurn()) {
+            return false;
+        }
+        // No zombies yet
+        if(!a.isAlive()) {
+            return false;
+        }
+        // Player in view
+        // (check both views, so we minimize "walking shadows")
+        // .
+        // .
+        if (actorCanSeeActor(a, player) && actorCanSeeActor(player, a)) {
+            // get a new AStar path to the player
+            a.setCurrentPath(map.getCurrentLevel().getAstar().getShortestPath(a.getTile(), player.getTile()));
+            if (a.getCurrentPath() != null) {
+                switch(moveActor(a, a.getCurrentPath().get(0))) {
+                    case MOVED:
+                        a.getCurrentPath().remove(0);
+                        if(a.getCurrentPath().size() == 0) {
+                            a.setCurrentPath(null);
+                        }
+                        break;
+                }
+            }
+        }
+        // Player's not in npc's view, but has a current path to follow
+        // .
+        // .
+        else if(a.getCurrentPath() != null) {
+
+            switch(moveActor(a, a.getCurrentPath().get(0))) {
+                case MOVED:
+                    a.getCurrentPath().remove(0);
+                    if(a.getCurrentPath().size() == 0) {
+                        a.setCurrentPath(null);
+                    }
+                    break;
+            }
+        }
+        // Not in player view
+        else {
+            moveActor(a, Input.Direction.getRandomDirection());
+        }
+        if(a.isAlive()) {
+            calculateVision(a);
+        }
+
+        return true;
+    }
     protected void processNpcActors() {
         Map map = roguelike.getMap();
         Actor player = roguelike.getPlayer();
@@ -25,52 +87,12 @@ public class Process {
         npcActors.remove(player);
 
         for (Actor a : npcActors) {
-            // Check if player is dead
-            if(!player.isAlive()) {
-                continue;
-            }
-            // No zombies yet
-            if(!a.isAlive()) {
-                continue;
-            }
-            // Player in view
-            // (check both views, so we minimize "walking shadows")
-            // .
-            // .
-            if (actorCanSeeActor(a, player) && actorCanSeeActor(player, a)) {
-                // get a new AStar path to the player
-                a.setCurrentPath(map.getCurrentLevel().getAstar().getShortestPath(a.getTile(), player.getTile()));
-                if (a.getCurrentPath() != null) {
-                    if(moveActor(a, a.getCurrentPath().get(0))) {
-                        a.getCurrentPath().remove(0);
-                        if(a.getCurrentPath().size() == 0) {
-                            a.setCurrentPath(null);
-                        }
-                    }
-                }
-            }
-            // Player's not in npc's view, but has a current path to follow
-            // .
-            // .
-            else if(a.getCurrentPath() != null) {
-                if(moveActor(a, a.getCurrentPath().get(0))) {
-                    a.getCurrentPath().remove(0);
-                    if(a.getCurrentPath().size() == 0) {
-                        a.setCurrentPath(null);
-                    }
-                }
-            }
-            // Not in player view
-            else {
-                moveActor(a, Input.Direction.getRandomDirection());
-            }
-            if(a.isAlive()) {
-                calculateVision(a);
-            }
+           processNpcActor(a);
         }
     }
 
-    protected boolean moveActor(Actor actor, Tile t) {
+    public enum MoveResult {DID_NOT_MOVE, MOVED, COMBAT, ERROR, BUMPED}
+    protected MoveResult moveActor(Actor actor, Tile t) {
         MessageConsole messageConsole = roguelike.getGui().getMessageConsole();
         Actor player = roguelike.getPlayer();
         Random rng = Roguelike.rng;
@@ -82,14 +104,15 @@ public class Process {
         // If the tile is null, it is likely out of range
         if (desiredTile == null) {
             messageConsole.addMessage("Tile is null", Color.gray);
-            return false;
+            return MoveResult.ERROR;
         }
 
         // If the tile is blocked(terrain), we can't go there, likely a wall at this point
         else if (desiredTile.isBlocked()) {
             if (actor.equals(player))
                 messageConsole.addMessage("You bumped into a wall", Color.gray);
-            return false;
+            actor.depleteEnergy((int) (1000 / actor.getSpeed()));
+            return MoveResult.BUMPED;
         }
 
         // If the tile already has an actor, and the actor is alive, we need to do some combat
@@ -102,7 +125,7 @@ public class Process {
 
             if(actor.isAlive() && desiredTile.getActor().isAlive()) {
                 //messageConsole.addMessage("moveActor() :: both actors still alive");
-                return false;
+                return MoveResult.COMBAT;
             }
 
             if(actor.isAlive() && !desiredTile.getActor().isAlive()) {
@@ -122,7 +145,7 @@ public class Process {
 
             if(bothDied) {
                 //messageConsole.addMessage("Both died");
-                return false;
+                return MoveResult.COMBAT;
             }
 
             // Loser gets a corpse
@@ -131,14 +154,12 @@ public class Process {
             if(!loser.equals(player)) {
                 loser.setTile(null);
             }
-            Item corpse = new Item ('%', Color.gray, loserTile);
-            corpse.setName(loser.getCorpseName());
+            Item corpse = new Item ('%', Color.gray, loserTile, loser.getCorpseName());
             loserTile.setItem(corpse);
 
             // random item?
             if(rng.nextInt(100) - 10 > 0) {
-                Item randomitem = new Item(')', Color.yellow, loserTile);
-                randomitem.setName("random item");
+                Item randomitem = new Item(')', Color.yellow, loserTile, "Health Potion");
                 loserTile.setItem(randomitem);
             }
 
@@ -148,31 +169,8 @@ public class Process {
 
             // Winner gets reward, if player
             if(winner.equals(player)) {
-                //messageConsole.addMessage("moveActor() :: W: " + winner.getName() + " (should be player)");
-                // Award exp
-                int baseExp = 10;
-                int expVariance = 3;
-                int randomExp = rng.nextInt((baseExp + expVariance) - (baseExp - expVariance) + 1) + (baseExp
-                        - expVariance);
-
-                winner.addExperience(randomExp);
-                messageConsole.addMessage(winner.getName() + " killed " + loser.getName() + " (" + randomExp +
-                        " exp)", Colors.EXPERIENCE);
-
-
-                if (loser.getName().equals("Giant")) {
-                    messageConsole.addMessage("Main quest complete: Slay Giant (350 exp)");
-                    winner.addExperience(350);
-                    roguelike.giantSlain = true;
-                }
-
-
-                int prevLevel = winner.getLevel();
-                winner.evaulateLevel();
-                if (prevLevel < winner.getLevel()) {
-                    messageConsole.addMessage(winner.getName() + " leveled up: " + winner.getLevel(), Colors.EXPERIENCE);
-                }
-                return false;
+                messageConsole.addMessage(winner.getName() + " killed " + loser.getName(), Colors.EXPERIENCE);
+                return MoveResult.COMBAT;
             }
 
         }
@@ -195,12 +193,6 @@ public class Process {
              * Abstract much of this to the map to figure out.
              * There are root coordinate variables in the levels, work to utilize those coordinates in the future if needed.
              */
-            boolean levelChanged = false;
-
-            // For now, only the player can change levels
-            if (actor.equals(player)) {
-
-            }
 
             Tile previousTile = currentTile;
 
@@ -229,20 +221,21 @@ public class Process {
                 roguelike.setPlayerMapX(actor.getTile().getX());
             }
             // Return true, a move was made
-            return true;
+            actor.depleteEnergy((int) (1000 / actor.getSpeed()));
+            return MoveResult.MOVED;
 
         }
         // Return false, no move was made
-        return false;
+        return MoveResult.DID_NOT_MOVE;
     }
 
-    protected boolean moveActor(Actor actor, Input.Direction d) {
+    protected MoveResult moveActor(Actor actor, Input.Direction d) {
         MessageConsole messageConsole = roguelike.getGui().getMessageConsole();
         Map map = roguelike.getMap();
 
         if(d == null) {
             messageConsole.addMessage("moveActor(" + actor.hashCode() + ", " + d + ") error");
-            return false;
+            return MoveResult.ERROR;
         }
         // Obtain the current tile the actor is on
         Tile currentTile = actor.getTile();
@@ -280,7 +273,7 @@ public class Process {
             return moveActor(actor, desiredTile);
         }
         // Move was false
-        return false;
+        return MoveResult.DID_NOT_MOVE;
     }
 
     private void processCombat(Actor actor1, Actor actor2) {
@@ -309,40 +302,47 @@ public class Process {
         String combatMessage = "";
 
 
-        // firstAttacker attacks
-        combatMessage += firstAttacker.getName() + " hit " + secondAttacker.getName() + " for " + firstAttackerDamage;
-
-        secondAttacker.setCurrentHp(secondAttacker.getCurrentHp() - firstAttackerDamage);
+        // firstAttacker attacks, if they can
+        if(firstAttacker.canTakeTurn()) {
+            combatMessage += firstAttacker.getName() + " hit " + secondAttacker.getName() + " for " + firstAttackerDamage;
+            secondAttacker.setCurrentHp(secondAttacker.getCurrentHp() - firstAttackerDamage);
+            firstAttacker.depleteEnergy((int) (1000 / firstAttacker.getSpeed()));
+        }
 
         // Check if secondAttacker was killed
         if (secondAttacker.getCurrentHp() <= 0) {
             secondAttacker.setAlive(false);
         }
 
-        // If secondAttacker is still alive
-        if (secondAttacker.isAlive()) {
-            // secondAttacker attacks
-            combatMessage += ", " + secondAttacker.getName() + " hit " + firstAttacker.getName() + " for " + secondAttackerDamage;
-            firstAttacker.setCurrentHp(firstAttacker.getCurrentHp() - secondAttackerDamage);
+        // If secondAttacker is still alive, and can attack
+        if(secondAttacker.canTakeTurn()) {
+            if (secondAttacker.isAlive()) {
+                // secondAttacker attacks
+                combatMessage += ", " + secondAttacker.getName() + " hit " + firstAttacker.getName() + " for " + secondAttackerDamage;
+                firstAttacker.setCurrentHp(firstAttacker.getCurrentHp() - secondAttackerDamage);
+                secondAttacker.depleteEnergy((int) (1000 / secondAttacker.getSpeed()));
 
-            // Check if firstAttacker was killed
-            if (firstAttacker.getCurrentHp() <= 0) {
-                firstAttacker.setAlive(false);
+                // Check if firstAttacker was killed
+                if (firstAttacker.getCurrentHp() <= 0) {
+                    firstAttacker.setAlive(false);
+                }
             }
         }
 
         // If the player is watching, or is involved, show the message
         // Otherwise, show some "noise" message
-        if(actor1.equals(player) || actor2.equals(player)) {
-            messageConsole.addMessage(combatMessage, Color.cyan);
-        } else if(actorInPlayerView(actor1) || actorInPlayerView(actor2)) {
-            messageConsole.addMessage(combatMessage, Color.cyan);
-        } else {
-            messageConsole.addMessage("You hear noise", Color.gray);
+        if(!combatMessage.equals("")) {
+            if (actor1.equals(player) || actor2.equals(player)) {
+                messageConsole.addMessage(combatMessage, Color.cyan);
+            } else if (actorInPlayerView(actor1) || actorInPlayerView(actor2)) {
+                messageConsole.addMessage(combatMessage, Color.cyan);
+            } else {
+                messageConsole.addMessage("You hear noise", Color.gray);
+            }
         }
     }
 
-    private boolean actorCanSeeActor(Actor source, Actor target) {
+    protected boolean actorCanSeeActor(Actor source, Actor target) {
         for(Tile t : source.getVisibleTiles()) {
             if(t.hasActor()) {
                 if(t.getActor().equals(target)) {
@@ -396,15 +396,22 @@ public class Process {
     }
 
     public boolean actuateTile(Actor actor) {
-        if(!actor.equals(roguelike.getPlayer())) {
-            System.out.println(actor.getName() + " tried to actuate tile, only players are allowed");
-            return false;
-        }
         Tile desiredTile = actor.getTile();
+        if(desiredTile.hasItem()) {
+            Item item = desiredTile.getItem();
+            actor.addInventoryItem(item);
+            desiredTile.setItem(null);
+            roguelike.getGui().getMessageConsole().addMessage("Picked up " + item.getName(), Color.yellow);
+            return true;
+        }
         boolean levelChanged = false;
         switch(desiredTile.getType()) {
             case CAVE_OPENING:
             case STAIRS_DOWN:
+                if(!actor.equals(roguelike.getPlayer())) {
+                    System.out.println(actor.getName() + " tried to actuate stairs_down, only players are allowed");
+                    return false;
+                }
                 // Save the map coordinates if we're on the world map
                 if (roguelike.map.getCurrentDepth() == 0) {
                     roguelike.setPlayerMapY(desiredTile.getY());
@@ -419,6 +426,10 @@ public class Process {
                 break;
 
             case STAIRS_UP:
+                if(!actor.equals(roguelike.getPlayer())) {
+                    System.out.println(actor.getName() + " tried to actuate stairs_up, only players are allowed");
+                    return false;
+                }
                 // Change only if we're not on a path to another tile
                 levelChanged = roguelike.map.goHigher(roguelike.getPlayerMapY(), roguelike.getPlayerMapX());
                 if (levelChanged) {

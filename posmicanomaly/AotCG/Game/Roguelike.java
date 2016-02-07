@@ -41,7 +41,7 @@ import java.util.Random;
  * - Fix opacity problem with windows on redraw, clear console probably works best.
  */
 public class Roguelike {
-    private static final int MAP_DEPTH = 2000;
+    private static final int MAP_DEPTH = 20;
     public static boolean RENDER_BETWEEN_TURNS = false;
 
     public static Random rng;
@@ -230,28 +230,7 @@ public class Roguelike {
         }
         // Mouse testing
         boolean mouseCoordinatesChanged = updateMouseLocation();
-        if(runPlayerBot) {
-            PlayerAIDecision playerAIDecision = makePlayerAIDecision();
-            switch(playerAIDecision) {
-                case ACTUATETILE:
-                    turns++;
-                    redrawGame = true;
-                    process.calculateVision(player);
-                    break;
-            }
-        }
-        if (!this.window.getLastKeyEvent().equals(this.lastKeyEvent) || player.getCurrentPath() != null) {
-            /**
-             * Check for game state or victory/defeat console displayed
-             */
-            checkWinConditions();
-            processGameState(currentState);
-
-            // Set lastKeyEvent to this one that we just used, so we do not enter loop again
-            this.lastKeyEvent = this.window.getLastKeyEvent();
-
-        }
-        else if(!this.window.getMainPanel().getLastMouseEvent().equals(this.lastMouseEvent)){
+        if(!this.window.getMainPanel().getLastMouseEvent().equals(this.lastMouseEvent)){
             // mouse event? click?
             int y = lastMy;
             int x = lastMx;
@@ -297,6 +276,31 @@ public class Roguelike {
             render.drawGame(getRootConsole());
             // Mouse
         }
+
+        if (runPlayerBot) {
+            PlayerAIDecision playerAIDecision = makePlayerAIDecision();
+            switch (playerAIDecision) {
+                case ACTUATETILE:
+                    turns++;
+                    redrawGame = true;
+                    process.calculateVision(player);
+                    break;
+            }
+        }
+
+        if (!this.window.getLastKeyEvent().equals(this.lastKeyEvent) || player.getCurrentPath() != null) {
+            /**
+             * Check for game state or victory/defeat console displayed
+             */
+            checkWinConditions();
+            processGameState(currentState);
+
+            // Set lastKeyEvent to this one that we just used, so we do not enter loop again
+            this.lastKeyEvent = this.window.getLastKeyEvent();
+
+        }
+
+
         if (!RENDER_BETWEEN_TURNS) {
             if (redrawGame) {
                 render.renderSingleFrame();
@@ -470,13 +474,30 @@ public class Roguelike {
         return true;
     }
 
-    public enum PlayerAIDecision {RANDOMPATH, CONTINUEPATH, ACTUATETILE, ERROR}
+    public enum PlayerAIDecision {RANDOMPATH, CONTINUEPATH, ACTUATETILE, USE_HEALTH_POTION, ERROR}
 
-    private enum PlayerAITask {KILL, EXPLORE, GO_DEEPER, GO_HIGHER, IDLE, CONTINUEPATH}
+    private enum PlayerAITask {USE_HEALTH_POTION, LOOT, KILL, EXPLORE, GO_DEEPER, GO_HIGHER, IDLE, CONTINUEPATH}
 
     private boolean playerAICanPerformTask(PlayerAITask task) {
         Tile source = player.getTile();
         switch(task) {
+            case USE_HEALTH_POTION:
+                double remaining = ((double)player.getCurrentHp() / player.getMaxHp());
+                return player.hasItemString("Health Potion") && remaining < 0.2;
+            case LOOT:
+                ArrayList<Tile> itemTiles = new ArrayList<>();
+                for(Tile t : player.getVisibleTiles()) {
+                    if(t.hasItem()) {
+                        itemTiles.add(t);
+                    }
+                }
+                boolean viableLoot = false;
+                for(Tile t : itemTiles) {
+                    if(t.getItem().getName().equals("Health Potion")) {
+                        viableLoot = true;
+                    }
+                }
+                return viableLoot;
             case KILL:
                 boolean monsterInView = false;
                 ArrayList<Actor> monsters = new ArrayList<>();
@@ -510,6 +531,50 @@ public class Roguelike {
         Tile source = player.getTile();
         AStar astar = map.getCurrentLevel().getAstar();
         switch(task) {
+            case USE_HEALTH_POTION:
+                System.out.println("BOT: Wants to use health potion");
+                if(playerAICanPerformTask(PlayerAITask.USE_HEALTH_POTION)) {
+                    Item item = player.getItem("Health Potion");
+                    useItem(item, player, player);
+                    return PlayerAIDecision.USE_HEALTH_POTION;
+                }
+                break;
+            case LOOT:
+                System.out.println("BOT: Wants to loot");
+                if(playerAICanPerformTask(PlayerAITask.LOOT)) {
+                    if(source.hasItem() && source.getItem().getName().equals("Health Potion")) {
+                        process.actuateTile(player);
+                        return PlayerAIDecision.ACTUATETILE;
+                    }
+                    else if(player.getCurrentPath() != null && player.getCurrentPath().get(player.getCurrentPath().size() - 1).hasItem()) {
+                        return PlayerAIDecision.CONTINUEPATH;
+                    }
+                    else {
+                        Item closestItem = null;
+                        int d = 0;
+                        ArrayList<Tile> itemTiles = new ArrayList<>();
+                        for (Tile t : player.getVisibleTiles()) {
+                            if (t.hasItem()) {
+                                if(t.getItem().getName().equals("Health Potion")) {
+                                    itemTiles.add(t);
+                                }
+                            }
+                        }
+                        for (Tile t : itemTiles) {
+                            if (closestItem == null) {
+                                closestItem = t.getItem();
+                                d = Math.abs(source.getX() - t.getX()) + Math.abs(source.getY() - t.getY());
+                            } else {
+                                int nd = Math.abs(source.getX() - t.getX()) + Math.abs(source.getY() - t.getY());
+                                if (nd < d) {
+                                    closestItem = t.getItem();
+                                }
+                            }
+                        }
+                        target = closestItem.getTile();
+                    }
+                }
+                break;
             case KILL:
                 System.out.println("BOT: Wants to kill");
                 if(playerAICanPerformTask(PlayerAITask.KILL)) {
@@ -752,7 +817,9 @@ public class Roguelike {
 
     private PlayerAIDecision makePlayerAIDecision() {
         ArrayList<PlayerAITask> priorityList = new ArrayList<>();
+        priorityList.add(PlayerAITask.USE_HEALTH_POTION);
         priorityList.add(PlayerAITask.KILL);
+        priorityList.add(PlayerAITask.LOOT);
         priorityList.add(PlayerAITask.CONTINUEPATH);
         priorityList.add(PlayerAITask.GO_HIGHER);
         priorityList.add(PlayerAITask.GO_DEEPER);
@@ -884,7 +951,8 @@ public class Roguelike {
                     break;
             }
             redrawGame = shouldRedraw;
-        } else if (currentState == State.PLAYING) {
+        }
+        else if (currentState == State.PLAYING) {
             // Victory Achieved
             // .
             // .
@@ -926,81 +994,130 @@ public class Roguelike {
                 boolean recalculateFOV = false;
                 int prevTurns = turns;
                 // double check the key event, because otherwise moving and mouse moving don't like each other
-                if(window.getLastKeyEvent() != lastKeyEvent) {
-                    KeyEvent key = this.window.getLastKeyEvent();
+                // can the player take a turn?
+                if(player.canTakeTurn()) {
+                    if (window.getLastKeyEvent() != lastKeyEvent) {
+                        KeyEvent key = this.window.getLastKeyEvent();
 
-                    // Obtain the command related to the keypress determined by game state
-                    Input.Command command = input.processKey(key);
+                        // Obtain the command related to the keypress determined by game state
+                        Input.Command command = input.processKey(key);
 
-                    // Check command and act upon it
-                    if (command != null) {
-                        switch (command) {
+                        // Check command and act upon it
+                        if (command != null) {
+                            switch (command) {
 
-                            case MOVEMENT:
-                                Input.Direction direction = input.getPlayerMovementDirection(key);
-                                if (process.moveActor(player, direction)) {
-                                    recalculateFOV = true;
-                                }
-                                redrawGame = true;
-                                turns++;
-                                break;
-
-                            case ACTUATE:
-                                boolean tileActuated = false;
-                                tileActuated = process.actuateTile(player);
-                                if(tileActuated) {
+                                case MOVEMENT:
+                                    Input.Direction direction = input.getPlayerMovementDirection(key);
+                                    switch (process.moveActor(player, direction)) {
+                                        case MOVED:
+                                        case COMBAT:
+                                        case BUMPED:
+                                            recalculateFOV = true;
+                                    }
                                     redrawGame = true;
                                     turns++;
-                                } else {
-                                    gui.getMessageConsole().addMessage("Tile can't be actuated, try some stairs", Color.red);
+                                    break;
+
+                                case ACTUATE:
+                                    boolean tileActuated = false;
+                                    tileActuated = process.actuateTile(player);
+                                    if (tileActuated) {
+                                        redrawGame = true;
+                                        recalculateFOV = true;
+                                        turns++;
+                                    } else {
+                                        gui.getMessageConsole().addMessage("Tile can't be actuated", Color.red);
+                                    }
+                                    break;
+
+                                case DEBUG:
+                                    input.processDebugCommand(key, this);
+                                    redrawGame = true;
+                                    break;
+
+                                case INVENTORY:
+                                    input.processInventoryCommand(key, this);
+                                    redrawGame = true;
+                                    break;
+
+                                case MENU:
+                                    input.processMenuCommand(key, this);
+                                    redrawGame = true;
+                                    break;
+
+                                default:
+                                    break;
+                            }
+                        }
+                    } else if (player.getCurrentPath() != null) {
+                        switch (process.moveActor(player, player.getCurrentPath().get(0))) {
+                            case MOVED:
+                                player.getCurrentPath().remove(0);
+                                if (player.getCurrentPath().size() == 0) {
+                                    player.setCurrentPath(null);
                                 }
-                                break;
-
-                            case DEBUG:
-                                input.processDebugCommand(key, this);
-                                redrawGame = true;
-                                break;
-
-                            case MENU:
-                                input.processMenuCommand(key, this);
-                                redrawGame = true;
-                                break;
-
-                            default:
+                                recalculateFOV = true;
                                 break;
                         }
+                        redrawGame = true;
+                        turns++;
                     }
                 }
-                else if(player.getCurrentPath() != null) {
-                    if(process.moveActor(player, player.getCurrentPath().get(0))) {
-                        player.getCurrentPath().remove(0);
-                        if(player.getCurrentPath().size() == 0) {
-                            player.setCurrentPath(null);
-                        }
-                        recalculateFOV = true;
-                    }
-                    redrawGame = true;
-                    turns++;
-                }
-
                 // Recalculate field of vision if it was set to true
                 // This allows us to know what we're seeing next, since NPC turn is after player
                 // NPC need to know if they now see the player
                 if (recalculateFOV) {
                     //
                     process.calculateVision(player);
-                    redrawGame = true;
+                    render.drawGame(getRootConsole());
                 }
-                // Was there a turn just there?
-                if (prevTurns != turns) {
-                    // Then we need to do the NPC moves
-                    // if we do it in MOVEMENT, then we don't get a path immediately.
-                    process.processNpcActors();
 
-                    // Following all the NPC movement, we need to recalculate player view to see any new NPC
-                    process.calculateVision(player);
-                    redrawGame = true;
+                ArrayList<Actor> actors = map.getCurrentLevel().getActors();
+                while(!player.canTakeTurn()) {
+                    // can any NPC actor take a turn?
+                    if (map.getCurrentLevel().canNPCActorTakeTurn()) {
+
+                        for(Actor a : actors) {
+                            if(!a.equals(player)) {
+                                if(process.processNpcActor(a)) {
+                                    process.calculateVision(player);
+                                    render.drawGame(getRootConsole());
+//                                    if (process.actorCanSeeActor(a, player)) {
+//                                        try {
+//                                            Thread.sleep(17);
+//                                        } catch (InterruptedException e) {
+//                                            e.printStackTrace();
+//                                        }
+//                                    }
+                                }
+                            }
+                        }
+                    }
+                    for(Actor a : map.getCurrentLevel().getActors()) {
+                        a.recoverEnergy(100);
+                    }
                 }
+
+//                // Recalculate field of vision if it was set to true
+//                // This allows us to know what we're seeing next, since NPC turn is after player
+//                // NPC need to know if they now see the player
+//                if (recalculateFOV) {
+//                    //
+//                    process.calculateVision(player);
+//                    redrawGame = true;
+//                }
+//                // Was there a turn just there?
+//                if (prevTurns != turns) {
+//                    // Then we need to do the NPC moves
+//                    // if we do it in MOVEMENT, then we don't get a path immediately.
+//                    //process.processNpcActors();
+//
+//                    // Following all the NPC movement, we need to recalculate player view to see any new NPC
+//                    process.calculateVision(player);
+//                    redrawGame = true;
+//                }
+
+
             }
         }
     }
@@ -1061,16 +1178,23 @@ public class Roguelike {
             // Tile has nothing, just show the map
             else {
                 glyph = tile.getSymbol();
-                color = tile.getColor().brighter().brighter();
+                color = tile.getColor();
             }
-            bgColor = tile.getBackgroundColor().brighter().brighter();
+            bgColor = tile.getBackgroundColor();
         }
 
         // Tile is not visible, but has been explored by the player
         else if (tile.isExplored()) {
             glyph = tile.getSymbol();
-            color = tile.getColor().darker().darker();
-            bgColor = tile.getBackgroundColor().darker().darker();
+            color = tile.getColor();
+            bgColor = tile.getBackgroundColor();
+            if(getMap().getCurrentDepth() > 0) {
+                bgColor = Colors.shroud(bgColor);
+                color = Colors.shroud(color);
+            } else {
+                bgColor = bgColor.darker().darker().darker().darker();
+                color = color.darker().darker().darker();
+            }
         }
 
         // Tile is not visible, and has not been explored by the player
@@ -1093,6 +1217,10 @@ public class Roguelike {
         mapConsole.setColor(tileY, tileX, color);
         mapConsole.setBgColor(tileY, tileX, bgColor);
         mapConsole.setChar(tileY, tileX, glyph);
+    }
+
+    public boolean useItem(Item item, Actor source, Actor target) {
+        return source.useItem(item, target);
     }
 
     public static void main(String[] args) {
