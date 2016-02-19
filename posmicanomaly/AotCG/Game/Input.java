@@ -183,8 +183,26 @@ public class Input {
     }
 
     public enum Direction {UP, DOWN, LEFT, RIGHT, NW, NE, SW, SE;
+
         public static Direction getRandomDirection() {
             return values()[Roguelike.rng.nextInt(values().length)];
+        }
+
+        public static Direction getRandomCardinalDirection() {
+            Direction direction = null;
+            boolean valid = false;
+            do {
+                direction = getRandomDirection();
+                switch (direction) {
+                    case UP:
+                    case DOWN:
+                    case LEFT:
+                    case RIGHT:
+                        valid = true;
+                        break;
+                }
+            } while(!valid);
+            return direction;
         }
     }
 

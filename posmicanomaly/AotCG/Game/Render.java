@@ -1,8 +1,12 @@
 package posmicanomaly.AotCG.Game;
 
 import posmicanomaly.AotCG.Component.Actor;
+import posmicanomaly.AotCG.Component.Colors;
+import posmicanomaly.AotCG.Component.Level;
 import posmicanomaly.AotCG.Component.Tile;
 import posmicanomaly.libjsrte.Console.Console;
+import posmicanomaly.libjsrte.Console.Symbol;
+import posmicanomaly.libjsrte.Util.ColorTools;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -38,6 +42,33 @@ public class Render implements Runnable {
 
     public void stop() {
         run = false;
+    }
+
+    protected void shimmerWater() {
+        /*
+        Shimmer water code
+
+        Sets the backgroundColor of tile to a varied color based on the standard WATER_BG
+         */
+        //Level level = roguelike.getMap().getCurrentLevel();
+        ArrayList<Tile> waterTiles = roguelike.getPlayer().getVisibleTiles();
+        for(Tile tile : waterTiles) {
+            if (tile.getType() == Tile.Type.WATER) {
+                if (roguelike.rng.nextInt(100) - 95 > 0) {
+                    tile.setBackgroundColor(ColorTools.varyColor(Colors.WATER_BG, 0.7, 1.0, ColorTools.BaseColor.RGB));
+
+
+                }
+                if (roguelike.rng.nextInt(100) - 95 > 0) {
+                    tile.setColor(ColorTools.varyColor(Colors.WATER, 0.7, 1.0, ColorTools.BaseColor.RGB));
+                    if (tile.getSymbol() == Symbol.ALMOST_EQUAL_TO) {
+                        tile.setSymbol('=');
+                    } else {
+                        tile.setSymbol(Symbol.ALMOST_EQUAL_TO);
+                    }
+                }
+            }
+        }
     }
 
     protected void applyLightingToMap() {
@@ -90,6 +121,8 @@ public class Render implements Runnable {
                 applyLightingToMap();
             }
 
+            // water shimmer
+            shimmerWater();
             // Debug
             showActorPaths();
             showHighlightedDebugTiles();

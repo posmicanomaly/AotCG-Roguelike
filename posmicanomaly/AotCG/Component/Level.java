@@ -18,6 +18,7 @@ public class Level {
     int mapLevelDepth;
 
     private Map.LevelStyle levelStyle;
+    private ArrayList<Tile> waterTiles;
 
     public Level(int height, int width, int mapLevelDepth, Map.LevelStyle levelStyle, int rootY, int rootX, Roguelike roguelike) {
         this.height = height;
@@ -29,6 +30,20 @@ public class Level {
         this.levelStyle = levelStyle;
         this.mapLevelDepth = mapLevelDepth;
         init(this.levelStyle);
+        waterTiles = findWaterTiles();
+    }
+
+    private ArrayList<Tile> findWaterTiles() {
+        ArrayList<Tile> result = new ArrayList<>();
+        for(int y = 0; y < tileArray.length; y++) {
+            for(int x = 0; x < tileArray[y].length; x++) {
+                Tile t = tileArray[y][x];
+                if(t.getType() == Tile.Type.WATER) {
+                    result.add(t);
+                }
+            }
+        }
+        return result;
     }
 
     public ArrayList<Tile> getNearbyTiles(int y, int x) {
@@ -225,5 +240,9 @@ public class Level {
             }
         }
         return false;
+    }
+
+    public ArrayList<Tile> getWaterTiles() {
+        return waterTiles;
     }
 }

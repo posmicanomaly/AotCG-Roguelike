@@ -532,7 +532,7 @@ public class Roguelike {
         AStar astar = map.getCurrentLevel().getAstar();
         switch(task) {
             case USE_HEALTH_POTION:
-                System.out.println("BOT: Wants to use health potion");
+                //System.out.println("BOT: Wants to use health potion");
                 if(playerAICanPerformTask(PlayerAITask.USE_HEALTH_POTION)) {
                     Item item = player.getItem("Health Potion");
                     useItem(item, player, player);
@@ -540,7 +540,7 @@ public class Roguelike {
                 }
                 break;
             case LOOT:
-                System.out.println("BOT: Wants to loot");
+               // System.out.println("BOT: Wants to loot");
                 if(playerAICanPerformTask(PlayerAITask.LOOT)) {
                     if(source.hasItem() && source.getItem().getName().equals("Health Potion")) {
                         process.actuateTile(player);
@@ -576,7 +576,7 @@ public class Roguelike {
                 }
                 break;
             case KILL:
-                System.out.println("BOT: Wants to kill");
+               // System.out.println("BOT: Wants to kill");
                 if(playerAICanPerformTask(PlayerAITask.KILL)) {
                     Actor closestMonster = null;
                     int d = 0;
@@ -1130,28 +1130,7 @@ public class Roguelike {
      * @param tile
      */
     private void refreshTile(Tile tile) {
-        /*
-        Shimmer water code
 
-        Sets the backgroundColor of tile to a varied color based on the standard WATER_BG
-         */
-
-        if(tile.isVisible()) {
-            if (tile.getType() == Tile.Type.WATER) {
-                if (rng.nextInt(100) < 10) {
-                    tile.setBackgroundColor(ColorTools.varyColor(Colors.WATER_BG, 0.7, 1.0, ColorTools.BaseColor.RGB));
-
-                }
-                if (rng.nextInt(100) < 10) {
-                    tile.setColor(ColorTools.varyColor(Colors.WATER, 0.7, 1.0, ColorTools.BaseColor.RGB));
-                    if (tile.getSymbol() == Symbol.ALMOST_EQUAL_TO) {
-                        tile.setSymbol('=');
-                    } else {
-                        tile.setSymbol(Symbol.ALMOST_EQUAL_TO);
-                    }
-                }
-            }
-        }
 
         /*
         Determine what is displayed for this tile:
