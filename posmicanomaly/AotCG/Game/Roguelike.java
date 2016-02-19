@@ -140,9 +140,8 @@ public class Roguelike {
         }
     }
 
-    protected void initGame() {
+    protected void preInit() {
         currentState = State.TITLE;
-        giantSlain = false;
         showVictoryConsole = false;
         showDefeatConsole = false;
         runPlayerBot = false;
@@ -160,15 +159,19 @@ public class Roguelike {
         mapConsole.setBorder(true);
         mapConsole.setBorderColor(Color.gray);
         mapConsole.setBorderStyle(Console.BorderStyle.DOUBLE);
+    }
 
+    protected void initMap() {
         if(mapConsole.hasBorder()) {
             this.map = new Map(mapHeight - 2, mapWidth - 2, Roguelike.MAP_DEPTH, this);
         } else {
             this.map = new Map(mapHeight, mapWidth, Roguelike.MAP_DEPTH, this);
         }
+    }
 
+    protected void setupGame() {
+        initMap();
         initPlayer();
-
         for (Actor a : map.getCurrentLevel().getActors()) {
             process.calculateVision(a);
         }
@@ -177,7 +180,18 @@ public class Roguelike {
         // Init the GUI
         gui.initGui();
         input.connectToGui(gui);
-        startGame();
+    }
+    protected void initGame() {
+        preInit();
+
+
+        //initMap();
+
+        //initPlayer();
+        // Allow rendering
+        this.window.getMainPanel().setRender(true);
+
+        //startGame();
     }
 
     protected void startGame() {
@@ -235,40 +249,40 @@ public class Roguelike {
             int y = lastMy;
             int x = lastMx;
             String message = "Clicked ";
-            if(isMouseOnMap()) {
-                x = getMouseOnMapX();
-                y = getMouseOnMapY();
-                Tile clickedTile = map.getCurrentLevel().getTile(y, x);
-                message += "map at ";
-                boolean allowMoveIntoUnexplored = false;
-                boolean allowMove = false;
-                if(allowMoveIntoUnexplored) {
-                    if(!clickedTile.isBlocked()) {
-                        allowMove = true;
+            if(currentState == State.PLAYING) {
+                if (isMouseOnMap()) {
+                    x = getMouseOnMapX();
+                    y = getMouseOnMapY();
+                    Tile clickedTile = map.getCurrentLevel().getTile(y, x);
+                    message += "map at ";
+                    boolean allowMoveIntoUnexplored = false;
+                    boolean allowMove = false;
+                    if (allowMoveIntoUnexplored) {
+                        if (!clickedTile.isBlocked()) {
+                            allowMove = true;
+                        } else {
+                            gui.getMessageConsole().addMessage("Can't move there", Color.red);
+                        }
                     } else {
-                        gui.getMessageConsole().addMessage("Can't move there", Color.red);
+                        if (clickedTile.isExplored() && !clickedTile.isBlocked()) {
+                            allowMove = true;
+                        } else {
+                            gui.getMessageConsole().addMessage("Can't move there", Color.red);
+                        }
+                    }
+                    if (allowMove) {
+                        player.setCurrentPath(map.getCurrentLevel().getAstar().getShortestPath(player.getTile(), clickedTile));
+                        if (player.getCurrentPath() == null) {
+                            gui.getMessageConsole().addMessage("Can't move there: there is no path?", Color.red);
+                        }
+                        if (player.getCurrentPath().size() == 0) {
+                            System.out.println("Player path is 0, setting to null");
+                            player.setCurrentPath(null);
+                        }
                     }
                 }
-                else {
-                    if(clickedTile.isExplored() && !clickedTile.isBlocked()) {
-                        allowMove = true;
-                    }
-                    else {
-                        gui.getMessageConsole().addMessage("Can't move there", Color.red);
-                    }
-                }
-                if(allowMove) {
-                    player.setCurrentPath(map.getCurrentLevel().getAstar().getShortestPath(player.getTile(), clickedTile));
-                    if (player.getCurrentPath() == null) {
-                        gui.getMessageConsole().addMessage("Can't move there: there is no path?", Color.red);
-                    }
-                    if(player.getCurrentPath().size() == 0) {
-                        System.out.println("Player path is 0, setting to null");
-                        player.setCurrentPath(null);
-                    }
-                }
+                System.out.println(message + y + "x" + x);
             }
-            System.out.println(message + y + "x" + x);
             this.lastMouseEvent = this.window.getMainPanel().getLastMouseEvent();
             render.drawGame(getRootConsole());
         }
@@ -276,7 +290,6 @@ public class Roguelike {
             render.drawGame(getRootConsole());
             // Mouse
         }
-
         if (runPlayerBot) {
             PlayerAIDecision playerAIDecision = makePlayerAIDecision();
             switch (playerAIDecision) {
@@ -288,11 +301,16 @@ public class Roguelike {
             }
         }
 
-        if (!this.window.getLastKeyEvent().equals(this.lastKeyEvent) || player.getCurrentPath() != null) {
+        // Check if not equal to the last keyevent, or if the player has a current path
+        // HOWEVER, during game init, there is no player, so first check that the player is not null.
+        // todo: continue to decouple the initialization code.
+        if (!this.window.getLastKeyEvent().equals(this.lastKeyEvent) || (player != null && player.getCurrentPath() != null)) {
             /**
              * Check for game state or victory/defeat console displayed
              */
-            checkWinConditions();
+            if(currentState == State.PLAYING) {
+                checkWinConditions();
+            }
             processGameState(currentState);
 
             // Set lastKeyEvent to this one that we just used, so we do not enter loop again
@@ -941,6 +959,8 @@ public class Roguelike {
                     break;
                 case KeyEvent.VK_ENTER:
                     if (title.getSelectedItem().equals("New Game")) {
+                        setupGame();
+                        startGame();
                         this.currentState = State.PLAYING;
                         // start bot
                         //runPlayerBot = true;
