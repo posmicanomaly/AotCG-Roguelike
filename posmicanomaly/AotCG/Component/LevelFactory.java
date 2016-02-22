@@ -46,7 +46,6 @@ public abstract class LevelFactory {
         floodFill(level);
     }
 
-
     /**
      * Wrapper for processMap
      * sets ignoreBuild to false

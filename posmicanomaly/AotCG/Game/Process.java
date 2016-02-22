@@ -92,6 +92,7 @@ public class Process {
     }
 
     public enum MoveResult {DID_NOT_MOVE, MOVED, COMBAT, ERROR, BUMPED}
+
     protected MoveResult moveActor(Actor actor, Tile t) {
         MessageConsole messageConsole = roguelike.getGui().getMessageConsole();
         Actor player = roguelike.getPlayer();

@@ -121,7 +121,7 @@ public class Input {
                 messageConsole.addMessage("Level flood filled", Color.yellow);
                 break;
             case KeyEvent.VK_R:
-                roguelike.initGame();
+                roguelike.initializeGameEnvironment();
                 break;
             case KeyEvent.VK_V:
                 roguelike.map.getCurrentLevel().toggleAllTilesVisible(true);

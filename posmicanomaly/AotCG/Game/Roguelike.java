@@ -1,11 +1,8 @@
 package posmicanomaly.AotCG.Game;
 
 import posmicanomaly.AotCG.Component.*;
-import posmicanomaly.AotCG.Gui.Component.MessageConsole;
 import posmicanomaly.AotCG.Screen.Title;
 import posmicanomaly.libjsrte.Console.Console;
-import posmicanomaly.libjsrte.Console.Symbol;
-import posmicanomaly.libjsrte.Util.ColorTools;
 import posmicanomaly.libjsrte.Window;
 
 import java.awt.*;
@@ -128,7 +125,8 @@ public class Roguelike {
         refreshIntervalMs = defaultRefreshIntervalMs;
         gameLoopsWithoutInput = 0;
 
-        initGame();
+        initializeGameEnvironment();
+        enableRendering();
 
         render = new Render(this);
         if (RENDER_BETWEEN_TURNS) {
@@ -140,7 +138,7 @@ public class Roguelike {
         }
     }
 
-    protected void preInit() {
+    protected void initializeGameEnvironment() {
         currentState = State.TITLE;
         showVictoryConsole = false;
         showDefeatConsole = false;
@@ -161,37 +159,36 @@ public class Roguelike {
         mapConsole.setBorderStyle(Console.BorderStyle.DOUBLE);
     }
 
-    protected void initMap() {
+    protected void enableRendering() {
+        this.window.getMainPanel().setRender(true);
+    }
+
+    protected void initializeMap() {
         if(mapConsole.hasBorder()) {
             this.map = new Map(mapHeight - 2, mapWidth - 2, Roguelike.MAP_DEPTH, this);
         } else {
             this.map = new Map(mapHeight, mapWidth, Roguelike.MAP_DEPTH, this);
         }
+
+        // shimmer the water a bit so its not all the same
+        for(int i = 0; i < 100; i++) {
+            render.shimmerWater(false);
+        }
     }
 
-    protected void setupGame() {
-        initMap();
-        initPlayer();
+    protected void setupNewGame() {
+        initializeMap();
+        initializePlayer();
+
+        // Calculate vision for all actors on the map
         for (Actor a : map.getCurrentLevel().getActors()) {
             process.calculateVision(a);
         }
 
 
-        // Init the GUI
+        // Initialize the GUI
         gui.initGui();
         input.connectToGui(gui);
-    }
-    protected void initGame() {
-        preInit();
-
-
-        //initMap();
-
-        //initPlayer();
-        // Allow rendering
-        this.window.getMainPanel().setRender(true);
-
-        //startGame();
     }
 
     protected void startGame() {
@@ -204,7 +201,6 @@ public class Roguelike {
         this.lastKeyEvent = this.window.getLastKeyEvent();
         this.lastMouseEvent = this.window.getMainPanel().getLastMouseEvent();
 
-        fpsTimerStart = System.currentTimeMillis();
         redrawGame = true;
 
         // Welcome message
@@ -287,7 +283,7 @@ public class Roguelike {
             render.drawGame(getRootConsole());
         }
         else if(mouseCoordinatesChanged) {
-            render.drawGame(getRootConsole());
+            render.drawGame(getRootConsole(), Render.Reason.MOUSE_MOVED);
             // Mouse
         }
         if (runPlayerBot) {
@@ -903,7 +899,7 @@ public class Roguelike {
         title = new Title(windowHeight, windowWidth);
     }
 
-    private void initPlayer() {
+    private void initializePlayer() {
         // Set up starting tile for player
         Tile startingTile = map.getCurrentLevel().getEntryTile();
 
@@ -959,7 +955,7 @@ public class Roguelike {
                     break;
                 case KeyEvent.VK_ENTER:
                     if (title.getSelectedItem().equals("New Game")) {
-                        setupGame();
+                        setupNewGame();
                         startGame();
                         this.currentState = State.PLAYING;
                         // start bot
@@ -985,7 +981,7 @@ public class Roguelike {
                         break;
                     // Player decides to start new game
                     case KeyEvent.VK_R:
-                        initGame();
+                        initializeGameEnvironment();
                     default:
                         break;
                 }
@@ -997,7 +993,7 @@ public class Roguelike {
             else if (showDefeatConsole) {
                 switch (this.window.getLastKeyEvent().getKeyCode()) {
                     case KeyEvent.VK_R:
-                        initGame();
+                        initializeGameEnvironment();
                         break;
                     default:
                         break;

@@ -97,18 +97,23 @@ public class Gui {
         victoryConsole.setBorderStyle(Console.BorderStyle.DOUBLE);
         victoryConsole.setBorderColor(Color.BLUE);
         int row = 1;
-        ArrayList<String> victoryMessages = new ArrayList<String>();
-        victoryMessages.add("You Win!");
-        victoryMessages.add("");
-        victoryMessages.add("Level Reached: " + roguelike.getPlayer().getLevel());
-        victoryMessages.add("Turns taken: " + roguelike.getTurns());
-        victoryMessages.add("Maximum HP: " + roguelike.getPlayer().getMaxHp());
-        victoryMessages.add("");
-        victoryMessages.add("Press ESCAPE to keep playing");
-        victoryMessages.add("Press R to restart");
-        for(String s : victoryMessages) {
-            victoryConsole.writeCenteredString(s, row);
-            row++;
+
+        victoryConsole.writeCenteredString("You Win!", row);
+        row+=2;
+        drawGameStatistics(victoryConsole, row);
+
+        row+=2;
+        victoryConsole.writeCenteredString("Press ESCAPE to keep playing", row);
+        row++;
+        victoryConsole.writeCenteredString("Press R to restart", row);
+    }
+
+    private void drawGameStatistics(Console target, int startRow) {
+        ArrayList<String> gameStatistics = new ArrayList<>();
+        gameStatistics.add("Maximum HP: " + roguelike.getPlayer().getMaxHp());
+        for(String s : gameStatistics) {
+            target.writeCenteredString(s, startRow);
+            startRow++;
         }
     }
 
@@ -117,20 +122,13 @@ public class Gui {
         defeatConsole.setBorder(true);
         defeatConsole.setBorderStyle(Console.BorderStyle.DOUBLE);
         defeatConsole.setBorderColor(Color.RED);
-        defeatConsole.fillBgColor(new Color(0, 0, 0, 0.5f));
         int row = 1;
-        ArrayList<String> defeatMessages = new ArrayList<String>();
-        defeatMessages.add("You Died!");
-        defeatMessages.add("");
-        defeatMessages.add("Level Reached: " + roguelike.getPlayer().getLevel());
-        defeatMessages.add("Turns taken: " + roguelike.getTurns());
-        defeatMessages.add("Maximum HP: " + roguelike.getPlayer().getMaxHp());
-        defeatMessages.add("");
-        defeatMessages.add("Press R to restart");
-        for(String s : defeatMessages) {
-            defeatConsole.writeCenteredString(s, row);
-            row++;
-        }
+        defeatConsole.writeCenteredString("You Died!", row);
+        row+=2;
+        drawGameStatistics(defeatConsole, row);
+
+        row+=2;
+        defeatConsole.writeCenteredString("Press R to restart", row);
     }
 
     public MessageConsole getMessageConsole() {

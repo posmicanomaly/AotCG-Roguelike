@@ -33,6 +33,11 @@ public class Render implements Runnable {
         highlightedDebugTiles = new ArrayList<>();
     }
 
+    // Rendering reasons
+    public enum Reason {
+        MOUSE_MOVED
+    }
+
     public void start() {
         System.out.println("Starting Render Thread");
         thread = new Thread(this);
@@ -44,14 +49,24 @@ public class Render implements Runnable {
         run = false;
     }
 
-    protected void shimmerWater() {
-        /*
+    protected void shimmerWater(boolean onlyVisibleWater) {
+         /*
         Shimmer water code
 
         Sets the backgroundColor of tile to a varied color based on the standard WATER_BG
          */
         //Level level = roguelike.getMap().getCurrentLevel();
-        ArrayList<Tile> waterTiles = roguelike.getPlayer().getVisibleTiles();
+        ArrayList<Tile> waterTiles;
+        if(onlyVisibleWater) {
+            if(roguelike.getPlayer() == null) {
+                // There's no player
+                return;
+            }
+            waterTiles = roguelike.getPlayer().getVisibleTiles();
+        }
+        else {
+            waterTiles = roguelike.getMap().getCurrentLevel().getWaterTiles();
+        }
         for(Tile tile : waterTiles) {
             if (tile.getType() == Tile.Type.WATER) {
                 if (roguelike.rng.nextInt(100) - 95 > 0) {
@@ -70,6 +85,9 @@ public class Render implements Runnable {
             }
         }
     }
+    protected void shimmerWater() {
+       shimmerWater(true);
+    }
 
     protected void applyLightingToMap() {
         for(Actor a : roguelike.getMap().getCurrentLevel().getActors()) {
@@ -78,7 +96,7 @@ public class Render implements Runnable {
                     if(t.hasActor()) {
                         continue;
                     }
-                    //roguelike.getMapConsole().setBgColor(t.getY(), t.getX(), roguelike.getMapConsole().getBgColor(t.getY(), t.getX()).brighter().brighter());
+                    // offset because of map borders
                     int mapConsoleTileY = t.getY() + 1;
                     int mapConsoleTileX = t.getX() + 1;
                     Color bgColor = roguelike.getMapConsole().getBgColor(mapConsoleTileY, mapConsoleTileX);
@@ -109,7 +127,8 @@ public class Render implements Runnable {
         }
     }
 
-    protected void drawGame(Console rootConsole) {
+
+    protected void drawGame(Console rootConsole, Reason reason) {
         //rootConsole.clear();
         if (roguelike.currentState == Roguelike.State.PLAYING) {
 
@@ -122,7 +141,9 @@ public class Render implements Runnable {
             }
 
             // water shimmer
-            shimmerWater();
+            if(reason != Reason.MOUSE_MOVED) {
+                shimmerWater();
+            }
             // Debug
             showActorPaths();
             showHighlightedDebugTiles();
@@ -140,6 +161,9 @@ public class Render implements Runnable {
             roguelike.title.getTitleConsole().copyBufferTo(rootConsole, 0, 0);
             roguelike.window.refresh();
         }
+    }
+    protected void drawGame(Console rootConsole) {
+       drawGame(rootConsole, null);
     }
 
     private void showHighlightedDebugTiles() {
@@ -229,7 +253,7 @@ public class Render implements Runnable {
                 tGreen = t.getBackgroundColor().getGreen();
                 tBlue = t.getBackgroundColor().getBlue();
 
-                int shimmer = Roguelike.rng.nextInt(20) + 100;
+                int shimmer = 100;
                 if(a.equals(roguelike.getPlayer())) {
                     tGreen += shimmer;
                     if(tGreen > 255) {
