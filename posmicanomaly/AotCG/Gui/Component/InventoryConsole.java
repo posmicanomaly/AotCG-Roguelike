@@ -42,4 +42,8 @@ public class InventoryConsole extends EnhancedConsole {
             }
         }
     }
+
+    public void setPlayer(Actor player) {
+        this.player = player;
+    }
 }

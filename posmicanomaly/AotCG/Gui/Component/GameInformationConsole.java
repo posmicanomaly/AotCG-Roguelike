@@ -17,8 +17,6 @@ public class GameInformationConsole extends EnhancedConsole {
     Roguelike roguelike;
     Actor player;
     private int turns;
-    private int currentFrames;
-    private int fps;
     private Map map;
     private int barWidth;
 
@@ -27,11 +25,12 @@ public class GameInformationConsole extends EnhancedConsole {
         this.player = player;
         this.roguelike = roguelike;
         turns = 0;
-        currentFrames = 0;
-        fps = 0;
         this.map = map;
     }
 
+    public void setPlayer(Actor player) {
+        this.player = player;
+    }
     @Override
     public void updateConsole() {
         clear();
@@ -40,6 +39,9 @@ public class GameInformationConsole extends EnhancedConsole {
 
         if(hasBorder()) {
             barWidth -= 2;
+        }
+        if(player == null) {
+            return;
         }
 
         String powerString = "PWR: " + player.getPower();
@@ -51,7 +53,7 @@ public class GameInformationConsole extends EnhancedConsole {
             row++;
             col++;
         }
-        writeString("@: " + player.getLevel() + " Z:" + map.getCurrentDepth(), row, col);
+        writeString("Z:" + map.getCurrentDepth(), row, col);
         row++;
         writeString("WC: x:" + roguelike.getPlayerMapX() + " y:" + roguelike.getPlayerMapY(), row, col);
         row++;
@@ -110,7 +112,7 @@ public class GameInformationConsole extends EnhancedConsole {
         if(hasBorder()) {
             row--;
         }
-        //writeString("T: " + turns, row, col);
+        writeString("T: " + turns, row, col);
         row--;
        // writeString("CF: " + currentFrames, row, col);
         row--;
@@ -160,11 +162,7 @@ public class GameInformationConsole extends EnhancedConsole {
         this.turns = turns;
     }
 
-    public void setCurrentFrames(int currentFrames) {
-        this.currentFrames = currentFrames;
-    }
-
-    public void setFps(int fps) {
-        this.fps = fps;
+    public void setMap(Map map) {
+        this.map = map;
     }
 }

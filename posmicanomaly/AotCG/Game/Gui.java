@@ -26,8 +26,8 @@ public class Gui {
     }
 
     protected void initGui() {
-        Actor player = roguelike.getPlayer();
-        Map map = roguelike.getMap();
+        Actor player = null;
+        Map map = null;
 
         initMessageConsole();
         gameInformationConsole = new GameInformationConsole(roguelike.getGameInformationConsoleHeight(),
@@ -52,6 +52,14 @@ public class Gui {
         defeatConsole = null;
     }
 
+    public void connectPlayer() {
+        gameInformationConsole.setPlayer(roguelike.getPlayer());
+        inventoryConsole.setPlayer(roguelike.getPlayer());
+    }
+    public void connectMap() {
+        gameInformationConsole.setMap(roguelike.getMap());
+    }
+
     private void initMessageConsole() {
         messageConsole = new MessageConsole(roguelike.messageHeight, roguelike.messageWidth);
         messageConsole.setBorder(true);
@@ -63,8 +71,6 @@ public class Gui {
         messageConsole.copyBufferTo(roguelike.getRootConsole(), roguelike.mapHeight, roguelike
                 .getGameInformationConsoleWidth());
         gameInformationConsole.setTurns(roguelike.getTurns());
-        gameInformationConsole.setCurrentFrames(roguelike.getCurrentFrames());
-        gameInformationConsole.setFps(roguelike.getLastFramesPerSecond());
         gameInformationConsole.updateConsole();
         gameInformationConsole.copyBufferTo(roguelike.getRootConsole(), 0, 0);
 
@@ -138,4 +144,6 @@ public class Gui {
     public Console getVictoryConsole() {
         return victoryConsole;
     }
+
+
 }

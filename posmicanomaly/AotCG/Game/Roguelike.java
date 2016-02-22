@@ -157,6 +157,10 @@ public class Roguelike {
         mapConsole.setBorder(true);
         mapConsole.setBorderColor(Color.gray);
         mapConsole.setBorderStyle(Console.BorderStyle.DOUBLE);
+
+        // Initialize the GUI
+        gui.initGui();
+        input.connectToGui(gui);
     }
 
     protected void enableRendering() {
@@ -179,16 +183,15 @@ public class Roguelike {
     protected void setupNewGame() {
         initializeMap();
         initializePlayer();
+        playerMapX = player.getTile().getX();
+        playerMapY = player.getTile().getY();
+        gui.connectPlayer();
+        gui.connectMap();
 
         // Calculate vision for all actors on the map
         for (Actor a : map.getCurrentLevel().getActors()) {
             process.calculateVision(a);
         }
-
-
-        // Initialize the GUI
-        gui.initGui();
-        input.connectToGui(gui);
     }
 
     protected void startGame() {
