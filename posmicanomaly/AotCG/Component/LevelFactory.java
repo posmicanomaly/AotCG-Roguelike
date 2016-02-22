@@ -316,16 +316,20 @@ public abstract class LevelFactory {
     }
 
     private static void processAndDraw(Level level, Roguelike roguelike) {
-        processMap(level.getTileArray(), true, false);
-        roguelike.getRender().drawGame(roguelike.getRootConsole());
+        if(Roguelike.SHOW_MAP_CREATION) {
+            processMap(level.getTileArray(), true, false);
+            roguelike.getRender().drawGame(roguelike.getRootConsole());
+        }
     }
 
     private static void processAndDraw(Level level, Roguelike roguelike, long pause) {
-        processAndDraw(level, roguelike);
-        try {
-            Thread.sleep(pause);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        if(Roguelike.SHOW_MAP_CREATION) {
+            processAndDraw(level, roguelike);
+            try {
+                Thread.sleep(pause);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 

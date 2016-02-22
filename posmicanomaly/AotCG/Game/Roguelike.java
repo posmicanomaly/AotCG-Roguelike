@@ -39,7 +39,7 @@ import java.util.Random;
  */
 public class Roguelike {
     private static final int MAP_DEPTH = 20;
-    public static final boolean SHOW_MAP_CREATION = true;
+    public static final boolean SHOW_MAP_CREATION = false;
     public static boolean RENDER_BETWEEN_TURNS = false;
 
     public static Random rng;
