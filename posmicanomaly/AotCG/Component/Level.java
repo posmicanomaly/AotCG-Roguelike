@@ -2,6 +2,8 @@ package posmicanomaly.AotCG.Component;
 
 import posmicanomaly.AotCG.Game.AStar;
 import posmicanomaly.AotCG.Game.Roguelike;
+import posmicanomaly.libjsrte.Console.Symbol;
+import posmicanomaly.libjsrte.Util.ColorTools;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -16,6 +18,7 @@ public class Level {
     private int turnExited;
     int rootY, rootX;
     int mapLevelDepth;
+    private boolean generating;
 
     private Map.LevelStyle levelStyle;
     private ArrayList<Tile> waterTiles;
@@ -29,8 +32,8 @@ public class Level {
         turnExited = -1;
         this.levelStyle = levelStyle;
         this.mapLevelDepth = mapLevelDepth;
-        init(this.levelStyle);
-        waterTiles = findWaterTiles();
+        this.generating = true;
+        init(this.levelStyle, roguelike);
     }
 
     private ArrayList<Tile> findWaterTiles() {
@@ -46,7 +49,39 @@ public class Level {
         return result;
     }
 
+    public void finalizeLevel() {
+        LevelFactory.refineMap(this);
+        waterTiles = findWaterTiles();
+        for(int i = 0; i < 100; i++) {
+            shimmerWaterTiles(waterTiles);
+        }
+        generating = false;
+    }
+
+    public void shimmerWaterTiles(ArrayList<Tile> waterTiles) {
+        for(Tile tile : waterTiles) {
+            if (tile.getType() == Tile.Type.WATER) {
+                if (Roguelike.rng.nextInt(100) - 95 > 0) {
+                    tile.setBackgroundColor(ColorTools.varyColor(Colors.WATER_BG, 0.7, 1.0, ColorTools.BaseColor.RGB));
+
+
+                }
+                if (Roguelike.rng.nextInt(100) - 95 > 0) {
+                    tile.setColor(ColorTools.varyColor(Colors.WATER, 0.7, 1.0, ColorTools.BaseColor.RGB));
+                    if (tile.getSymbol() == Symbol.ALMOST_EQUAL_TO) {
+                        tile.setSymbol('=');
+                    } else {
+                        tile.setSymbol(Symbol.ALMOST_EQUAL_TO);
+                    }
+                }
+            }
+        }
+    }
+
     public ArrayList<Tile> getNearbyTiles(int y, int x) {
+        return getNearbyTiles(y, x, true);
+    }
+    public ArrayList<Tile> getNearbyTiles(int y, int x, boolean allowDiagonal) {
         ArrayList<Tile> result = new ArrayList<Tile>();
         if (!inBounds(y, x)) {
             return null;
@@ -74,20 +109,22 @@ public class Level {
             result.add(tDown);
         }
 
-        if (tNW != null) {
-            result.add(tNW);
-        }
+        if(allowDiagonal) {
+            if (tNW != null) {
+                result.add(tNW);
+            }
 
-        if (tNE != null) {
-            result.add(tNE);
-        }
+            if (tNE != null) {
+                result.add(tNE);
+            }
 
-        if (tSW != null) {
-            result.add(tSW);
-        }
+            if (tSW != null) {
+                result.add(tSW);
+            }
 
-        if (tSE != null) {
-            result.add(tSE);
+            if (tSE != null) {
+                result.add(tSE);
+            }
         }
 
         return result;
@@ -112,13 +149,13 @@ public class Level {
         }
     }
 
-    private void init(Map.LevelStyle levelStyle) {
-        this.tileArray = makeMap(height, width, levelStyle);
+    private void init(Map.LevelStyle levelStyle, Roguelike roguelike) {
+        this.tileArray = makeMap(height, width, levelStyle, roguelike);
     }
 
-    private Tile[][] makeMap(int height, int width, Map.LevelStyle levelStyle) {
+    private Tile[][] makeMap(int height, int width, Map.LevelStyle levelStyle, Roguelike roguelike) {
         if(levelStyle == Map.LevelStyle.WORLD) {
-            return LevelFactory.makeWorldMap(height, width);
+            return LevelFactory.makeWorldMap(height, width, roguelike);
         }
         return LevelFactory.makeDefaultLevel(height, width, mapLevelDepth);
     }
@@ -244,5 +281,35 @@ public class Level {
 
     public ArrayList<Tile> getWaterTiles() {
         return waterTiles;
+    }
+
+    public int getMapLevelDepth() {
+        return mapLevelDepth;
+    }
+
+    public void setTileArray(Tile[][] tileArray) {
+        this.tileArray = tileArray;
+    }
+
+    public ArrayList<Tile> getTileArrayAsList() {
+        ArrayList<Tile> tiles = new ArrayList<>();
+        for(int y = 0; y < height; y++) {
+            for(int x = 0; x < width; x++) {
+                tiles.add(tileArray[y][x]);
+            }
+        }
+        return tiles;
+    }
+
+    public void setGenerating(boolean generating) {
+        this.generating = generating;
+    }
+
+    public boolean isGenerating() {
+        return generating;
+    }
+
+    public Map.LevelStyle getLevelStyle() {
+        return levelStyle;
     }
 }

@@ -39,6 +39,7 @@ import java.util.Random;
  */
 public class Roguelike {
     private static final int MAP_DEPTH = 20;
+    public static final boolean SHOW_MAP_CREATION = true;
     public static boolean RENDER_BETWEEN_TURNS = false;
 
     public static Random rng;
@@ -133,6 +134,8 @@ public class Roguelike {
             render.start();
         }
 
+        LevelFactory.setRoguelike(this);
+
         while (true) {
             gameLoop();
         }
@@ -174,10 +177,7 @@ public class Roguelike {
             this.map = new Map(mapHeight, mapWidth, Roguelike.MAP_DEPTH, this);
         }
 
-        // shimmer the water a bit so its not all the same
-        for(int i = 0; i < 100; i++) {
-            render.shimmerWater(false);
-        }
+        map.getCurrentLevel().finalizeLevel();
     }
 
     protected void setupNewGame() {
@@ -958,9 +958,9 @@ public class Roguelike {
                     break;
                 case KeyEvent.VK_ENTER:
                     if (title.getSelectedItem().equals("New Game")) {
+                        this.currentState = State.PLAYING;
                         setupNewGame();
                         startGame();
-                        this.currentState = State.PLAYING;
                         // start bot
                         //runPlayerBot = true;
                     }
@@ -1160,7 +1160,7 @@ public class Roguelike {
         Color bgColor;
 
         // Tile is visible to the player
-        if (tile.isVisible()) {
+        if (tile.isVisible() || (SHOW_MAP_CREATION && map.getCurrentLevel().isGenerating())) {
             // Tile has an actor(player/monster)
             if (tile.hasActor()) {
                 Actor actor = tile.getActor();

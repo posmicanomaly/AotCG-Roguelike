@@ -1,17 +1,21 @@
 package posmicanomaly.AotCG.Component;
 
 import posmicanomaly.AotCG.Game.Roguelike;
-import posmicanomaly.libjsrte.Console.Symbol;
 import posmicanomaly.libjsrte.Util.ColorTools;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Random;
 
 /**
  * Created by Jesse Pospisil on 8/31/2015.
  */
 public abstract class LevelFactory {
+    public static Roguelike roguelike;
+    public static void setRoguelike(Roguelike roguelike) {
+        LevelFactory.roguelike = roguelike;
+    }
     static final int MAX_ROOM_SIZE = 11;
     static final int MIN_ROOM_SIZE = 3;
     // Setting PERIMETER_THICKNESS to 0 gives me walls of 1. Bad math somewhere.
@@ -46,29 +50,22 @@ public abstract class LevelFactory {
         floodFill(level);
     }
 
-    /**
-     * Wrapper for processMap
-     * sets ignoreBuild to false
-     *
-     * @param level level to process
-     */
-    private static void processMap(Tile[][] level) {
-        processMap(level, false);
-    }
+
 
     /**
      * Used to init a tile during gameplay, will call to ignoreBuild tiles
      * @param t
      */
     public static void initTile(Tile t) {
-        initTile(t, true);
+        initTile(t, true, false);
     }
 
-    private static void initTile(Tile t, boolean ignoreBuild) {
+    private static void initTile(Tile t, boolean ignoreBuild, boolean randomizeColors) {
         char symbol;
 
         Color color;
         Color backgroundColor = t.getBackgroundColor();
+
 
         if (!ignoreBuild) {
                 /*
@@ -91,20 +88,33 @@ public abstract class LevelFactory {
             // Interior
             case FLOOR:
                 symbol = ms.FLOOR;
-                color = ColorTools.varyColor(Colors.FLOOR, 0.8, 1.0, ColorTools.BaseColor.RGB);
-                backgroundColor = ColorTools.varyColor(Colors.FLOOR_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
+                if(randomizeColors) {
+                    color = ColorTools.varyColor(Colors.FLOOR, 0.8, 1.0, ColorTools.BaseColor.RGB);
+                    backgroundColor = ColorTools.varyColor(Colors.FLOOR_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
+                } else {
+                    color = Colors.FLOOR;
+                    backgroundColor = Colors.FLOOR_BG;
+                }
                 break;
             case WALL:
                 symbol = ms.WALL;
                 isBlocked = true;
                 color = Colors.WALL;
-                backgroundColor = ColorTools.varyColor(Colors.WALL_BG, 0.7, 1.0, ColorTools.BaseColor.RGB);
+                if(randomizeColors) {
+                    backgroundColor = ColorTools.varyColor(Colors.WALL_BG, 0.7, 1.0, ColorTools.BaseColor.RGB);
+                } else {
+                    backgroundColor = Colors.WALL_BG;
+                }
                 transparent = false;
                 break;
             case WALL_SECRET:
                 symbol = ms.WALL_SECRET;
                 color = Colors.WALL;
-                backgroundColor = ColorTools.varyColor(Colors.WALL_BG, 0.7, 1.0, ColorTools.BaseColor.RGB);
+                if(randomizeColors) {
+                    backgroundColor = ColorTools.varyColor(Colors.WALL_BG, 0.7, 1.0, ColorTools.BaseColor.RGB);
+                } else {
+                    backgroundColor = Colors.WALL_BG;
+                }
                 //
                 transparent = false;
                 break;
@@ -123,87 +133,143 @@ public abstract class LevelFactory {
                 break;
             case CAVE_GRASS:
                 symbol = ms.CAVE_GRASS;
-                color = ColorTools.varyColor(Colors.CAVE_GRASS, 0.5, 1.0, ColorTools.BaseColor.RGB);
+                if(randomizeColors) {
+                    color = ColorTools.varyColor(Colors.CAVE_GRASS, 0.5, 1.0, ColorTools.BaseColor.RGB);
+                } else {
+                    color = Colors.CAVE_GRASS;
+                }
                 backgroundColor = color.darker().darker().darker().darker();
                 transparent = false;
                 break;
             case LOW_GRASS:
                 symbol = ms.LOW_GRASS;
-                color = ColorTools.varyColor(Colors.CAVE_GRASS, 0.5, 1.0, ColorTools.BaseColor.RGB);
+                if(randomizeColors) {
+                    color = ColorTools.varyColor(Colors.CAVE_GRASS, 0.5, 1.0, ColorTools.BaseColor.RGB);
+                } else {
+                    color = Colors.CAVE_GRASS;
+                }
                 backgroundColor = color.darker().darker().darker().darker().darker();
                 break;
             case DOOR:
                 symbol = ms.DOOR;
-                color = ColorTools.varyColor(Colors.DOOR, 0.5, 1.0, ColorTools.BaseColor.RGB);
-                backgroundColor = ColorTools.varyColor(Colors.DOOR_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
+                if(randomizeColors) {
+                    color = ColorTools.varyColor(Colors.DOOR, 0.5, 1.0, ColorTools.BaseColor.RGB);
+                    backgroundColor = ColorTools.varyColor(Colors.DOOR_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
+                } else {
+                    color = Colors.DOOR;
+                    backgroundColor = Colors.DOOR_BG;
+                }
                 transparent = false;
                 break;
             case STAIRS_UP:
                 symbol = ms.STAIRS_UP;
                 color = Color.GREEN;
-                backgroundColor = ColorTools.varyColor(Colors.FLOOR_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
+                if(randomizeColors) {
+                    backgroundColor = ColorTools.varyColor(Colors.FLOOR_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
+                } else {
+                    backgroundColor = Colors.FLOOR_BG;
+                }
                 break;
             case STAIRS_DOWN:
                 symbol = ms.STAIRS_DOWN;
                 color = Color.RED;
-                backgroundColor = ColorTools.varyColor(Colors.FLOOR_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
+                if(randomizeColors) {
+                    backgroundColor = ColorTools.varyColor(Colors.FLOOR_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
+                } else {
+                    backgroundColor = Colors.FLOOR_BG;
+                }
                 break;
 
             // Exterior
             case WORLD_GRASS:
                 symbol = ms.WORLD_GRASS;
-                color = ColorTools.varyColor(Colors.WORLD_GRASS, 0.7, 1.0, ColorTools.BaseColor.RGB);
+                if(randomizeColors) {
+                    color = ColorTools.varyColor(Colors.WORLD_GRASS, 0.7, 1.0, ColorTools.BaseColor.RGB);
+                } else {
+                    color = Colors.WORLD_GRASS;
+                }
                 backgroundColor = color.darker().darker();
                 break;
             case CAVE_OPENING:
                 symbol = ms.CAVE_OPENING;
                 color = Colors.CAVE_OPENING;
-
                 break;
             case FOREST:
                 symbol = ms.FOREST;
                 if(Roguelike.rng.nextInt(100) < 30) {
                     symbol = ms.FOREST_ALT;
                 }
-                color =  ColorTools.varyColor(Colors.FOREST, 0.7, 1.0, ColorTools.BaseColor.RGB);
+                if(randomizeColors) {
+                    color = ColorTools.varyColor(Colors.FOREST, 0.7, 1.0, ColorTools.BaseColor.RGB);
+                } else {
+                    color = Colors.FOREST;
+                }
                 backgroundColor = color.darker().darker();
                 transparent = false;
                 break;
             case MOUNTAIN:
                 symbol = ms.MOUNTAIN;
-                color =  ColorTools.varyColor(Colors.MOUNTAIN, 0.9, 1.0, ColorTools.BaseColor.RGB);
+                if(randomizeColors) {
+                    color = ColorTools.varyColor(Colors.MOUNTAIN, 0.9, 1.0, ColorTools.BaseColor.RGB);
+                } else {
+                    color = Colors.MOUNTAIN;
+                }
                 backgroundColor = color.darker().darker().darker().darker();
                 transparent = false;
                 break;
             case SAND:
                 symbol = ms.SAND;
-                color = ColorTools.varyColor(Colors.SAND, 0.7, 0.8, ColorTools.BaseColor.RGB);
+                if(randomizeColors) {
+                    color = ColorTools.varyColor(Colors.SAND, 0.7, 0.8, ColorTools.BaseColor.RGB);
+                } else {
+                    color = Colors.SAND;
+                }
                 backgroundColor = color.darker().darker();
                 break;
             case JUNGLE:
                 symbol = ms.JUNGLE;
-                color = ColorTools.varyColor(Colors.JUNGLE, 0.7, 1.0, ColorTools.BaseColor.RGB);
+                if(randomizeColors) {
+                    color = ColorTools.varyColor(Colors.JUNGLE, 0.7, 1.0, ColorTools.BaseColor.RGB);
+                } else {
+                    color = Colors.JUNGLE;
+                }
                 backgroundColor = color.darker().darker();
                 transparent = false;
                 break;
             case PLAINS:
                 symbol = ms.PLAINS;
-                color = ColorTools.varyColor(Colors.PLAINS, 0.7, 1.0, ColorTools.BaseColor.RGB);
+                if(randomizeColors) {
+                    color = ColorTools.varyColor(Colors.PLAINS, 0.7, 1.0, ColorTools.BaseColor.RGB);
+                } else {
+                    color = Colors.PLAINS;
+                }
                 backgroundColor = color.darker().darker();
                 break;
             case BRUSH:
                 symbol = ms.BRUSH;
-                color = ColorTools.varyColor(Colors.BRUSH, 0.7, 1.0, ColorTools.BaseColor.RGB);
+                if(randomizeColors) {
+                    color = ColorTools.varyColor(Colors.BRUSH, 0.7, 1.0, ColorTools.BaseColor.RGB);
+                } else {
+                    color = Colors.BRUSH;
+                }
                 backgroundColor = color.darker().darker();
                 break;
             case HILL:
                 symbol = ms.HILL;
-                color = ColorTools.varyColor(Colors.HILL, 0.9, 1.0, ColorTools.BaseColor.RGB);
+                if(randomizeColors) {
+                    color = ColorTools.varyColor(Colors.HILL, 0.9, 1.0, ColorTools.BaseColor.RGB);
+                } else {
+                    color = Colors.HILL;
+                }
                 backgroundColor = color.darker().darker();
                 break;
             case TOWN:
                 symbol = ms.TOWN;
-                color=ColorTools.varyColor(Colors.TOWN, 0.9, 1.0, ColorTools.BaseColor.RGB);
+                if(randomizeColors) {
+                    color = ColorTools.varyColor(Colors.TOWN, 0.9, 1.0, ColorTools.BaseColor.RGB);
+                } else {
+                    color = Colors.TOWN;
+                }
                 //backgroundColor = color.darker().darker();
                 break;
             default:
@@ -226,14 +292,43 @@ public abstract class LevelFactory {
      * @param level       level to process
      * @param ignoreBuild ignore building types(debug)
      */
-    private static void processMap(Tile[][] level, boolean ignoreBuild) {
+    private static void processMap(Tile[][] level, boolean ignoreBuild, boolean randomizeColors) {
         for (int y = 0; y < level.length; y++) {
             for (int x = 0; x < level[0].length; x++) {
                 Tile t = level[y][x];
-                initTile(t, ignoreBuild);
+                initTile(t, ignoreBuild, randomizeColors);
             }
         }
     }
+
+    private static void processMap(Tile[][] level, boolean ignoreBuild) {
+        processMap(level, ignoreBuild, true);
+    }
+
+    /**
+     * Wrapper for processMap
+     * sets ignoreBuild to false
+     *
+     * @param level level to process
+     */
+    private static void processMap(Tile[][] level) {
+        processMap(level, false);
+    }
+
+    private static void processAndDraw(Level level, Roguelike roguelike) {
+        processMap(level.getTileArray(), true, false);
+        roguelike.getRender().drawGame(roguelike.getRootConsole());
+    }
+
+    private static void processAndDraw(Level level, Roguelike roguelike, long pause) {
+        processAndDraw(level, roguelike);
+        try {
+            Thread.sleep(pause);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     /**
      * Fills level with BUILD_FLOOD starting from the first floor tile encountered
@@ -304,22 +399,7 @@ public abstract class LevelFactory {
      * @return
      */
     private static boolean spreadBuildFlood(Tile tile, Tile[][] level) {
-        int x = tile.getX();
-        int y = tile.getY();
-        Tile tLeft = null;
-        Tile tRight = null;
-        Tile tUp = null;
-        Tile tDown = null;
-
-        // Check bounds to avoid nullReferences
-        if (x > 1)
-            tLeft = level[y][x - 1];
-        if (x < level[0].length - 1)
-            tRight = level[y][x + 1];
-        if (y > 1)
-            tUp = level[y - 1][x];
-        if (y < level.length - 1)
-            tDown = level[y + 1][x];
+        ArrayList<Tile> tiles = getNearbyTiles(tile, level);
 
         // the return result, init to false
         // If we can spread, we will change this to true
@@ -328,26 +408,14 @@ public abstract class LevelFactory {
         /*
         For each case, if the tile != null, isBlocked == false, type != WATER
          */
-        if (tLeft != null && tLeft.isBlocked() == false && tLeft.getType() != Tile.Type.BUILD_FLOOD) {
-            tLeft.setType(Tile.Type.BUILD_FLOOD);
-            canSpread = true;
+        for(Tile t : tiles) {
+            if(t != null) {
+                if(!t.isBlocked() && t.getType() != Tile.Type.BUILD_FLOOD) {
+                    t.setType(Tile.Type.BUILD_FLOOD);
+                    canSpread = true;
+                }
+            }
         }
-        if (tRight != null && tRight.isBlocked() == false && tRight.getType() != Tile.Type.BUILD_FLOOD) {
-            tRight.setType(Tile.Type.BUILD_FLOOD);
-            canSpread = true;
-        }
-
-        if (tUp != null && tUp.isBlocked() == false && tUp.getType() != Tile.Type.BUILD_FLOOD) {
-            tUp.setType(Tile.Type.BUILD_FLOOD);
-            canSpread = true;
-        }
-
-        if (tDown != null && tDown.isBlocked() == false && tDown.getType() != Tile.Type.BUILD_FLOOD) {
-            tDown.setType(Tile.Type.BUILD_FLOOD);
-            canSpread = true;
-        }
-
-
         return canSpread;
     }
 
@@ -376,6 +444,15 @@ public abstract class LevelFactory {
             return false;
         }
 
+        // Check that the bounds aren't shared with another room
+        for(int y = yStart - 1; y < yStart + height + 1; y++) {
+            for(int x = xStart - 1; x < xStart + width + 1; x++) {
+                if(level[y][x].getType() == Tile.Type.FLOOR) {
+                    return false;
+                }
+            }
+        }
+
         // Check for overlap with another room
         boolean overlap = false;
         for (int y = yStart; y < yStart + height; y++) {
@@ -388,25 +465,29 @@ public abstract class LevelFactory {
                 }
             }
         }
+
+
         return true;
     }
 
     /**
      * Places a room at y, x, with width and height, in level
      * Sets type to floor
-     *
-     * @param yStart
+     *  @param yStart
      * @param xStart
      * @param width
      * @param height
      * @param level
      */
-    private static void placeRoom(int yStart, int xStart, int width, int height, Tile[][] level) {
+    private static ArrayList<Tile> placeRoom(int yStart, int xStart, int width, int height, Tile[][] level) {
+        ArrayList<Tile> tiles = new ArrayList<>();
         for (int y = yStart; y < yStart + height; y++) {
             for (int x = xStart; x < xStart + width; x++) {
                 level[y][x].setType(Tile.Type.FLOOR);
+                tiles.add(level[y][x]);
             }
         }
+        return tiles;
     }
 
     /**
@@ -424,6 +505,20 @@ public abstract class LevelFactory {
                 }
             }
         }
+
+        int walls = 0;
+        for (int y = 0; y < level.length; y++) {
+            for (int x = 0; x < level[0].length; x++) {
+                Tile t = level[y][x];
+                if (t.getType() == Tile.Type.WALL) {
+                    walls++;
+                }
+            }
+        }
+        if(walls == level.length * level[0].length) {
+            return false;
+        }
+
         return true;
     }
 
@@ -434,17 +529,18 @@ public abstract class LevelFactory {
      * @param amount
      * @param feature
      */
-    private static void addPoolFeature(Tile[][] level, int amount, Tile.Type feature) {
+    private static void addPoolFeature(Level level, int amount, Tile.Type feature) {
+        Tile[][] tileArray = level.getTileArray();
         Random rng = Roguelike.rng;
         for(int i = 0; i < amount; i++) {
             boolean startTileFound = false;
             Tile startTile = null;
             while(!startTileFound) {
-                int y = rng.nextInt(level.length);
-                int x = rng.nextInt(level[0].length);
-                if(!level[y][x].isBlocked()) {
+                int y = rng.nextInt(tileArray.length);
+                int x = rng.nextInt(tileArray[0].length);
+                if(!tileArray[y][x].isBlocked()) {
                     startTileFound = true;
-                    startTile = level[y][x];
+                    startTile = tileArray[y][x];
                 }
             }
             startTile.setType(feature);
@@ -464,7 +560,7 @@ public abstract class LevelFactory {
      * @param current
      * @param max
      */
-    private static void spreadPool(Tile[][] level, Tile t, Tile.Type feature, int current, int max) {
+    private static void spreadPool(Level level, Tile t, Tile.Type feature, int current, int max) {
         if(current == max) {
             return;
         }
@@ -474,16 +570,16 @@ public abstract class LevelFactory {
         Tile tRight = null;
         Tile tUp = null;
         Tile tDown = null;
-
+        Tile[][] tileArray = level.getTileArray();
         // Check bounds to avoid nullReferences
         if (x > 0)
-            tLeft = level[y][x - 1];
-        if (x < level[0].length - 1)
-            tRight = level[y][x + 1];
+            tLeft = tileArray[y][x - 1];
+        if (x < tileArray[0].length - 1)
+            tRight = tileArray[y][x + 1];
         if (y > 0)
-            tUp = level[y - 1][x];
-        if (y < level.length - 1)
-            tDown = level[y + 1][x];
+            tUp = tileArray[y - 1][x];
+        if (y < tileArray.length - 1)
+            tDown = tileArray[y + 1][x];
 
         ArrayList<Tile> tiles = new ArrayList<Tile>();
                     /*
@@ -510,9 +606,10 @@ public abstract class LevelFactory {
         for(Tile nextTile : tiles) {
             spreadPool(level, nextTile, feature, current + 1, max);
         }
+        processAndDraw(level, roguelike);
     }
 
-    public static Tile[][] makeWorldMap(int height, int width) {
+    public static Tile[][] makeWorldMap(int height, int width, Roguelike roguelike) {
         System.out.println("makeWorldMap");
         Tile[][] result = null;
 
@@ -520,25 +617,43 @@ public abstract class LevelFactory {
 
         processMap(result);
 
+
+        return result;
+    }
+
+    public static void refineWorldMap(Level level) {
+        Tile[][] result = level.getTileArray();
         Random rng = Roguelike.rng;
         //addPoolFeature(result, rng.nextInt(10) + 5, Tile.Type.WATER);
         //addStairs(result);
-        addPoolFeature(result, rng.nextInt(20) + 5, Tile.Type.MOUNTAIN);
+        addPoolFeature(level, rng.nextInt(20) + 5, Tile.Type.MOUNTAIN);
+        processAndDraw(level, roguelike, 500);
         //addPoolFeature(result, rng.nextInt(20) + 5, Tile.Type.WATER);
         plantPerimeterWater(result);
+        processAndDraw(level, roguelike, 250);
         plantWater(20, result);
+        processAndDraw(level, roguelike, 250);
         plantTrees(rng.nextInt(20) + 10, result);
-        grow(100, result);
+        processAndDraw(level, roguelike, 250);
+        grow(100, level);
+        processAndDraw(level, roguelike, 500);
         addBrush(result);
+        processAndDraw(level, roguelike, 250);
         addHills(result);
+        processAndDraw(level, roguelike, 250);
         addShores(result);
+        processAndDraw(level, roguelike, 250);
         // Process the map before placing towns, we use the existing tile bg color for a town.
         processMap(result);
         addCaveOpenings(result);
+        processAndDraw(level, roguelike, 250);
         addTowns(result);
+        processAndDraw(level, roguelike, 250);
+        // process with randomization of colors
+        processAndDraw(level, roguelike, 500);
         processMap(result);
         System.out.println("makeWorldMap done");
-        return result;
+
     }
 
     /**
@@ -556,130 +671,453 @@ public abstract class LevelFactory {
      * @return
      */
     public static Tile[][] makeDefaultLevel(int height, int width, int mapLevelDepth) {
-        Tile[][] result = null;
+        return makeBlankMap(height, width);
+    }
+
+    public static void refineTightLevel(Level level) {
         boolean playableMap = false;
+        int height = level.getTileArray().length;
+        int width = level.getTileArray()[0].length;
+
+        int levelCreationTries = 0;
+        final int NUMBER_OF_ROOMS = level.getMapLevelDepth() * 2;
+        // While map is not playable(rooms not accessible)
+        while (!playableMap) {
+            levelCreationTries++;
+            // Make a blank map filled with walls
+            level.setTileArray(makeBlankMap(height, width));
+            Random rng = Roguelike.rng;
+            // Number of rooms to try and place
+
+            ArrayList<Tile> eligibleTiles = level.getTileArrayAsList();
+            double radius = 1.0;
+            Tile lastTile = null;
+
+            for (int r = 0; r < NUMBER_OF_ROOMS; r++) {
+                boolean placed = false;
+                while(!placed) {
+                    // Random coordinates
+                    ArrayList<Tile> newTiles = new ArrayList<>();
+                    if(r > 0) {
+                        newTiles = new ArrayList<>();
+                        for(Tile t : eligibleTiles) {
+                            if(Math.abs(lastTile.getX() - t.getX()) + Math.abs(lastTile.getY() - t.getY()) <= radius) {
+                                newTiles.add(t);
+                            }
+                        }
+                    }
+                    Tile nextTile = null;
+                    if(r == 0) {
+                        nextTile = eligibleTiles.get(rng.nextInt(eligibleTiles.size()));
+                    } else {
+                        nextTile = newTiles.get(rng.nextInt(newTiles.size()));
+                    }
+                    int y = nextTile.getY();
+                    int x = nextTile.getX();
+
+                    // Random dimensions
+                    int roomHeight = rng.nextInt((MAX_ROOM_SIZE - MIN_ROOM_SIZE) + 1) + MIN_ROOM_SIZE;
+                    int roomWidth = rng.nextInt((MAX_ROOM_SIZE - MIN_ROOM_SIZE) + 1) + MIN_ROOM_SIZE;
+
+                    // Check and place if possible
+                    if (canPlaceRoom(y, x, roomHeight, roomWidth, level.getTileArray())) {
+                        ArrayList<Tile> tiles = placeRoom(y, x, roomHeight, roomWidth, level.getTileArray());
+                        for(Tile t : tiles) {
+                            if(eligibleTiles.contains(t)) {
+                                eligibleTiles.remove(t);
+                            }
+                        }
+                        placed = true;
+                        lastTile = nextTile;
+                        processAndDraw(level, roguelike);
+                    }
+                    radius+= 0.001;
+                }
+            }
+
+            boolean failed = false;
+            while(!failed) {
+                // Process the map to set tile properties
+                processMap(level.getTileArray(), false, false);
+                // FloodFill the map
+                floodFill(level.getTileArray());
+                processAndDraw(level, roguelike);
+                // If the entire map is flooded, map is playable
+                if (isFlooded(level.getTileArray())) {
+                    playableMap = true;
+                    processMap(level.getTileArray(), false, false);
+                    break;
+                } else {
+                    ArrayList<Tile> thinWalls = findThinWalls(level);
+                    if(thinWalls.size() == 0) {
+                        failed = true;
+                        continue;
+                    }
+                    Collections.shuffle(thinWalls);
+                    for(Tile t : thinWalls) {
+                        if(hasFloodAndFloorNeighborTiles(t, level.getTileArray(), height, width)) {
+                            t.setType(Tile.Type.FLOOR);
+                            processAndDraw(level, roguelike);
+                            break;
+                        }
+
+                        if(t.equals(thinWalls.get(thinWalls.size() - 1))) {
+                            // try to make a hallway to closest room
+                            ArrayList<Tile> path = getShortestRoomConnectionPath(level);
+                            if(path == null) {
+                                System.out.println("path is null");
+                                failed = true;
+                            }
+                            else {
+                                for(Tile pt : path) {
+                                    pt.setType(Tile.Type.FLOOR);
+                                    processAndDraw(level, roguelike);
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+            if(failed) {
+                processAndDraw(level, roguelike, 3000);
+            }
+        }
+        processAndDraw(level, roguelike);
+
+        System.out.println("Level took " + levelCreationTries + " tries");
+        processAndDraw(level, roguelike);
+
+        addMonsters(level, level.getMapLevelDepth() * 7);
+        processAndDraw(level, roguelike);
+        Random rng = Roguelike.rng;
+        plantCaveGrass(NUMBER_OF_ROOMS, level.getTileArray());
+        //addPoolFeature(level, rng.nextInt(30) + 5, Tile.Type.CAVE_GRASS);
+        //addPoolFeature(level, rng.nextInt(30) + 5, Tile.Type.LOW_GRASS);
+        plantWater(NUMBER_OF_ROOMS, level.getTileArray());
+        grow(100, level);
+        System.out.println("add low grass");
+        addLowGrass(level.getTileArray());
+        //addPoolFeature(level, rng.nextInt(10) + 5, Tile.Type.WATER);
+        System.out.println("add doors");
+        addDoorways(level.getTileArray(), 4);
+        System.out.println("add stairs");
+        addStairs(level);
+        processAndDraw(level, roguelike);
+        System.out.println("Level complete");
+        processMap(level.getTileArray());
+    }
+
+    private static ArrayList<Tile> getShortestRoomConnectionPath(Level level) {
+        System.out.println("trying to get a path to nearest floor tile");
+        ArrayList<Tile> tiles = level.getTileArrayAsList();
+        ArrayList<Tile> floodedTiles = new ArrayList<>();
+        ArrayList<Tile> floorTiles = new ArrayList<>();
+        for(Tile t : tiles) {
+            if(t.getType() == Tile.Type.BUILD_FLOOD) {
+                for(Tile nb : getNearbyTiles(t, level.getTileArray())) {
+                    if (nb.getType() == Tile.Type.WALL) {
+                        floodedTiles.add(t);
+                        break;
+                    }
+                }
+            } else if(t.getType() == Tile.Type.FLOOR) {
+                for(Tile nb : getNearbyTiles(t, level.getTileArray())) {
+                    if (nb.getType() == Tile.Type.WALL) {
+                        floorTiles.add(t);
+                        break;
+                    }
+                }
+            }
+        }
+        System.out.println("tiles: " + tiles.size() + " flooded: " + floodedTiles.size() + " floor: " + floorTiles.size());
+        ArrayList<ArrayList<Tile>> paths = new ArrayList<>();
+        Tile closestFloodTile = null;
+        int d = 0;
+        for(Tile fl : floorTiles) {
+            for(Tile fd : floodedTiles) {
+                int distance = Math.abs(fl.getX() - fd.getX()) + Math.abs(fl.getY() - fd.getY());
+                if(closestFloodTile == null) {
+                    closestFloodTile = fd;
+                    d = distance;
+                }
+                else if(distance < d) {
+                    closestFloodTile = fd;
+                    d = distance;
+                }
+            }
+            // occasionally allow a diagonal path to slip in for some variety, as long as the hall won't be too long
+            int dice = Roguelike.rng.nextInt(40);
+            if(dice > 30) {
+                ArrayList<Tile> potentialPath = level.getAstar().getShortestPath(fl, closestFloodTile, true, true, false);
+                if(potentialPath.size() < 10) {
+                    paths.add(potentialPath);
+                } else {
+                    paths.add(level.getAstar().getShortestPathMapGen(fl, closestFloodTile));
+                }
+            } else {
+                paths.add(level.getAstar().getShortestPathMapGen(fl, closestFloodTile));
+            }
+        }
+        System.out.println("paths: " + paths.size());
+        ArrayList<Tile> spath = null;
+        for(ArrayList<Tile> p : paths) {
+            if(spath == null) {
+                spath = p;
+            }
+            else if(p.size() < spath.size()) {
+                spath = p;
+                System.out.println("set spath to p");
+            }
+            if(spath != null) {
+                System.out.println("spath: " + spath.size() + " p: " + p.size());
+            }
+        }
+        System.out.println("chosen spath: " + spath.size());
+        return spath;
+    }
+
+    public static void refineLooseLevel(Level level) {
+        boolean playableMap = false;
+        int height = level.getTileArray().length;
+        int width = level.getTileArray()[0].length;
 
         int levelCreationTries = 0;
         // While map is not playable(rooms not accessible)
         while (!playableMap) {
             levelCreationTries++;
             // Make a blank map filled with walls
-            result = makeBlankMap(height, width);
+            level.setTileArray(makeBlankMap(height, width));
             Random rng = Roguelike.rng;
             // Number of rooms to try and place
-            final int NUMBER_OF_ROOMS = height * width;
+            final int NUMBER_OF_ROOMS = level.getMapLevelDepth() + 3;
+
+            ArrayList<Tile> eligibleTiles = level.getTileArrayAsList();
 
             for (int r = 0; r < NUMBER_OF_ROOMS; r++) {
-                // Random coordinates
-                int y = rng.nextInt(height);
-                int x = rng.nextInt(width);
+                boolean placed = false;
+                while(!placed) {
+                    // Random coordinates
+                    Tile nextTile = eligibleTiles.get(rng.nextInt(eligibleTiles.size()));
+                    int y = nextTile.getY();
+                    int x = nextTile.getX();
 
-                // Random dimensions
-                int roomHeight = rng.nextInt((MAX_ROOM_SIZE - MIN_ROOM_SIZE) + 1) + MIN_ROOM_SIZE;
-                int roomWidth = rng.nextInt((MAX_ROOM_SIZE - MIN_ROOM_SIZE) + 1) + MIN_ROOM_SIZE;
+                    // Random dimensions
+                    int looseRoomMinSize = MIN_ROOM_SIZE + 3;
+                    int roomHeight = rng.nextInt((MAX_ROOM_SIZE - looseRoomMinSize) + 1) + looseRoomMinSize;
+                    int roomWidth = rng.nextInt((MAX_ROOM_SIZE - looseRoomMinSize) + 1) + looseRoomMinSize;
 
-                // Check and place if possible
-                if (canPlaceRoom(y, x, roomHeight, roomWidth, result)) {
-                    placeRoom(y, x, roomHeight, roomWidth, result);
+                    // Check and place if possible
+                    if (canPlaceRoom(y, x, roomHeight, roomWidth, level.getTileArray())) {
+                        ArrayList<Tile> tiles = placeRoom(y, x, roomHeight, roomWidth, level.getTileArray());
+                        for(Tile t : tiles) {
+                            if(eligibleTiles.contains(t)) {
+                                eligibleTiles.remove(t);
+                            }
+                        }
+                        placed = true;
+                        processAndDraw(level, roguelike);
+                    }
                 }
             }
 
-            /*
-            Find the thin walls
-             */
-
-            ArrayList<Tile> thinWalls = new ArrayList<Tile>();
-
-            for (int y = 0; y < height; y++) {
-                for (int x = 0; x < width; x++) {
-                    Tile t = result[y][x];
-
-                    // If tile is a WALL
-                    if (t.getType().equals(Tile.Type.WALL)) {
-                        // Get the surrounding tiles
-                        Tile tLeft = null;
-                        Tile tRight = null;
-                        Tile tUp = null;
-                        Tile tDown = null;
-                        if (x > 1)
-                            tLeft = result[y][x - 1];
-                        if (x < width - 1)
-                            tRight = result[y][x + 1];
-                        if (y > 1)
-                            tUp = result[y - 1][x];
-                        if (y < height - 1)
-                            tDown = result[y + 1][x];
-
-                        boolean verticalDivide = false;
-                        boolean horizontalDivide = false;
-
-                        // Check vertical divide
-                        if (tUp != null && tDown != null) {
-                            if (tUp.getType() == Tile.Type.FLOOR && tDown.getType() == Tile.Type.FLOOR) {
-                                verticalDivide = true;
-                            }
+            boolean failed = false;
+            while(!failed) {
+                // Process the map to set tile properties
+                processMap(level.getTileArray(), false, false);
+                // FloodFill the map
+                floodFill(level.getTileArray());
+                processAndDraw(level, roguelike);
+                // If the entire map is flooded, map is playable
+                if (isFlooded(level.getTileArray())) {
+                    playableMap = true;
+                    processMap(level.getTileArray(), false, false);
+                    break;
+                } else {
+                    ArrayList<Tile> thinWalls = findThinWalls(level);
+                    Collections.shuffle(thinWalls);
+                    boolean needsTunnels = false;
+                    for(Tile t : thinWalls) {
+                        if(hasFloodAndFloorNeighborTiles(t, level.getTileArray(), height, width)) {
+                            t.setType(Tile.Type.FLOOR);
+                            processAndDraw(level, roguelike);
+                            break;
                         }
 
-                        // Check horizontal divide
-                        if (tLeft != null && tRight != null) {
-                            if (tLeft.getType() == Tile.Type.FLOOR && tRight.getType() == Tile.Type.FLOOR) {
-                                horizontalDivide = true;
-                            }
+                        if(t.equals(thinWalls.get(thinWalls.size() - 1))) {
+                            needsTunnels = true;
                         }
-
-                        // If either are true
-                        if (horizontalDivide || verticalDivide) {
-                            // Set it as a PATH (DEBUG)
-                            thinWalls.add(t);
+                    }
+                    if(thinWalls.size() == 0) {
+                        needsTunnels = true;
+                    }
+                    if(needsTunnels) {
+                        // try to make a hallway to closest room
+                        ArrayList<Tile> path = getShortestRoomConnectionPath(level);
+                        if(path == null) {
+                            System.out.println("path is null");
+                            failed = true;
+                        }
+                        else {
+                            for(Tile pt : path) {
+                                pt.setType(Tile.Type.FLOOR);
+                                processAndDraw(level, roguelike, 20);
+                            }
                         }
                     }
                 }
             }
-            int maxAttempts = 50;
-            for(int i = 0; i < maxAttempts; i++) {
-                // Process the map to set tile properties
-                processMap(result);
-                // FloodFill the map
-                floodFill(result);
+            if(failed) {
+                processAndDraw(level, roguelike, 3000);
+            }
+        }
+        processAndDraw(level, roguelike);
 
-                // If the entire map is flooded, map is playable
-                if (isFlooded(result)) {
-                    playableMap = true;
-                    break;
-                } else {
-                    int findTimeout = 0;
-                    Tile t;
-                    do {
-                        // Pick a random thin wall and break it
-                        t = thinWalls.get(rng.nextInt(thinWalls.size()));
-                        findTimeout++;
-                    } while(!hasFloodAndFloorNeighborTiles(t, result, height, width) && findTimeout < 50);
+        System.out.println("Level took " + levelCreationTries + " tries");
+        processAndDraw(level, roguelike);
 
-                    if(hasFloodAndFloorNeighborTiles(t, result, height, width)) {
-                        // Break the wall
-                        t.setType(Tile.Type.PATH);
-                        thinWalls.remove(t);
+        addMonsters(level, level.getMapLevelDepth() * 7);
+        processAndDraw(level, roguelike);
+        Random rng = Roguelike.rng;
+        plantCaveGrass(30, level.getTileArray());
+        //addPoolFeature(level, rng.nextInt(30) + 5, Tile.Type.CAVE_GRASS);
+        //addPoolFeature(level, rng.nextInt(30) + 5, Tile.Type.LOW_GRASS);
+        plantWater(30, level.getTileArray());
+        grow(100, level);
+        System.out.println("add low grass");
+        addLowGrass(level.getTileArray());
+        //addPoolFeature(level, rng.nextInt(10) + 5, Tile.Type.WATER);
+        System.out.println("add doors");
+        addDoorways(level.getTileArray(), 4);
+        System.out.println("add stairs");
+        addStairs(level);
+        processAndDraw(level, roguelike);
+        System.out.println("Level complete");
+        processMap(level.getTileArray());
+    }
+
+    private static ArrayList<Tile> findThinWalls(Level level) {
+        ArrayList<Tile> thinWalls = new ArrayList<>();
+        int height = level.getTileArray().length;
+        int width = level.getTileArray()[0].length;
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                Tile t = level.getTileArray()[y][x];
+
+                // If tile is a WALL
+                if (t.getType().equals(Tile.Type.WALL)) {
+                    // Get the surrounding tiles
+                    Tile tLeft = null;
+                    Tile tRight = null;
+                    Tile tUp = null;
+                    Tile tDown = null;
+                    if (x > 1)
+                        tLeft = level.getTileArray()[y][x - 1];
+                    if (x < width - 1)
+                        tRight = level.getTileArray()[y][x + 1];
+                    if (y > 1)
+                        tUp = level.getTileArray()[y - 1][x];
+                    if (y < height - 1)
+                        tDown = level.getTileArray()[y + 1][x];
+
+                    Tile.Type tl = null;
+                    Tile.Type tr = null;
+                    Tile.Type tu = null;
+                    Tile.Type td = null;
+
+                    boolean verticalDivide = false;
+                    boolean horizontalDivide = false;
+
+                    // Check vertical divide
+                    if (tUp != null && tDown != null) {
+                        if ((tUp.getType() == Tile.Type.FLOOR || tUp.getType() == Tile.Type.BUILD_FLOOD)
+                                && (tDown.getType() == Tile.Type.BUILD_FLOOD || tDown.getType() == Tile.Type.FLOOR)) {
+                            verticalDivide = true;
+                        }
+                    }
+
+                    // Check horizontal divide
+                    if (tLeft != null && tRight != null) {
+                        if ((tLeft.getType() == Tile.Type.BUILD_FLOOD || tLeft.getType() == Tile.Type.FLOOR)
+                                && (tRight.getType() == Tile.Type.BUILD_FLOOD || tRight.getType() == Tile.Type.FLOOR)) {
+                            horizontalDivide = true;
+                        }
+                    }
+
+                    // If either are true
+                    if (horizontalDivide || verticalDivide) {
+                        // Set it as a PATH (DEBUG)
+                        thinWalls.add(t);
                     }
                 }
             }
         }
+        return thinWalls;
+    }
 
-        System.out.println("Level took " + levelCreationTries + " tries");
-        processMap(result);
+    private static void plantCaveGrass(int seeds, Tile[][] tileArray) {
+        int seedsPlanted = 0;
+        do {
+            boolean validTile = false;
+            Tile t;
+            do {
+                t = getRandomTile(tileArray);
+                switch (t.getType()) {
+                    case FLOOR:
+                        validTile = true;
+                }
+            } while(!validTile);
+            t.setType(Tile.Type.CAVE_GRASS);
+            seedsPlanted++;
+        } while(seedsPlanted < seeds);
+    }
 
-        addMonsters(result, mapLevelDepth * 7);
-        Random rng = Roguelike.rng;
-        addPoolFeature(result, rng.nextInt(30) + 5, Tile.Type.CAVE_GRASS);
-        addPoolFeature(result, rng.nextInt(30) + 5, Tile.Type.LOW_GRASS);
-        addPoolFeature(result, rng.nextInt(10) + 5, Tile.Type.WATER);
-        addDoorways(result, 4);
-        addStairs(result);
-        processMap(result);
-        return result;
+    private static void addLowGrass(Tile[][] result) {
+        for(int y = 0; y < result.length; y++) {
+            for(int x = 0; x < result[y].length; x++) {
+                Tile t = result[y][x];
+                boolean skip = false;
+                // What do we not want to change
+                switch(t.getType()) {
+                    case WALL:
+                    case MOUNTAIN:
+                    case WATER:
+                    case JUNGLE:
+                    case FOREST:
+                    case HILL:
+                    case CAVE_GRASS:
+                        skip = true;
+                        break;
+                    default:
+                        break;
+                }
+                if(skip) {
+                    continue;
+                }
+                for(Tile nextTile : getNearbyTiles(t, result)) {
+                    if(nextTile == null)
+                        continue;
+                    boolean set = false;
+                    // If our current tile is next to the following tiles, change current tile.
+                    switch(nextTile.getType()) {
+                        case CAVE_GRASS:
+                            set = true;
+                            break;
+                        default:
+                            break;
+                    }
+                    if(set) {
+                        t.setType(Tile.Type.LOW_GRASS);
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     private static void addDoorways(Tile[][] result, int secret) {
         ArrayList<Tile> eligibileDoorways = getEligibleDoorways(result);
+        System.out.println("eligible doorways: " + eligibileDoorways.size());
 
         int secretDoorwaysPlaced = 0;
         if(eligibileDoorways.size() - secret < 0) {
@@ -695,9 +1133,9 @@ public abstract class LevelFactory {
         }
     }
 
-    private static void addMonsters(Tile[][] result, int amount) {
-        int height = result.length;
-        int width = result[0].length;
+    private static void addMonsters(Level level, int amount) {
+        int height = level.getTileArray().length;
+        int width = level.getTileArray()[0].length;
         boolean giantAdded = false;
         int actorsToAdd = amount;
         int actorsAdded = 0;
@@ -705,21 +1143,21 @@ public abstract class LevelFactory {
             Random rng = Roguelike.rng;
             int y = rng.nextInt(height);
             int x = rng.nextInt(width);
-            if (result[y][x].getType() == Tile.Type.FLOOR && !result[y][x].hasActor()) {
+            if (level.getTileArray()[y][x].getType() == Tile.Type.FLOOR && !level.getTileArray()[y][x].hasActor()) {
                 Actor actor;
-                if(!giantAdded) {
-                    actor = ActorFactory.createActor(ActorFactory.TYPE.GIANT, result[y][x]);
+                if(!giantAdded && level.getMapLevelDepth() > 5) {
+                    actor = ActorFactory.createActor(ActorFactory.TYPE.GIANT, level.getTileArray()[y][x]);
                     giantAdded = true;
                 } else {
                     int rngResult = rng.nextInt(100);
                     if(rngResult < 50) {
-                        actor = ActorFactory.createActor(ActorFactory.TYPE.RAT, result[y][x]);
+                        actor = ActorFactory.createActor(ActorFactory.TYPE.RAT, level.getTileArray()[y][x]);
                     } else {
-                        actor = ActorFactory.createActor(ActorFactory.TYPE.BAT, result[y][x]);
+                        actor = ActorFactory.createActor(ActorFactory.TYPE.BAT, level.getTileArray()[y][x]);
                     }
                 }
 
-                result[y][x].setActor(actor);
+                level.getTileArray()[y][x].setActor(actor);
                 actorsAdded++;
             }
         } while(actorsAdded < actorsToAdd);
@@ -728,7 +1166,9 @@ public abstract class LevelFactory {
     private static ArrayList<Tile> getEligibleDoorways(Tile[][] result) {
         ArrayList<Tile.Type> validBaseTypes = new ArrayList<Tile.Type>();
         validBaseTypes.add(Tile.Type.CAVE_GRASS);
-        validBaseTypes.add(Tile.Type.FLOOR);
+        validBaseTypes.add(Tile.Type.PATH);
+        validBaseTypes.add(Tile.Type.LOW_GRASS);
+        validBaseTypes.add(Tile.Type.WATER);
 
         ArrayList<Tile> tiles = new ArrayList<Tile>();
         int height = result.length;
@@ -775,8 +1215,25 @@ public abstract class LevelFactory {
 
                     if(horizontalWalls && verticalWalls) {
                         // Don't put a door here, would look bad
-                    } else if(horizontalWalls || verticalWalls) {
-                        tiles.add(currentTile);
+                    }
+                    else if(horizontalWalls || verticalWalls) {
+                        int totalTilesNotBlocked = 0;
+                        boolean nextToDoor = false;
+                        for(Tile t : getNearbyTiles(currentTile, result)) {
+                            if(t.isBlocked()) {
+                                continue;
+                            }
+                            if(tiles.contains(t)) {
+                                nextToDoor = true;
+                                break;
+                            }
+                            totalTilesNotBlocked++;
+                        }
+                        if(!nextToDoor) {
+                            if (totalTilesNotBlocked < 5 && totalTilesNotBlocked > 2) {
+                                tiles.add(currentTile);
+                            }
+                        }
                     }
                 }
             }
@@ -969,6 +1426,10 @@ public abstract class LevelFactory {
                     case JUNGLE:
                     case SAND:
                         validTile = true;
+                        break;
+                    case FLOOR:
+                        validTile = true;
+                        break;
                 }
             } while(!validTile);
             t.setType(Tile.Type.WATER);
@@ -990,10 +1451,13 @@ public abstract class LevelFactory {
         }
     }
 
-    private static void grow(int cycles, Tile[][] tileArray) {
+    private static void grow(int cycles, Level level) {
+        Tile[][] tileArray = level.getTileArray();
         for(int i = 0; i < cycles; i++) {
             ArrayList<Tile> forestEdges = new ArrayList<>();
             ArrayList<Tile> waterEdges = new ArrayList<>();
+            ArrayList<Tile> caveGrassEdges = new ArrayList<>();
+
             for(int y = 0; y < tileArray.length; y++) {
                 for(int x = 0; x < tileArray[y].length; x++) {
                     Tile t = tileArray[y][x];
@@ -1004,6 +1468,9 @@ public abstract class LevelFactory {
                             break;
                         case WATER:
                             waterEdges.add(t);
+                            break;
+                        case CAVE_GRASS:
+                            caveGrassEdges.add(t);
                         default:
                             break;
                     }
@@ -1026,6 +1493,22 @@ public abstract class LevelFactory {
                     }
                 }
             }
+            for(Tile t : caveGrassEdges) {
+                for(Tile nextTile : getNearbyTiles(t, tileArray)) {
+                    if(nextTile == null) {
+                        continue;
+                    }
+
+                    switch (nextTile.getType()) {
+                        case FLOOR:
+                            int chanceToGrow = Roguelike.rng.nextInt(100) - 99;
+                            if(chanceToGrow > -1) {
+                                nextTile.setType(t.getType());
+                                break;
+                            }
+                    }
+                }
+            }
             for(Tile t : waterEdges) {
                 for(Tile nextTile : getNearbyTiles(t, tileArray)) {
                     if(nextTile == null) {
@@ -1040,6 +1523,7 @@ public abstract class LevelFactory {
                         case SAND:
                         case FOREST:
                         case JUNGLE:
+                        case FLOOR:
                             int chanceToGrow = Roguelike.rng.nextInt(200) - 198;
                             if(chanceToGrow > -1) {
                                 nextTile.setType(t.getType());
@@ -1048,6 +1532,7 @@ public abstract class LevelFactory {
                     }
                 }
             }
+            processAndDraw(level, roguelike);
         }
     }
 
@@ -1179,6 +1664,7 @@ public abstract class LevelFactory {
         Tile tRight = null;
         Tile tUp = null;
         Tile tDown = null;
+
         if (x > 0)
             tLeft = result[y][x - 1];
         if (x < width - 1)
@@ -1212,41 +1698,79 @@ public abstract class LevelFactory {
 
 
 
-    private static void addStairs(Tile[][] result) {
-        Random rng = Roguelike.rng;
-        int y, x;
-        Tile t;
-        boolean validTile = false;
-        do {
-            y = rng.nextInt(result.length);
-            x = rng.nextInt(result[0].length);
-            t = result[y][x];
-            switch(t.getType()) {
-                case FLOOR:
-                case CAVE_GRASS:
-                case WORLD_GRASS:
-                    validTile = true;
-                    break;
-                default:
-                    break;
+    private static void addStairs(Level level) {
+        ArrayList<Tile> tiles = new ArrayList<>();
+        for(int y = 0; y < level.getTileArray().length; y++) {
+            for(int x = 0; x < level.getTileArray()[0].length; x++) {
+                Tile t = level.getTileArray()[y][x];
+                switch (t.getType()) {
+                    case FLOOR:
+                    case CAVE_GRASS:
+                    case LOW_GRASS:
+                    case WATER:
+                        tiles.add(t);
+                        break;
+                    default:
+                        break;
+                }
             }
-        } while (!validTile);
+        }
+
+        Tile t = tiles.get(Roguelike.rng.nextInt(tiles.size()));
         t.setType(Tile.Type.STAIRS_UP);
-        validTile = false;
-        do {
-            y = rng.nextInt(result.length);
-            x = rng.nextInt(result[0].length);
-            t = result[y][x];
-            switch(t.getType()) {
-                case FLOOR:
-                case CAVE_GRASS:
-                case WORLD_GRASS:
-                    validTile = true;
-                    break;
-                default:
-                    break;
+
+        tiles.remove(t);
+        ArrayList<ArrayList<Tile>> paths = new ArrayList<>();
+        System.out.println("tiles for paths: " + tiles.size());
+        int checked = 0;
+
+        // Reduce how many paths we calculate to lower time to make level
+        int largeMapHack = 1;
+        if(tiles.size() > 1000) {
+            largeMapHack = 8;
+        }
+        for(int i = 0; i < tiles.size(); i+=largeMapHack) {
+            paths.add(level.getAstar().getShortestPath(t, tiles.get(i), true));
+            checked++;
+        }
+        System.out.println("checked " + checked + " tiles");
+
+        int longestD = -1;
+        int dist = 0;
+        ArrayList<Tile> path = null;
+        for(ArrayList<Tile> p : paths) {
+            if(p == null) {
+                continue;
             }
-        } while (!validTile);
-        t.setType(Tile.Type.STAIRS_DOWN);
+            if(path == null) {
+                path = p;
+            }
+            else if(p.size() > path.size()) {
+                path = p;
+            }
+        }
+        if(path == null) {
+            System.out.println("Error addStairs path to down stairs is null");
+        } else {
+            Collections.reverse(path);
+            t = path.get(0);
+            t.setType(Tile.Type.STAIRS_DOWN);
+        }
+    }
+
+    public static void refineMap(Level level) {
+        switch(level.getLevelStyle()) {
+            case WORLD:
+                refineWorldMap(level);
+                break;
+            case DEFAULT:
+                int roll = Roguelike.rng.nextInt(20);
+                if(roll < 10) {
+                    refineLooseLevel(level);
+                } else {
+                    refineTightLevel(level);
+                }
+                break;
+        }
     }
 }

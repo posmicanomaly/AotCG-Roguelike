@@ -67,23 +67,7 @@ public class Render implements Runnable {
         else {
             waterTiles = roguelike.getMap().getCurrentLevel().getWaterTiles();
         }
-        for(Tile tile : waterTiles) {
-            if (tile.getType() == Tile.Type.WATER) {
-                if (roguelike.rng.nextInt(100) - 95 > 0) {
-                    tile.setBackgroundColor(ColorTools.varyColor(Colors.WATER_BG, 0.7, 1.0, ColorTools.BaseColor.RGB));
-
-
-                }
-                if (roguelike.rng.nextInt(100) - 95 > 0) {
-                    tile.setColor(ColorTools.varyColor(Colors.WATER, 0.7, 1.0, ColorTools.BaseColor.RGB));
-                    if (tile.getSymbol() == Symbol.ALMOST_EQUAL_TO) {
-                        tile.setSymbol('=');
-                    } else {
-                        tile.setSymbol(Symbol.ALMOST_EQUAL_TO);
-                    }
-                }
-            }
-        }
+        roguelike.getMap().getCurrentLevel().shimmerWaterTiles(waterTiles);
     }
     protected void shimmerWater() {
        shimmerWater(true);
@@ -130,14 +114,22 @@ public class Render implements Runnable {
 
     protected void drawGame(Console rootConsole, Reason reason) {
         //rootConsole.clear();
-        if (roguelike.currentState == Roguelike.State.PLAYING) {
+        if (roguelike.currentState == Roguelike.State.TITLE) {
+            roguelike.title.update();
+            roguelike.title.getTitleConsole().copyBufferTo(rootConsole, 0, 0);
+            roguelike.window.refresh();
+        }
+        else if (roguelike.currentState == Roguelike.State.PLAYING || roguelike.SHOW_MAP_CREATION) {
 
             // Refresh the map buffer
+            if(roguelike.getMap() == null) {
+                return;
+            }
             roguelike.copyMapToBuffer();
 
             // Lighting test
             if(roguelike.getMap().getCurrentDepth() > 0) {
-                applyLightingToMap();
+               // applyLightingToMap();
             }
 
             // water shimmer
@@ -156,13 +148,9 @@ public class Render implements Runnable {
             drawMouseToolTips(rootConsole);
 
             roguelike.window.refresh();
-        } else if (roguelike.currentState == Roguelike.State.TITLE) {
-            roguelike.title.update();
-            roguelike.title.getTitleConsole().copyBufferTo(rootConsole, 0, 0);
-            roguelike.window.refresh();
         }
     }
-    protected void drawGame(Console rootConsole) {
+    public void drawGame(Console rootConsole) {
        drawGame(rootConsole, null);
     }
 

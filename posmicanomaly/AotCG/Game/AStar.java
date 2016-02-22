@@ -135,8 +135,11 @@ public class AStar {
     }
 
     private ArrayList<Node> getNeighboringNodes(Node source) {
+        return getNeighboringNodes(source, true);
+    }
+    private ArrayList<Node> getNeighboringNodes(Node source, boolean allowDiagonal) {
         ArrayList<Node> result = new ArrayList<>();
-        ArrayList<Tile> tiles = level.getNearbyTiles(source.getY(), source.getX());
+        ArrayList<Tile> tiles = level.getNearbyTiles(source.getY(), source.getX(), allowDiagonal);
         for(Tile t : tiles) {
             result.add(new Node(t));
         }
@@ -144,10 +147,21 @@ public class AStar {
         return result;
     }
 
+
+
     public ArrayList<Tile> getShortestPath(Tile source, Tile target) {
-        return getShortestPath(source, target, false);
+        return getShortestPath(source, target, false, false, false);
     }
     public ArrayList<Tile> getShortestPath(Tile source, Tile target, boolean canCheckUnexplored) {
+        return getShortestPath(source, target, canCheckUnexplored, false, false);
+    }
+    public ArrayList<Tile> getShortestPathMapGen(Tile source, Tile target) {
+        return getShortestPath(source, target, true, true, true);
+    }
+    public ArrayList<Tile> getShortestPath(Tile source, Tile target,
+                                           boolean canCheckUnexplored,
+                                           boolean canWalkThroughWalls,
+                                           boolean encourageStraight) {
         //roguelike.getRender().addHighlightedDebugTile(source, Color.blue);
         //roguelike.getRender().addHighlightedDebugTile(target, Color.red);
         //roguelike.getRender().drawGame(roguelike.getRootConsole());
@@ -191,13 +205,20 @@ public class AStar {
                 return shortestPath;
             }
 
-            ArrayList<Node> neighboringNodes = getNeighboringNodes(current);
+            ArrayList<Node> neighboringNodes;
+            if(encourageStraight) {
+                neighboringNodes = getNeighboringNodes(current, false);
+            } else {
+                neighboringNodes = getNeighboringNodes(current);
+            }
             for (Node n : neighboringNodes) {
 
                 // ** MOD **
                 // skip blocked
-                if(n.isBlocked()) {
-                    continue;
+                if(!canWalkThroughWalls) {
+                    if (n.isBlocked()) {
+                        continue;
+                    }
                 }
                 // ** MOD **
                 // skip over exits

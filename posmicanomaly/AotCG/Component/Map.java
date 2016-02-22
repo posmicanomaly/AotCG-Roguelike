@@ -24,9 +24,8 @@ public class Map {
         this.width = width;
         this.depth = depth;
         worldMap = new Level(height, width, currentDepth, LevelStyle.WORLD, 0, 0, roguelike);
-
         level3dArray = new Level[height][width][depth];
-        currentLevel = worldMap;
+        currentLevel = worldMap;;
     }
 
     public boolean goDeeper(int rootY, int rootX) {
@@ -41,13 +40,20 @@ public class Map {
         if(nextLevel == null) {
             System.out.println("nextLevel == null, making new level");
             nextLevel = new Level(this.height, this.width, currentDepth + 1, LevelStyle.DEFAULT, rootY, rootX, roguelike);
-            level3dArray[rootY][rootX][currentDepth + 1] = nextLevel;
+            currentLevel.setTurnExited(Roguelike.turns);
+            currentLevel = nextLevel;
+            currentDepth++;
+            nextLevel.finalizeLevel();
+            level3dArray[rootY][rootX][currentDepth] = nextLevel;
+            return true;
         }
+        else {
 
-        currentLevel.setTurnExited(Roguelike.turns);
-        currentLevel = nextLevel;
-        currentDepth++;
-        return true;
+            currentLevel.setTurnExited(Roguelike.turns);
+            currentLevel = nextLevel;
+            currentDepth++;
+            return true;
+        }
     }
 
     public boolean goHigher(int rootY, int rootX) {
@@ -61,6 +67,10 @@ public class Map {
         if(currentDepth - 1 == 0) {
             System.out.println("Entering world map");
             prevLevel = worldMap;
+            currentLevel.setTurnExited(Roguelike.turns);
+            currentLevel = prevLevel;
+            currentDepth--;
+            return true;
         }
         else {
             prevLevel = level3dArray[rootY][rootX][currentDepth - 1];
@@ -68,13 +78,19 @@ public class Map {
             if(prevLevel == null) {
                 System.out.println("prevLevel == null, making new level");
                 prevLevel = new Level(this.height, this.width, currentDepth - 1, LevelStyle.DEFAULT, rootY, rootX, roguelike);
+                currentLevel.setTurnExited(Roguelike.turns);
+                currentLevel = prevLevel;
+                currentDepth--;
+                prevLevel.finalizeLevel();
+                level3dArray[rootY][rootX][currentDepth] = prevLevel;
+                return true;
+            } else {
+                currentLevel.setTurnExited(Roguelike.turns);
+                currentLevel = prevLevel;
+                currentDepth--;
+                return true;
             }
         }
-
-        currentLevel.setTurnExited(Roguelike.turns);
-        currentLevel = prevLevel;
-        currentDepth--;
-        return true;
     }
 //    public boolean goDeeper() {
 //        // Need to generate a new level
