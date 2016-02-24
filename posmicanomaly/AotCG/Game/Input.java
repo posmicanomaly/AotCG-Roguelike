@@ -135,14 +135,10 @@ public class Input {
                 }
                 break;
             case KeyEvent.VK_EQUALS:
-                roguelike.minFrameSpeed++;
-                messageConsole.addMessage("minFrameSpeed: " + roguelike.minFrameSpeed);
+                roguelike.getWindow().increaseDisplayScale();
                 break;
             case KeyEvent.VK_MINUS:
-                if (roguelike.minFrameSpeed > 0) {
-                    roguelike.minFrameSpeed--;
-                    messageConsole.addMessage("minFrameSpeed: " + roguelike.minFrameSpeed);
-                }
+                roguelike.getWindow().decreaseDisplayScale();
                 break;
         }
     }
