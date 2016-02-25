@@ -202,7 +202,7 @@ public class Roguelike {
 
         // Set lastKeyEvent so we can reference a change
         this.lastKeyEvent = this.window.getLastKeyEvent();
-        this.lastMouseEvent = this.window.getMainPanel().getLastMouseEvent();
+        this.lastMouseEvent = this.window.getMouse().getLastMouseEvent();
 
         redrawGame = true;
 
@@ -243,7 +243,7 @@ public class Roguelike {
         }
         // Mouse testing
         boolean mouseCoordinatesChanged = updateMouseLocation();
-        if(!this.window.getMainPanel().getLastMouseEvent().equals(this.lastMouseEvent)){
+        if(!this.window.getMouse().getLastMouseEvent().equals(this.lastMouseEvent)){
             // mouse event? click?
             int y = lastMy;
             int x = lastMx;
@@ -282,7 +282,7 @@ public class Roguelike {
                 }
                 System.out.println(message + y + "x" + x);
             }
-            this.lastMouseEvent = this.window.getMainPanel().getLastMouseEvent();
+            this.lastMouseEvent = this.window.getMouse().getLastMouseEvent();
             render.drawGame(getRootConsole());
         }
         else if(mouseCoordinatesChanged) {
@@ -856,11 +856,13 @@ public class Roguelike {
 
 
     private boolean updateMouseLocation() {
-        Point mouseCoordinates = getWindow().getMainPanel().getMousePosition();
-        if(mouseCoordinates != null) {
-            mx = (int) ((mouseCoordinates.getX()) / getFontSize());
-            my = (int) ((mouseCoordinates.getY()) / getFontSize());
+        if(window.getMouse() == null) {
+            System.out.println("updateMouseLocation() :: window.getMouse returned null");
+            return false;
         }
+        mx = window.getMouse().getCellX();
+        my = window.getMouse().getCellY();
+
 
         boolean mouseCoordinatesChanged = false;
         if(mx != lastMx) {
@@ -1337,14 +1339,6 @@ public class Roguelike {
 
     public int getFontSize() {
         return fontSize;
-    }
-
-    public int getMy() {
-        return my;
-    }
-
-    public int getMx() {
-        return mx;
     }
 
     public int getLastMy() {
