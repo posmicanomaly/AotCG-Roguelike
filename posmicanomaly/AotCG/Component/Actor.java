@@ -1,5 +1,7 @@
 package posmicanomaly.AotCG.Component;
 
+import posmicanomaly.AotCG.Game.Input;
+
 import java.awt.*;
 import java.util.ArrayList;
 
@@ -79,24 +81,25 @@ public class Actor extends Entity {
         return false;
     }
 
-    public boolean useItem(Item item) {
-        for(Item i : inventory) {
-            if(i.equals(item)) {
-                if(item.use(this)) {
-                    inventory.remove(item);
-                    return true;
-                }
-            }
-        }
-        return false;
+    public boolean useItem(Item item, Input.ItemUse itemUse) {
+        return useItem(item, this, itemUse);
     }
 
-    public boolean useItem(Item item, Actor target) {
+    public boolean useItem(Item item, Actor target, Input.ItemUse itemUse) {
         for(Item i : inventory) {
             if(i.equals(item)) {
-                if(item.use(target)) {
-                    inventory.remove(item);
-                    return true;
+                switch(itemUse) {
+                    case CONSUME:
+                        if(item.consume(target)) {
+
+                            return true;
+                        }
+                        break;
+                    case DROP:
+                        if(item.drop(target)) {
+                            return true;
+                        }
+                        break;
                 }
             }
         }

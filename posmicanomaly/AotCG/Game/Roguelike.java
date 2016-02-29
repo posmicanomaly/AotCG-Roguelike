@@ -1,6 +1,7 @@
 package posmicanomaly.AotCG.Game;
 
 import posmicanomaly.AotCG.Component.*;
+import posmicanomaly.AotCG.Gui.Component.InventoryConsole;
 import posmicanomaly.AotCG.Screen.Title;
 import posmicanomaly.libjsrte.Console.Console;
 import posmicanomaly.libjsrte.Window;
@@ -552,7 +553,7 @@ public class Roguelike {
                 //System.out.println("BOT: Wants to use health potion");
                 if(playerAICanPerformTask(PlayerAITask.USE_HEALTH_POTION)) {
                     Item item = player.getItem("Health Potion");
-                    useItem(item, player, player);
+                    player.useItem(item, Input.ItemUse.CONSUME);
                     return PlayerAIDecision.USE_HEALTH_POTION;
                 }
                 break;
@@ -1057,7 +1058,15 @@ public class Roguelike {
                                     break;
 
                                 case INVENTORY:
-                                    input.processInventoryCommand(key, this);
+                                    InventoryConsole.Display InventoryMode = getGui().getInventoryConsole().getDisplayMode();
+                                    switch(InventoryMode) {
+                                        case DROP:
+                                            input.processDropInventoryCommand(key, this);
+                                            break;
+                                        case CONSUME:
+                                            input.processConsumeInventoryCommand(key, this);
+                                            break;
+                                    }
                                     redrawGame = true;
                                     break;
 
@@ -1219,9 +1228,9 @@ public class Roguelike {
         mapConsole.setChar(tileY, tileX, glyph);
     }
 
-    public boolean useItem(Item item, Actor source, Actor target) {
-        return source.useItem(item, target);
-    }
+//    public boolean useItem(Item item, Actor source, Actor target, Input.ItemUse itemUse) {
+//        return source.useItem(item, target, itemUse);
+//    }
 
     public static void main(String[] args) {
         new Roguelike();

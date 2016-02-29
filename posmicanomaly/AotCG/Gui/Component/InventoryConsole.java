@@ -11,10 +11,18 @@ import java.util.ArrayList;
  */
 public class InventoryConsole extends EnhancedConsole {
     private Actor player;
+    private Display displayMode;
+
+    public Display getDisplayMode() {
+        return displayMode;
+    }
+
+    public enum Display {ALL, CONSUME, DROP}
 
     public InventoryConsole(Actor player, int yBufferWidth, int xBufferWidth) {
         super(yBufferWidth, xBufferWidth);
         this.player = player;
+        displayMode = Display.ALL;
     }
 
     @Override
@@ -45,5 +53,8 @@ public class InventoryConsole extends EnhancedConsole {
 
     public void setPlayer(Actor player) {
         this.player = player;
+    }
+    public void setDisplayMode(Display displayMode) {
+        this.displayMode = displayMode;
     }
 }

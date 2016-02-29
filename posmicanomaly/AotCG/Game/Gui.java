@@ -146,4 +146,7 @@ public class Gui {
     }
 
 
+    public InventoryConsole getInventoryConsole() {
+        return inventoryConsole;
+    }
 }
