@@ -85,8 +85,10 @@ public class Input {
         int selection = key.getKeyChar() - 'a';
         if(selection < 0) {
             System.out.println("Inventory selection not a letter: " + selection);
+            return false;
         } else if(selection > roguelike.getPlayer().getInventory().size() - 1) {
             System.out.println("Inventory selection input larger than inventory size: " + selection);
+            return false;
         }
         return true;
     }
@@ -125,6 +127,7 @@ public class Input {
                     roguelike.showInventory = false;
                 } else {
                     roguelike.showInventory = true;
+                    roguelike.getGui().initInventoryConsole();
                     roguelike.getGui().getInventoryConsole().setDisplayMode(InventoryConsole.Display.CONSUME);
                 }
 
@@ -135,6 +138,7 @@ public class Input {
                     roguelike.showInventory = false;
                 } else {
                     roguelike.showInventory = true;
+                    roguelike.getGui().initInventoryConsole();
                     roguelike.getGui().getInventoryConsole().setDisplayMode(InventoryConsole.Display.DROP);
                 }
 

@@ -515,6 +515,9 @@ public class Roguelike {
                         viableLoot = true;
                     }
                 }
+                if(player.getInventory().size() >= 26) {
+                    viableLoot = false;
+                }
                 return viableLoot;
             case KILL:
                 boolean monsterInView = false;

@@ -27,6 +27,19 @@ public class InventoryConsole extends EnhancedConsole {
 
     @Override
     public void updateConsole() {
+        String newTitle = "Inventory:";
+        switch(displayMode) {
+            case ALL:
+                newTitle += "All";
+                break;
+            case CONSUME:
+                newTitle += "Consume";
+                break;
+            case DROP:
+                newTitle += "Drop";
+                break;
+        }
+        setTitle(newTitle);
         clear();
         ArrayList<String> inventory = new ArrayList<String>();
         char currentItem = 'a';
