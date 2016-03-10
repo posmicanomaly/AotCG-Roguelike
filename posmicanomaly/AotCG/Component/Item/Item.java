@@ -1,11 +1,15 @@
-package posmicanomaly.AotCG.Component;
+package posmicanomaly.AotCG.Component.Item;
+
+import posmicanomaly.AotCG.Component.Actor.Actor;
+import posmicanomaly.AotCG.Component.Entity;
+import posmicanomaly.AotCG.Component.Map.Tile;
 
 import java.awt.*;
 
 /**
  * Created by Jesse Pospisil on 9/14/2015.
  */
-public class Item extends Entity implements ItemInteraction{
+public abstract class Item extends Entity implements ItemInteraction {
     public Item(char symbol, Color color, Tile tile, String name) {
         super(symbol, color, tile);
         this.setName(name);
@@ -13,12 +17,7 @@ public class Item extends Entity implements ItemInteraction{
 
     @Override
     public boolean consume(Actor target) {
-        if (this.name.equals("Health Potion")) {
-            target.setMaxHp(target.getMaxHp() + 10);
-            target.setCurrentHp(target.getMaxHp());
-            target.removeInventoryItem(this);
-            return true;
-        }
+        System.out.println("can't consume");
         return false;
     }
 

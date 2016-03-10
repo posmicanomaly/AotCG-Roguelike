@@ -1,5 +1,9 @@
-package posmicanomaly.AotCG.Component;
+package posmicanomaly.AotCG.Factory;
 
+import posmicanomaly.AotCG.Component.*;
+import posmicanomaly.AotCG.Component.Actor.Actor;
+import posmicanomaly.AotCG.Component.Map.Level;
+import posmicanomaly.AotCG.Component.Map.Tile;
 import posmicanomaly.AotCG.Game.Roguelike;
 import posmicanomaly.libjsrte.Util.ColorTools;
 

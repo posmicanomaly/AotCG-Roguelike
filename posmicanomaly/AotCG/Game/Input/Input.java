@@ -1,9 +1,11 @@
-package posmicanomaly.AotCG.Game;
+package posmicanomaly.AotCG.Game.Input;
 
-import posmicanomaly.AotCG.Component.Item;
-import posmicanomaly.AotCG.Component.LevelFactory;
-import posmicanomaly.AotCG.Gui.Component.InventoryConsole;
-import posmicanomaly.AotCG.Gui.Component.MessageConsole;
+import posmicanomaly.AotCG.Component.Item.Item;
+import posmicanomaly.AotCG.Factory.LevelFactory;
+import posmicanomaly.AotCG.Game.Gui.Gui;
+import posmicanomaly.AotCG.Game.Roguelike;
+import posmicanomaly.AotCG.Game.Gui.Component.InventoryConsole;
+import posmicanomaly.AotCG.Game.Gui.Component.MessageConsole;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -156,15 +158,15 @@ public class Input {
             DEBUG Input
              */
             case KeyEvent.VK_F:
-                LevelFactory.DEBUG_FLOOD_FILL(roguelike.map.getCurrentLevel().getTileArray());
-                LevelFactory.DEBUG_PROCESS_MAP(roguelike.map.getCurrentLevel().getTileArray());
+                LevelFactory.DEBUG_FLOOD_FILL(roguelike.getMap().getCurrentLevel().getTileArray());
+                LevelFactory.DEBUG_PROCESS_MAP(roguelike.getMap().getCurrentLevel().getTileArray());
                 messageConsole.addMessage("Level flood filled", Color.yellow);
                 break;
             case KeyEvent.VK_R:
                 roguelike.initializeGameEnvironment();
                 break;
             case KeyEvent.VK_V:
-                roguelike.map.getCurrentLevel().toggleAllTilesVisible(true);
+                roguelike.getMap().getCurrentLevel().toggleAllTilesVisible(true);
                 messageConsole.addMessage("All tiles visible", Color.yellow);
                 break;
             case KeyEvent.VK_B:
@@ -183,7 +185,7 @@ public class Input {
         }
     }
 
-    protected Direction getPlayerMovementDirection(KeyEvent key) {
+    public Direction getPlayerMovementDirection(KeyEvent key) {
         Direction direction = null;
         switch (key.getKeyCode()) {
             case KeyEvent.VK_W:

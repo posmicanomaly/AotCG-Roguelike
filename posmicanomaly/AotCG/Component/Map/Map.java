@@ -1,9 +1,6 @@
-package posmicanomaly.AotCG.Component;
+package posmicanomaly.AotCG.Component.Map;
 
 import posmicanomaly.AotCG.Game.Roguelike;
-
-import java.awt.*;
-import java.util.ArrayList;
 
 /**
  * Created by Jesse Pospisil on 8/17/2015.

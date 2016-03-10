@@ -1,4 +1,6 @@
-package posmicanomaly.AotCG.Component;
+package posmicanomaly.AotCG.Component.Item;
+
+import posmicanomaly.AotCG.Component.Actor.Actor;
 
 /**
  * Created by jessepospisil on 2/29/16.

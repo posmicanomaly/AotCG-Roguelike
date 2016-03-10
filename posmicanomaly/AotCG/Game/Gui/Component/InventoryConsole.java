@@ -1,7 +1,7 @@
-package posmicanomaly.AotCG.Gui.Component;
+package posmicanomaly.AotCG.Game.Gui.Component;
 
-import posmicanomaly.AotCG.Component.Actor;
-import posmicanomaly.AotCG.Component.Item;
+import posmicanomaly.AotCG.Component.Actor.Actor;
+import posmicanomaly.AotCG.Component.Item.Item;
 
 import java.awt.*;
 import java.util.ArrayList;

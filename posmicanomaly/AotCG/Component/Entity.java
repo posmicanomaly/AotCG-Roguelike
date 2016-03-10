@@ -1,5 +1,7 @@
 package posmicanomaly.AotCG.Component;
 
+import posmicanomaly.AotCG.Component.Map.Tile;
+
 import java.awt.*;
 
 /**

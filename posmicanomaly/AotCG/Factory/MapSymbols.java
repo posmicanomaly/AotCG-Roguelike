@@ -1,14 +1,7 @@
-package posmicanomaly.AotCG.Component;
+package posmicanomaly.AotCG.Factory;
 
-import posmicanomaly.AotCG.Game.Roguelike;
-import posmicanomaly.libjsrte.Console.Symbol;
-import posmicanomaly.libjsrte.Util.ColorTools;
-
-import java.awt.*;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.util.Scanner;
 
 /**
@@ -17,7 +10,7 @@ import java.util.Scanner;
 public class MapSymbols {
     // Defaults
     // Interior
-    char FLOOR = 249;
+    public char FLOOR = 249;
     char WALL = '#';
     char WALL_SECRET = '*';
     char PATH = 249;

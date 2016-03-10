@@ -1,7 +1,18 @@
 package posmicanomaly.AotCG.Game;
 
 import posmicanomaly.AotCG.Component.*;
-import posmicanomaly.AotCG.Gui.Component.InventoryConsole;
+import posmicanomaly.AotCG.Component.Actor.Actor;
+import posmicanomaly.AotCG.Component.Item.Item;
+import posmicanomaly.AotCG.Component.Map.AStar;
+import posmicanomaly.AotCG.Component.Map.Level;
+import posmicanomaly.AotCG.Component.Map.Map;
+import posmicanomaly.AotCG.Component.Map.Tile;
+import posmicanomaly.AotCG.Factory.ActorFactory;
+import posmicanomaly.AotCG.Factory.LevelFactory;
+import posmicanomaly.AotCG.Factory.MapSymbols;
+import posmicanomaly.AotCG.Game.Gui.Gui;
+import posmicanomaly.AotCG.Game.Input.Input;
+import posmicanomaly.AotCG.Game.Gui.Component.InventoryConsole;
 import posmicanomaly.AotCG.Screen.Title;
 import posmicanomaly.libjsrte.Console.Console;
 import posmicanomaly.libjsrte.Window;
@@ -48,7 +59,7 @@ public class Roguelike {
     public static MapSymbols mapSymbols = new MapSymbols("config/symbols.txt");
 
 
-    protected Console menuWindow;
+    public Console menuWindow;
     protected Gui gui;
     protected Title title;
     protected State currentState;
@@ -58,9 +69,9 @@ public class Roguelike {
     int windowHeight = 70;
     //int windowWidth = 135;
     int windowWidth = 106;
-    int messageHeight = 18;
-    int messageWidth;
-    int mapHeight;
+    public int messageHeight = 18;
+    public int messageWidth;
+    public int mapHeight;
     int mapWidth;
 
     // mouse testing
@@ -79,11 +90,11 @@ public class Roguelike {
     long fpsTimerStart;
     int gameInformationConsoleHeight = windowHeight;
     int gameInformationConsoleWidth = 14;
-    boolean showMenu;
-    boolean showInventory;
+    public boolean showMenu;
+    public boolean showInventory;
     boolean giantSlain;
-    boolean showVictoryConsole;
-    boolean showDefeatConsole;
+    public boolean showVictoryConsole;
+    public boolean showDefeatConsole;
     Map map;
     boolean redrawGame;
     private Console mapConsole;
@@ -142,7 +153,7 @@ public class Roguelike {
         }
     }
 
-    protected void initializeGameEnvironment() {
+    public void initializeGameEnvironment() {
         currentState = State.TITLE;
         showVictoryConsole = false;
         showDefeatConsole = false;

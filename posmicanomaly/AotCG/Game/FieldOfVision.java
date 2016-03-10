@@ -1,7 +1,7 @@
 package posmicanomaly.AotCG.Game;
 
-import posmicanomaly.AotCG.Component.Level;
-import posmicanomaly.AotCG.Component.Tile;
+import posmicanomaly.AotCG.Component.Map.Level;
+import posmicanomaly.AotCG.Component.Map.Tile;
 
 import java.util.ArrayList;
 
