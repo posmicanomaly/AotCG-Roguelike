@@ -1,7 +1,7 @@
-package posmicanomaly.AotCG.Gui.Component;
+package posmicanomaly.AotCG.Game.Gui.Component;
 
-import posmicanomaly.AotCG.Component.Actor;
-import posmicanomaly.AotCG.Component.Item;
+import posmicanomaly.AotCG.Component.Actor.Actor;
+import posmicanomaly.AotCG.Component.Item.Item;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -11,14 +11,35 @@ import java.util.ArrayList;
  */
 public class InventoryConsole extends EnhancedConsole {
     private Actor player;
+    private Display displayMode;
+
+    public Display getDisplayMode() {
+        return displayMode;
+    }
+
+    public enum Display {ALL, CONSUME, DROP}
 
     public InventoryConsole(Actor player, int yBufferWidth, int xBufferWidth) {
         super(yBufferWidth, xBufferWidth);
         this.player = player;
+        displayMode = Display.ALL;
     }
 
     @Override
     public void updateConsole() {
+        String newTitle = "Inventory:";
+        switch(displayMode) {
+            case ALL:
+                newTitle += "All";
+                break;
+            case CONSUME:
+                newTitle += "Consume";
+                break;
+            case DROP:
+                newTitle += "Drop";
+                break;
+        }
+        setTitle(newTitle);
         clear();
         ArrayList<String> inventory = new ArrayList<String>();
         char currentItem = 'a';
@@ -45,5 +66,8 @@ public class InventoryConsole extends EnhancedConsole {
 
     public void setPlayer(Actor player) {
         this.player = player;
+    }
+    public void setDisplayMode(Display displayMode) {
+        this.displayMode = displayMode;
     }
 }

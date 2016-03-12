@@ -1,4 +1,7 @@
-package posmicanomaly.AotCG.Component;
+package posmicanomaly.AotCG.Component.Map;
+
+import posmicanomaly.AotCG.Component.Actor.Actor;
+import posmicanomaly.AotCG.Component.Item.Item;
 
 import java.awt.*;
 

@@ -1,13 +1,12 @@
-package posmicanomaly.AotCG.Gui.Component;
+package posmicanomaly.AotCG.Game.Gui.Component;
 
-import posmicanomaly.AotCG.Component.Actor;
+import posmicanomaly.AotCG.Component.Actor.Actor;
 import posmicanomaly.AotCG.Component.Colors;
-import posmicanomaly.AotCG.Component.Map;
-import posmicanomaly.AotCG.Component.Tile;
+import posmicanomaly.AotCG.Component.Map.Map;
+import posmicanomaly.AotCG.Component.Map.Tile;
 import posmicanomaly.AotCG.Game.Roguelike;
 
 import java.awt.*;
-import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
 
 /**

@@ -1,7 +1,15 @@
 package posmicanomaly.AotCG.Game;
 
 import posmicanomaly.AotCG.Component.*;
-import posmicanomaly.AotCG.Gui.Component.MessageConsole;
+import posmicanomaly.AotCG.Component.Actor.Actor;
+import posmicanomaly.AotCG.Component.Item.Corpse;
+import posmicanomaly.AotCG.Component.Item.Item;
+import posmicanomaly.AotCG.Component.Item.Potion;
+import posmicanomaly.AotCG.Component.Map.Map;
+import posmicanomaly.AotCG.Component.Map.Tile;
+import posmicanomaly.AotCG.Factory.LevelFactory;
+import posmicanomaly.AotCG.Game.Input.Input;
+import posmicanomaly.AotCG.Game.Gui.Component.MessageConsole;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -154,12 +162,12 @@ public class Process {
             if(!loser.equals(player)) {
                 loser.setTile(null);
             }
-            Item corpse = new Item ('%', Color.gray, loserTile, loser.getCorpseName());
+            Item corpse = new Corpse('%', Color.gray, loserTile, loser.getCorpseName());
             loserTile.setItem(corpse);
 
             // random item?
             if(rng.nextInt(100) - 10 > 0) {
-                Item randomitem = new Item(')', Color.yellow, loserTile, "Health Potion");
+                Item randomitem = new Potion(')', Color.yellow, loserTile, "Health Potion", 10);
                 loserTile.setItem(randomitem);
             }
 

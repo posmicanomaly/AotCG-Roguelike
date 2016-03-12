@@ -1,9 +1,9 @@
-package posmicanomaly.AotCG.Game;
+package posmicanomaly.AotCG.Component.Map;
 
-import posmicanomaly.AotCG.Component.Level;
-import posmicanomaly.AotCG.Component.Tile;
+import posmicanomaly.AotCG.Component.Map.Level;
+import posmicanomaly.AotCG.Component.Map.Tile;
+import posmicanomaly.AotCG.Game.Roguelike;
 
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
 

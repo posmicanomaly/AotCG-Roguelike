@@ -1,6 +1,8 @@
-package posmicanomaly.AotCG.Component;
+package posmicanomaly.AotCG.Component.Map;
 
-import posmicanomaly.AotCG.Game.AStar;
+import posmicanomaly.AotCG.Component.Actor.Actor;
+import posmicanomaly.AotCG.Component.Colors;
+import posmicanomaly.AotCG.Factory.LevelFactory;
 import posmicanomaly.AotCG.Game.Roguelike;
 import posmicanomaly.libjsrte.Console.Symbol;
 import posmicanomaly.libjsrte.Util.ColorTools;

@@ -1,12 +1,8 @@
 package posmicanomaly.AotCG.Game;
 
-import posmicanomaly.AotCG.Component.Actor;
-import posmicanomaly.AotCG.Component.Colors;
-import posmicanomaly.AotCG.Component.Level;
-import posmicanomaly.AotCG.Component.Tile;
+import posmicanomaly.AotCG.Component.Actor.Actor;
+import posmicanomaly.AotCG.Component.Map.Tile;
 import posmicanomaly.libjsrte.Console.Console;
-import posmicanomaly.libjsrte.Console.Symbol;
-import posmicanomaly.libjsrte.Util.ColorTools;
 
 import java.awt.*;
 import java.util.ArrayList;

@@ -1,10 +1,11 @@
-package posmicanomaly.AotCG.Game;
+package posmicanomaly.AotCG.Game.Gui;
 
-import posmicanomaly.AotCG.Component.Actor;
-import posmicanomaly.AotCG.Component.Map;
-import posmicanomaly.AotCG.Gui.Component.GameInformationConsole;
-import posmicanomaly.AotCG.Gui.Component.InventoryConsole;
-import posmicanomaly.AotCG.Gui.Component.MessageConsole;
+import posmicanomaly.AotCG.Component.Actor.Actor;
+import posmicanomaly.AotCG.Component.Map.Map;
+import posmicanomaly.AotCG.Game.Roguelike;
+import posmicanomaly.AotCG.Game.Gui.Component.GameInformationConsole;
+import posmicanomaly.AotCG.Game.Gui.Component.InventoryConsole;
+import posmicanomaly.AotCG.Game.Gui.Component.MessageConsole;
 import posmicanomaly.libjsrte.Console.Console;
 
 import java.awt.*;
@@ -25,7 +26,7 @@ public class Gui {
         this.roguelike = roguelike;
     }
 
-    protected void initGui() {
+    public void initGui() {
         Actor player = null;
         Map map = null;
 
@@ -36,10 +37,7 @@ public class Gui {
         gameInformationConsole.setBorderColor(Color.gray);
         gameInformationConsole.setBorderStyle(Console.BorderStyle.DOUBLE);
 
-        inventoryConsole = new InventoryConsole(player, 25, 25);
-        inventoryConsole.setBorder(true);
-        inventoryConsole.setBorderColor(Color.gray);
-        inventoryConsole.setBorderStyle(Console.BorderStyle.DOUBLE);
+        //initInventoryConsole();
 
         roguelike.menuWindow = new Console(25, 25);
         roguelike.menuWindow.setBorder(true);
@@ -52,9 +50,16 @@ public class Gui {
         defeatConsole = null;
     }
 
+    public void initInventoryConsole() {
+        inventoryConsole = new InventoryConsole(roguelike.getPlayer(), 2 + roguelike.getPlayer().getInventory().size(), 25);
+        inventoryConsole.setBorder(true);
+        inventoryConsole.setBorderColor(Color.gray);
+        inventoryConsole.setBorderStyle(Console.BorderStyle.DOUBLE);
+    }
+
     public void connectPlayer() {
         gameInformationConsole.setPlayer(roguelike.getPlayer());
-        inventoryConsole.setPlayer(roguelike.getPlayer());
+       // inventoryConsole.setPlayer(roguelike.getPlayer());
     }
     public void connectMap() {
         gameInformationConsole.setMap(roguelike.getMap());
@@ -75,30 +80,30 @@ public class Gui {
         gameInformationConsole.copyBufferTo(roguelike.getRootConsole(), 0, 0);
 
         if (roguelike.showMenu) {
-            roguelike.getMenuWindow().copyBufferTo(roguelike.getRootConsole(), roguelike.window.HEIGHT / 2 - 12, roguelike.window.WIDTH / 2 - 12);
+            roguelike.getMenuWindow().copyBufferTo(roguelike.getRootConsole(), roguelike.getWindow().HEIGHT / 2 - 12, roguelike.getWindow().WIDTH / 2 - 12);
         }
 
         if (roguelike.showInventory) {
+          //  initInventoryConsole();
             inventoryConsole.updateConsole();
-            inventoryConsole.copyBufferTo(roguelike.getRootConsole(), roguelike.windowHeight / 2 - inventoryConsole.getyBufferHeight() / 2,
-                    roguelike.windowWidth / 2 - inventoryConsole.getxBufferWidth() / 2);
+            inventoryConsole.copyBufferTo(roguelike.getRootConsole(), 1, gameInformationConsole.getxBufferWidth() + 1);
         }
 
         if(roguelike.showVictoryConsole) {
             victoryConsole.update();
-            victoryConsole.copyBufferTo(roguelike.getRootConsole(), roguelike.windowHeight / 2 - victoryConsole
-                    .getyBufferHeight() / 2, roguelike.windowWidth / 2 - victoryConsole.getxBufferWidth() / 2);
+            victoryConsole.copyBufferTo(roguelike.getRootConsole(), roguelike.getWindowHeight() / 2 - victoryConsole
+                    .getyBufferHeight() / 2, roguelike.getWindowWidth() / 2 - victoryConsole.getxBufferWidth() / 2);
         }
 
         if(roguelike.showDefeatConsole) {
             defeatConsole.update();
-            defeatConsole.copyBufferTo(roguelike.getRootConsole(), roguelike.windowHeight / 2 - defeatConsole
-                    .getyBufferHeight() / 2, roguelike.windowWidth / 2 - defeatConsole.getxBufferWidth() / 2);
+            defeatConsole.copyBufferTo(roguelike.getRootConsole(), roguelike.getWindowHeight() / 2 - defeatConsole
+                    .getyBufferHeight() / 2, roguelike.getWindowWidth() / 2 - defeatConsole.getxBufferWidth() / 2);
         }
     }
 
-    protected void initVictoryConsole() {
-        victoryConsole = new Console(roguelike.windowHeight / 2, roguelike.windowWidth / 2);
+    public void initVictoryConsole() {
+        victoryConsole = new Console(roguelike.getWindowHeight() / 2, roguelike.getWindowWidth() / 2);
         victoryConsole.setBorder(true);
         victoryConsole.setBorderStyle(Console.BorderStyle.DOUBLE);
         victoryConsole.setBorderColor(Color.BLUE);
@@ -123,8 +128,8 @@ public class Gui {
         }
     }
 
-    protected void initDefeatConsole() {
-        defeatConsole = new Console(roguelike.windowHeight / 2, roguelike.windowWidth / 2);
+    public void initDefeatConsole() {
+        defeatConsole = new Console(roguelike.getWindowHeight() / 2, roguelike.getWindowWidth() / 2);
         defeatConsole.setBorder(true);
         defeatConsole.setBorderStyle(Console.BorderStyle.DOUBLE);
         defeatConsole.setBorderColor(Color.RED);
@@ -146,4 +151,7 @@ public class Gui {
     }
 
 
+    public InventoryConsole getInventoryConsole() {
+        return inventoryConsole;
+    }
 }

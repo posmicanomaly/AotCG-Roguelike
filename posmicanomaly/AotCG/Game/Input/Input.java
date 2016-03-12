@@ -1,8 +1,11 @@
-package posmicanomaly.AotCG.Game;
+package posmicanomaly.AotCG.Game.Input;
 
-import posmicanomaly.AotCG.Component.Item;
-import posmicanomaly.AotCG.Component.LevelFactory;
-import posmicanomaly.AotCG.Gui.Component.MessageConsole;
+import posmicanomaly.AotCG.Component.Item.Item;
+import posmicanomaly.AotCG.Factory.LevelFactory;
+import posmicanomaly.AotCG.Game.Gui.Gui;
+import posmicanomaly.AotCG.Game.Roguelike;
+import posmicanomaly.AotCG.Game.Gui.Component.InventoryConsole;
+import posmicanomaly.AotCG.Game.Gui.Component.MessageConsole;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -24,8 +27,21 @@ public class Input {
     }
 
     public Command processKey(KeyEvent key) {
-        if(roguelike.showInventory && !key.isControlDown()) {
-                return Command.INVENTORY;
+        if(key.isControlDown()) {
+            switch(key.getKeyCode()) {
+                  /*
+                    Menu Toggle Input
+                     */
+                case KeyEvent.VK_M:
+                case KeyEvent.VK_D:
+                case KeyEvent.VK_Q:
+                    return Command.MENU;
+                default:
+                    return null;
+            }
+        }
+        else if(roguelike.showInventory && !key.isControlDown()) {
+            return Command.INVENTORY;
         }
         else {
             switch (key.getKeyCode()) {
@@ -60,30 +76,43 @@ public class Input {
                 case KeyEvent.VK_EQUALS:
                     return Command.DEBUG;
 
-                    /*
-                    Menu Toggle Input
-                     */
-                case KeyEvent.VK_M:
-                case KeyEvent.VK_I:
-                    return Command.MENU;
                 default:
                     return null;
             }
         }
     }
 
-    public void processInventoryCommand(KeyEvent key, Roguelike roguelike) {
-        if(key.getKeyChar() - 'a' > roguelike.getPlayer().getInventory().size() - 1) {
-            System.out.println("key input larger than inventory size");
-        } else {
+    private boolean isInventorySelectionValid(KeyEvent key, Roguelike roguelike) {
+        // Check if the input is a -> z, as in selecting an item
+        int selection = key.getKeyChar() - 'a';
+        if(selection < 0) {
+            System.out.println("Inventory selection not a letter: " + selection);
+            return false;
+        } else if(selection > roguelike.getPlayer().getInventory().size() - 1) {
+            System.out.println("Inventory selection input larger than inventory size: " + selection);
+            return false;
+        }
+        return true;
+    }
+
+    public enum ItemUse {CONSUME, DROP}
+
+    public void processConsumeInventoryCommand(KeyEvent key, Roguelike roguelike) {
+        if (isInventorySelectionValid(key, roguelike)) {
             Item item = roguelike.getPlayer().getInventory().get(key.getKeyChar() - 'a');
-            roguelike.useItem(item, roguelike.getPlayer(), roguelike.getPlayer());
+            roguelike.getPlayer().useItem(item, ItemUse.CONSUME);
+        }
+    }
+
+    public void processDropInventoryCommand(KeyEvent key, Roguelike roguelike) {
+        if(isInventorySelectionValid(key, roguelike)) {
+            Item item = roguelike.getPlayer().getInventory().get(key.getKeyChar() - 'a');
+            roguelike.getPlayer().useItem(item, ItemUse.DROP);
         }
     }
 
     public void processMenuCommand(KeyEvent key, Roguelike roguelike) {
         switch (key.getKeyCode()) {
-
             /*
             Menu Toggle Input
              */
@@ -94,14 +123,27 @@ public class Input {
                     roguelike.showMenu = true;
                 }
                 break;
-            case KeyEvent.VK_I:
-                if(key.isControlDown()) {
-                    if (roguelike.showInventory) {
-                        roguelike.showInventory = false;
-                    } else {
-                        roguelike.showInventory = true;
-                    }
+            case KeyEvent.VK_Q:
+
+                if(roguelike.showInventory) {
+                    roguelike.showInventory = false;
+                } else {
+                    roguelike.showInventory = true;
+                    roguelike.getGui().initInventoryConsole();
+                    roguelike.getGui().getInventoryConsole().setDisplayMode(InventoryConsole.Display.CONSUME);
                 }
+
+                break;
+            case KeyEvent.VK_D:
+
+                if (roguelike.showInventory) {
+                    roguelike.showInventory = false;
+                } else {
+                    roguelike.showInventory = true;
+                    roguelike.getGui().initInventoryConsole();
+                    roguelike.getGui().getInventoryConsole().setDisplayMode(InventoryConsole.Display.DROP);
+                }
+
                 break;
             default:
                 break;
@@ -116,15 +158,15 @@ public class Input {
             DEBUG Input
              */
             case KeyEvent.VK_F:
-                LevelFactory.DEBUG_FLOOD_FILL(roguelike.map.getCurrentLevel().getTileArray());
-                LevelFactory.DEBUG_PROCESS_MAP(roguelike.map.getCurrentLevel().getTileArray());
+                LevelFactory.DEBUG_FLOOD_FILL(roguelike.getMap().getCurrentLevel().getTileArray());
+                LevelFactory.DEBUG_PROCESS_MAP(roguelike.getMap().getCurrentLevel().getTileArray());
                 messageConsole.addMessage("Level flood filled", Color.yellow);
                 break;
             case KeyEvent.VK_R:
                 roguelike.initializeGameEnvironment();
                 break;
             case KeyEvent.VK_V:
-                roguelike.map.getCurrentLevel().toggleAllTilesVisible(true);
+                roguelike.getMap().getCurrentLevel().toggleAllTilesVisible(true);
                 messageConsole.addMessage("All tiles visible", Color.yellow);
                 break;
             case KeyEvent.VK_B:
@@ -143,7 +185,7 @@ public class Input {
         }
     }
 
-    protected Direction getPlayerMovementDirection(KeyEvent key) {
+    public Direction getPlayerMovementDirection(KeyEvent key) {
         Direction direction = null;
         switch (key.getKeyCode()) {
             case KeyEvent.VK_W:
