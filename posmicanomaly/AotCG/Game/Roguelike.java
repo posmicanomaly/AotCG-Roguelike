@@ -116,7 +116,7 @@ public class Roguelike {
     public Roguelike() {
         System.setProperty("sun.java2d.opengl", "true");
 
-        this.window = new Window(this.windowHeight, this.windowWidth, "AotCG", fontSize);
+        this.window = new Window(this.windowHeight, this.windowWidth, "Everquest Roguelike", fontSize);
         rootConsole = this.window.getMainPanel().getRootConsole();
         //this.window.getMainPanel().getRootConsole().setBorder(true);
 
