@@ -1,6 +1,7 @@
 package posmicanomaly.AotCG.Factory;
 
 import posmicanomaly.AotCG.Component.Actor.Actor;
+import posmicanomaly.AotCG.Component.GameColors;
 import posmicanomaly.AotCG.Component.Map.Tile;
 
 import java.awt.*;
@@ -27,7 +28,7 @@ public class ActorFactory {
                 speed = 1.1;
                 glyph = '@';
                 actorName = "you";
-                color = Color.PINK;
+                color = GameColors.PLAYER;
                 break;
             case RAT:
                 level = 1;
@@ -35,7 +36,7 @@ public class ActorFactory {
                 speed = 1.2;
                 glyph = 'r';
                 actorName = "rat";
-                color = Color.yellow;
+                color = GameColors.RAT;
                 break;
             case BAT:
                 level = 1;
@@ -43,7 +44,7 @@ public class ActorFactory {
                 speed = 1.4;
                 glyph = 'b';
                 actorName = "bat";
-                color = Color.green;
+                color = GameColors.BAT;
                 break;
             case GIANT:
                 level = 3;
@@ -51,7 +52,7 @@ public class ActorFactory {
                 speed = 1.0;
                 glyph = 'G';
                 actorName = "giant";
-                color = Color.pink;
+                color = GameColors.GIANT;
                 break;
             default:
                 return null;

@@ -27,7 +27,7 @@ public class Title {
         titleConsole.clear();
         titleConsole.update();
         int row = titleConsole.getyBufferHeight() / 4;
-        titleConsole.writeCenteredString("Everquest Roguelike", row);
+        titleConsole.writeCenteredString("AotCG, a Roguelike", row);
         row += 3;
         for(int i = 0; i < menuItems.size(); i++) {
             String item = menuItems.get(i);
