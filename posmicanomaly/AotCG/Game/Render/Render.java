@@ -1,8 +1,11 @@
-package posmicanomaly.AotCG.Game;
+package posmicanomaly.AotCG.Game.Render;
 
 import posmicanomaly.AotCG.Component.Actor.Actor;
 import posmicanomaly.AotCG.Component.GameColors;
 import posmicanomaly.AotCG.Component.Map.Tile;
+import posmicanomaly.AotCG.Factory.LevelFactory;
+import posmicanomaly.AotCG.Game.Render.Animation.Animation;
+import posmicanomaly.AotCG.Game.Roguelike;
 import posmicanomaly.libjsrte.Console.Console;
 
 import java.awt.*;
@@ -14,8 +17,21 @@ import java.util.ArrayList;
 public class Render implements Runnable {
     private Thread thread;
     private Roguelike roguelike;
+    private Animation animation;
     private boolean run;
     private ArrayList<DebugTile> highlightedDebugTiles;
+
+    public void doTestAnimation() {
+        animation.doFlashPlayer(5);
+        animation.doFlashVisibleTiles(5);
+        animation.doJumble(5);
+    }
+
+    public Roguelike getRoguelike() {
+        return roguelike;
+    }
+
+
     private class DebugTile {
         Tile t;
         Color c;
@@ -28,6 +44,7 @@ public class Render implements Runnable {
     public Render(Roguelike roguelike) {
         this.roguelike = roguelike;
         highlightedDebugTiles = new ArrayList<>();
+        this.animation = new Animation(this);
     }
 
     // Rendering reasons
@@ -109,14 +126,14 @@ public class Render implements Runnable {
     }
 
 
-    protected void drawGame(Console rootConsole, Reason reason) {
+    public void drawGame(Console rootConsole, Reason reason) {
         //rootConsole.clear();
-        if (roguelike.currentState == Roguelike.State.TITLE) {
-            roguelike.title.update();
-            roguelike.title.getTitleConsole().copyBufferTo(rootConsole, 0, 0);
-            roguelike.window.refresh();
+        if (roguelike.getCurrentState() == Roguelike.State.TITLE) {
+            roguelike.getTitle().update();
+            roguelike.getTitle().getTitleConsole().copyBufferTo(rootConsole, 0, 0);
+            roguelike.getWindow().refresh();
         }
-        else if (roguelike.currentState == Roguelike.State.PLAYING || roguelike.SHOW_MAP_CREATION) {
+        else if (roguelike.getCurrentState() == Roguelike.State.PLAYING || roguelike.SHOW_MAP_CREATION) {
 
             // Refresh the map buffer
             if(roguelike.getMap() == null) {
@@ -147,11 +164,11 @@ public class Render implements Runnable {
             roguelike.getMapConsole().copyBufferTo(rootConsole, 0, roguelike.getGameInformationConsoleWidth());
 
 
-            roguelike.gui.drawGUI();
+            roguelike.getGui().drawGUI();
             // Mouse testing
             drawMouseToolTips(rootConsole);
 
-            roguelike.window.refresh();
+            roguelike.getWindow().refresh();
         }
     }
     public void drawGame(Console rootConsole) {
@@ -192,7 +209,7 @@ public class Render implements Runnable {
             rootConsole.setBgColor(roguelike.getLastMy(), roguelike.getLastMx(), GameColors.MOUSEBG);
             int transX = roguelike.getLastMx() - roguelike.getGameInformationConsoleWidth() - 1;
             int transY = roguelike.getLastMy() - 1;
-            Tile t = roguelike.map.getCurrentLevel().getTile(transY, transX);
+            Tile t = roguelike.getMap().getCurrentLevel().getTile(transY, transX);
             int y = roguelike.getLastMy() - 1;
             int x = roguelike.getLastMx();
             if(t == null) {
@@ -219,16 +236,16 @@ public class Render implements Runnable {
 
     public void renderSingleFrame(Reason reason) {
         drawGame(roguelike.getRootConsole(), reason);
-        roguelike.lastFrameDrawTime = System.currentTimeMillis();
-        roguelike.redrawGame = false;
+        roguelike.setLastFrameDrawTime(System.currentTimeMillis());
+        roguelike.setRedrawGame(false);
     }
 
     public void renderSingleFrame() {
             // Draw the game
             // TODO: draw only if we need to, to improve CPU usage
             drawGame(roguelike.getRootConsole());
-            roguelike.lastFrameDrawTime = System.currentTimeMillis();
-            roguelike.redrawGame = false;
+            roguelike.setLastFrameDrawTime(System.currentTimeMillis());
+            roguelike.setRedrawGame(false);
     }
 
     protected void showActorPaths() {
@@ -283,23 +300,23 @@ public class Render implements Runnable {
     @Override
     public void run() {
         while (run) {
-            if(System.currentTimeMillis() - roguelike.lastFrameDrawTime > roguelike.refreshIntervalMs) {
-                roguelike.redrawGame = true;
+            if(System.currentTimeMillis() - roguelike.getLastFrameDrawTime() > roguelike.getRefreshIntervalMs()) {
+                roguelike.setRedrawGame(true);
             }
             /**
              * Check if we need to force a redraw for next loop. Idle
              */
 
-            if (roguelike.redrawGame) {
+            if (roguelike.getRedrawGame()) {
                 long startTime = System.currentTimeMillis();
                 // Draw the game
                 // TODO: draw only if we need to, to improve CPU usage
                 drawGame(roguelike.getRootConsole());
-                roguelike.lastFrameDrawTime = System.currentTimeMillis();
-                roguelike.redrawGame = false;
+                roguelike.setLastFrameDrawTime(System.currentTimeMillis());
+                roguelike.setRedrawGame(false);
                 //roguelike.gameLoopRedrawTimeStart = System.currentTimeMillis();
-                roguelike.currentFrames++;
-                long remainingTime = roguelike.minFrameSpeed - (System.currentTimeMillis() - startTime);
+                roguelike.incrementCurrentFrames();
+                long remainingTime = roguelike.getMinFrameSpeed() - (System.currentTimeMillis() - startTime);
 
                 // During initialization, this time may go negative. Set to 0 if this happens to prevent exception.
                 if (remainingTime < 0) {
@@ -318,13 +335,13 @@ public class Render implements Runnable {
 
                 // fpsTimerStart is initialized in startGame()
                 // if 1 second or more has passed, set the currentFrames to lastFramesPerSecond
-                if (System.currentTimeMillis() - roguelike.fpsTimerStart >= 1000) {
-                    roguelike.lastFramesPerSecond = roguelike.currentFrames;
+                if (System.currentTimeMillis() - roguelike.getFpsTimerStart() >= 1000) {
+                    roguelike.setLastFramesPerSecond(roguelike.getCurrentFrames());
 
                     // Reset currentFrames
-                    roguelike.currentFrames = 0;
+                    roguelike.setCurrentFrames(0);
                     // Reset fpsTimerStart
-                    roguelike.fpsTimerStart = System.currentTimeMillis();
+                    roguelike.setFpsTimerStart(System.currentTimeMillis());
                 }
 
                 // Sleep for whatever time we have remaining to maintain the desired FPS
@@ -335,7 +352,7 @@ public class Render implements Runnable {
                 }
             } else {
                 try {
-                    Thread.sleep(roguelike.minFrameSpeed);
+                    Thread.sleep(roguelike.getMinFrameSpeed());
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

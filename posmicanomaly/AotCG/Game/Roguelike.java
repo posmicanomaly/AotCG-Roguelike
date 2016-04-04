@@ -13,6 +13,7 @@ import posmicanomaly.AotCG.Factory.MapSymbols;
 import posmicanomaly.AotCG.Game.Gui.Component.InventoryConsole;
 import posmicanomaly.AotCG.Game.Gui.Gui;
 import posmicanomaly.AotCG.Game.Input.Input;
+import posmicanomaly.AotCG.Game.Render.Render;
 import posmicanomaly.AotCG.Screen.Title;
 import posmicanomaly.libjsrte.Console.Console;
 import posmicanomaly.libjsrte.Window;
@@ -314,51 +315,7 @@ public class Roguelike {
         }
 
         if (TEST_ANIMATION) {
-            // get key press
-            // check in loops if it changed, time stamp, so we can break out to skip the animation
-            long time = window.getLastKeyEvent().getWhen();
-            Color playerColor = getPlayer().getColor();
-            int red = playerColor.getRed();
-            int green = playerColor.getGreen();
-            int blue = playerColor.getBlue();
-            for (int i = 0; i < 5; i++) {
-                if(window.getLastKeyEvent().getWhen() != time) {
-                    break;
-                }
-                //getPlayer().setColor(new Color(playerColor.getRed() + i, playerColor.getGreen() + i, playerColor.getBlue() + i));
-                Color newColor = new Color(255 - i * 2, 255 - i * 2, 255 - i * 2);
-                getPlayer().setColor(newColor);
-
-
-                for(Tile t : getPlayer().getVisibleTiles()) {
-                    if(window.getLastKeyEvent().getWhen() != time) {
-                        break;
-                    }
-//                    int r = t.getBackgroundColor().getRed() + i * 4;
-//                    int g = t.getBackgroundColor().getGreen() + i * 2;
-//                    int b = t.getBackgroundColor().getBlue() + i * 2;
-//                    if(r > 255) r = 255;
-//                    if(g > 255) g = 255;
-//                    if(b > 255) b = 255;
-//                    t.setBackgroundColor(new Color(r, g, b));
-                    t.setSymbol((char) rng.nextInt(255));
-                }
-                if(window.getLastKeyEvent().getWhen() != time) {
-                    break;
-                }
-                render.renderSingleFrame(Render.Reason.ANIMATION);
-                try {
-                    Thread.sleep(17);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            for(Tile t : getPlayer().getVisibleTiles()) {
-                LevelFactory.initTile(t);
-            }
-            getPlayer().setColor(playerColor);
-            render.renderSingleFrame(Render.Reason.ANIMATION);
+            render.doTestAnimation();
             TEST_ANIMATION = false;
         }
         // Check if not equal to the last keyevent, or if the player has a current path
@@ -550,6 +507,58 @@ public class Roguelike {
             }
         }
         return true;
+    }
+
+    public State getCurrentState() {
+        return currentState;
+    }
+
+    public Title getTitle() {
+        return title;
+    }
+
+    public long getLastFrameDrawTime() {
+        return lastFrameDrawTime;
+    }
+
+    public void setLastFrameDrawTime(long lastFrameDrawTime) {
+        this.lastFrameDrawTime = lastFrameDrawTime;
+    }
+
+    public void setRedrawGame(boolean redrawGame) {
+        this.redrawGame = redrawGame;
+    }
+
+    public long getRefreshIntervalMs() {
+        return refreshIntervalMs;
+    }
+
+    public boolean getRedrawGame() {
+        return redrawGame;
+    }
+
+    public void incrementCurrentFrames() {
+        currentFrames++;
+    }
+
+    public long getMinFrameSpeed() {
+        return minFrameSpeed;
+    }
+
+    public long getFpsTimerStart() {
+        return fpsTimerStart;
+    }
+
+    public void setLastFramesPerSecond(int lastFramesPerSecond) {
+        this.lastFramesPerSecond = lastFramesPerSecond;
+    }
+
+    public void setCurrentFrames(int currentFrames) {
+        this.currentFrames = currentFrames;
+    }
+
+    public void setFpsTimerStart(long fpsTimerStart) {
+        this.fpsTimerStart = fpsTimerStart;
     }
 
     public enum PlayerAIDecision {RANDOMPATH, CONTINUEPATH, ACTUATETILE, USE_HEALTH_POTION, ERROR}
@@ -948,7 +957,7 @@ public class Roguelike {
         return mouseCoordinatesChanged;
     }
 
-    protected boolean isMouseOnMap() {
+    public boolean isMouseOnMap() {
         if(lastMx < windowWidth - 1 && lastMx > gameInformationConsoleWidth
                 && lastMy < windowHeight - messageHeight - 1 && lastMy > 0) {
             return true;
@@ -977,7 +986,7 @@ public class Roguelike {
         startingTile.setActor(player);
     }
 
-    protected void copyMapToBuffer() {
+    public void copyMapToBuffer() {
         for (int y = 0; y < map.getCurrentLevel().getHeight(); ++y) {
             for (int x = 0; x < map.getCurrentLevel().getWidth(); ++x) {
                 Tile t = map.getCurrentLevel().getTile(y, x);
