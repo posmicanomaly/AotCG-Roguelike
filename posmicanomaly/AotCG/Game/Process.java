@@ -111,14 +111,14 @@ public class Process {
         Tile desiredTile = t;
         // If the tile is null, it is likely out of range
         if (desiredTile == null) {
-            messageConsole.addMessage("Tile is null", Color.gray);
+            messageConsole.addMessage("Tile is null", GameColors.ERROR);
             return MoveResult.ERROR;
         }
 
         // If the tile is blocked(terrain), we can't go there, likely a wall at this point
         else if (desiredTile.isBlocked()) {
             if (actor.equals(player))
-                messageConsole.addMessage("You bumped into a wall", Color.gray);
+                messageConsole.addMessage("You bumped into a wall", GameColors.NOISE);
             actor.depleteEnergy((int) (1000 / actor.getSpeed()));
             return MoveResult.BUMPED;
         }
@@ -162,12 +162,12 @@ public class Process {
             if(!loser.equals(player)) {
                 loser.setTile(null);
             }
-            Item corpse = new Corpse('%', Color.gray, loserTile, loser.getCorpseName());
+            Item corpse = new Corpse('%', GameColors.ITEM, loserTile, loser.getCorpseName());
             loserTile.setItem(corpse);
 
             // random item?
             if(rng.nextInt(100) - 10 > 0) {
-                Item randomitem = new Potion(')', Color.yellow, loserTile, "Health Potion", 10);
+                Item randomitem = new Potion(')', GameColors.ITEM, loserTile, "Health Potion", 10);
                 loserTile.setItem(randomitem);
             }
 
@@ -177,7 +177,7 @@ public class Process {
 
             // Winner gets reward, if player
             if(winner.equals(player)) {
-                messageConsole.addMessage(winner.getName() + " killed " + loser.getName(), Colors.EXPERIENCE);
+                messageConsole.addMessage(winner.getName() + " killed " + loser.getName(), GameColors.EXPERIENCE);
                 return MoveResult.COMBAT;
             }
 
@@ -341,11 +341,11 @@ public class Process {
         // Otherwise, show some "noise" message
         if(!combatMessage.equals("")) {
             if (actor1.equals(player) || actor2.equals(player)) {
-                messageConsole.addMessage(combatMessage, Color.cyan);
+                messageConsole.addMessage(combatMessage, GameColors.COMBAT);
             } else if (actorInPlayerView(actor1) || actorInPlayerView(actor2)) {
-                messageConsole.addMessage(combatMessage, Color.cyan);
+                messageConsole.addMessage(combatMessage, GameColors.COMBAT);
             } else {
-                messageConsole.addMessage("You hear noise", Color.gray);
+                messageConsole.addMessage("You hear noise", GameColors.NOISE);
             }
         }
     }
@@ -409,7 +409,7 @@ public class Process {
             Item item = desiredTile.getItem();
             actor.addInventoryItem(item);
             desiredTile.setItem(null);
-            roguelike.getGui().getMessageConsole().addMessage("Picked up " + item.getName(), Color.yellow);
+            roguelike.getGui().getMessageConsole().addMessage("Picked up " + item.getName(), GameColors.INVENTORY);
             return true;
         }
         boolean levelChanged = false;

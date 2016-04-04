@@ -1,7 +1,7 @@
 package posmicanomaly.AotCG.Game;
 
-import posmicanomaly.AotCG.Component.*;
 import posmicanomaly.AotCG.Component.Actor.Actor;
+import posmicanomaly.AotCG.Component.GameColors;
 import posmicanomaly.AotCG.Component.Item.Item;
 import posmicanomaly.AotCG.Component.Map.AStar;
 import posmicanomaly.AotCG.Component.Map.Level;
@@ -10,9 +10,9 @@ import posmicanomaly.AotCG.Component.Map.Tile;
 import posmicanomaly.AotCG.Factory.ActorFactory;
 import posmicanomaly.AotCG.Factory.LevelFactory;
 import posmicanomaly.AotCG.Factory.MapSymbols;
+import posmicanomaly.AotCG.Game.Gui.Component.InventoryConsole;
 import posmicanomaly.AotCG.Game.Gui.Gui;
 import posmicanomaly.AotCG.Game.Input.Input;
-import posmicanomaly.AotCG.Game.Gui.Component.InventoryConsole;
 import posmicanomaly.AotCG.Screen.Title;
 import posmicanomaly.libjsrte.Console.Console;
 import posmicanomaly.libjsrte.Window;
@@ -58,6 +58,7 @@ public class Roguelike {
     public static int turns;
     public static MapSymbols mapSymbols = new MapSymbols("config/symbols.txt");
 
+    public static boolean TEST_ANIMATION = false;
 
     public Console menuWindow;
     protected Gui gui;
@@ -116,7 +117,7 @@ public class Roguelike {
     public Roguelike() {
         System.setProperty("sun.java2d.opengl", "true");
 
-        this.window = new Window(this.windowHeight, this.windowWidth, "AotCG", fontSize);
+        this.window = new Window(this.windowHeight, this.windowWidth, "AotCG, a Roguelike", fontSize);
         rootConsole = this.window.getMainPanel().getRootConsole();
         //this.window.getMainPanel().getRootConsole().setBorder(true);
 
@@ -240,7 +241,7 @@ public class Roguelike {
                 welcome = "I don't know where you are.";
                 break;
         }
-        gui.getMessageConsole().addMessage(welcome, Colors.EXPERIENCE);
+        gui.getMessageConsole().addMessage(welcome, GameColors.EXPERIENCE);
     }
 
     //==========================================================================================================
@@ -272,19 +273,19 @@ public class Roguelike {
                         if (!clickedTile.isBlocked()) {
                             allowMove = true;
                         } else {
-                            gui.getMessageConsole().addMessage("Can't move there", Color.red);
+                            gui.getMessageConsole().addMessage("Can't move there", GameColors.ERROR);
                         }
                     } else {
                         if (clickedTile.isExplored() && !clickedTile.isBlocked()) {
                             allowMove = true;
                         } else {
-                            gui.getMessageConsole().addMessage("Can't move there", Color.red);
+                            gui.getMessageConsole().addMessage("Can't move there", GameColors.ERROR);
                         }
                     }
                     if (allowMove) {
                         player.setCurrentPath(map.getCurrentLevel().getAstar().getShortestPath(player.getTile(), clickedTile));
                         if (player.getCurrentPath() == null) {
-                            gui.getMessageConsole().addMessage("Can't move there: there is no path?", Color.red);
+                            gui.getMessageConsole().addMessage("Can't move there: there is no path?", GameColors.ERROR);
                         }
                         if (player.getCurrentPath().size() == 0) {
                             System.out.println("Player path is 0, setting to null");
@@ -312,10 +313,58 @@ public class Roguelike {
             }
         }
 
+        if (TEST_ANIMATION) {
+            // get key press
+            // check in loops if it changed, time stamp, so we can break out to skip the animation
+            long time = window.getLastKeyEvent().getWhen();
+            Color playerColor = getPlayer().getColor();
+            int red = playerColor.getRed();
+            int green = playerColor.getGreen();
+            int blue = playerColor.getBlue();
+            for (int i = 0; i < 5; i++) {
+                if(window.getLastKeyEvent().getWhen() != time) {
+                    break;
+                }
+                //getPlayer().setColor(new Color(playerColor.getRed() + i, playerColor.getGreen() + i, playerColor.getBlue() + i));
+                Color newColor = new Color(255 - i * 2, 255 - i * 2, 255 - i * 2);
+                getPlayer().setColor(newColor);
+
+
+                for(Tile t : getPlayer().getVisibleTiles()) {
+                    if(window.getLastKeyEvent().getWhen() != time) {
+                        break;
+                    }
+//                    int r = t.getBackgroundColor().getRed() + i * 4;
+//                    int g = t.getBackgroundColor().getGreen() + i * 2;
+//                    int b = t.getBackgroundColor().getBlue() + i * 2;
+//                    if(r > 255) r = 255;
+//                    if(g > 255) g = 255;
+//                    if(b > 255) b = 255;
+//                    t.setBackgroundColor(new Color(r, g, b));
+                    t.setSymbol((char) rng.nextInt(255));
+                }
+                if(window.getLastKeyEvent().getWhen() != time) {
+                    break;
+                }
+                render.renderSingleFrame(Render.Reason.ANIMATION);
+                try {
+                    Thread.sleep(17);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            for(Tile t : getPlayer().getVisibleTiles()) {
+                LevelFactory.initTile(t);
+            }
+            getPlayer().setColor(playerColor);
+            render.renderSingleFrame(Render.Reason.ANIMATION);
+            TEST_ANIMATION = false;
+        }
         // Check if not equal to the last keyevent, or if the player has a current path
         // HOWEVER, during game init, there is no player, so first check that the player is not null.
         // todo: continue to decouple the initialization code.
-        if (!this.window.getLastKeyEvent().equals(this.lastKeyEvent) || (player != null && player.getCurrentPath() != null)) {
+        else if (!this.window.getLastKeyEvent().equals(this.lastKeyEvent) || (player != null && player.getCurrentPath() != null)) {
             /**
              * Check for game state or victory/defeat console displayed
              */
@@ -1049,6 +1098,7 @@ public class Roguelike {
                                         case COMBAT:
                                         case BUMPED:
                                             recalculateFOV = true;
+                                            TEST_ANIMATION = true;
                                     }
                                     redrawGame = true;
                                     turns++;
@@ -1202,8 +1252,14 @@ public class Roguelike {
             else {
                 glyph = tile.getSymbol();
                 color = tile.getColor();
+                if(tile.getType() == Tile.Type.WALL) {
+                    //color = GameColors.WALL;
+                }
             }
             bgColor = tile.getBackgroundColor();
+            if(tile.getType() == Tile.Type.WALL) {
+                //bgColor = GameColors.WALL_BG;
+            }
         }
 
         // Tile is not visible, but has been explored by the player
@@ -1211,20 +1267,28 @@ public class Roguelike {
             glyph = tile.getSymbol();
             color = tile.getColor();
             bgColor = tile.getBackgroundColor();
+            if(tile.getType() == Tile.Type.WALL) {
+                //color = GameColors.WALL_DARK;
+                //bgColor = GameColors.WALL_BG_DARK;
+            }
             if(getMap().getCurrentDepth() > 0) {
-                bgColor = Colors.shroud(bgColor);
-                color = Colors.shroud(color);
+                bgColor = GameColors.grayScale(bgColor).darker().darker();
+                color = GameColors.grayScale(color).darker().darker();
+                //bgColor = GameColors.shroud(bgColor);
+                //color = GameColors.shroud(color);
             } else {
-                bgColor = bgColor.darker().darker().darker().darker();
-                color = color.darker().darker().darker();
+                bgColor = GameColors.grayScale(bgColor).darker().darker();
+                color = GameColors.grayScale(color).darker().darker();
+                //bgColor = GameColors.shroud(bgColor);
+                //color = GameColors.shroud(color);
             }
         }
 
         // Tile is not visible, and has not been explored by the player
         else {
             glyph = ' ';
-            color = Color.black;
-            bgColor = Color.black;
+            color = GameColors.BACKGROUND;
+            bgColor = GameColors.BACKGROUND;
         }
 
 

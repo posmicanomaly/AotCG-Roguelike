@@ -1,6 +1,7 @@
 package posmicanomaly.AotCG.Game;
 
 import posmicanomaly.AotCG.Component.Actor.Actor;
+import posmicanomaly.AotCG.Component.GameColors;
 import posmicanomaly.AotCG.Component.Map.Tile;
 import posmicanomaly.libjsrte.Console.Console;
 
@@ -31,7 +32,7 @@ public class Render implements Runnable {
 
     // Rendering reasons
     public enum Reason {
-        MOUSE_MOVED
+        ANIMATION, NONE, MOUSE_MOVED
     }
 
     public void start() {
@@ -121,17 +122,24 @@ public class Render implements Runnable {
             if(roguelike.getMap() == null) {
                 return;
             }
+
             roguelike.copyMapToBuffer();
 
             // Lighting test
             if(roguelike.getMap().getCurrentDepth() > 0) {
-               // applyLightingToMap();
+                applyLightingToMap();
             }
 
             // water shimmer
-            if(reason != Reason.MOUSE_MOVED) {
-                shimmerWater();
+            switch(reason) {
+                case MOUSE_MOVED:
+                case ANIMATION:
+                    break;
+                default:
+                    shimmerWater();
+                    break;
             }
+
             // Debug
             showActorPaths();
             showHighlightedDebugTiles();
@@ -147,7 +155,7 @@ public class Render implements Runnable {
         }
     }
     public void drawGame(Console rootConsole) {
-       drawGame(rootConsole, null);
+       drawGame(rootConsole, Reason.NONE);
     }
 
     private void showHighlightedDebugTiles() {
@@ -181,7 +189,7 @@ public class Render implements Runnable {
 
     private void drawMouseToolTips(Console rootConsole) {
         if(roguelike.isMouseOnMap()) {
-            rootConsole.setBgColor(roguelike.getLastMy(), roguelike.getLastMx(), Color.RED);
+            rootConsole.setBgColor(roguelike.getLastMy(), roguelike.getLastMx(), GameColors.MOUSEBG);
             int transX = roguelike.getLastMx() - roguelike.getGameInformationConsoleWidth() - 1;
             int transY = roguelike.getLastMy() - 1;
             Tile t = roguelike.map.getCurrentLevel().getTile(transY, transX);
@@ -190,16 +198,16 @@ public class Render implements Runnable {
             if(t == null) {
                 System.out.println("Mouse on map, but tile is null. Check the math!");
             } else {
-                Color foreground = Color.gray;
+                Color foreground = GameColors.MOUSEBG2;
                 Color background = new Color(0, 0, 0, 0.8f);
                 String tip = "?";
                 if(t.isVisible()) {
                     if (t.hasActor()) {
                         tip = t.getActor().getName();
-                        foreground = Color.red;
+                        foreground = GameColors.RED_PATH;
                     } else {
                         tip = t.getTypeString();
-                        foreground = Color.green;
+                        foreground = GameColors.GREEN_PATH;
                     }
                 } else if(t.isExplored()) {
                     tip = t.getTypeString() + "?";
@@ -207,6 +215,12 @@ public class Render implements Runnable {
                 rootConsole.writeColoredString(tip, y, x, foreground, background);
             }
         }
+    }
+
+    public void renderSingleFrame(Reason reason) {
+        drawGame(roguelike.getRootConsole(), reason);
+        roguelike.lastFrameDrawTime = System.currentTimeMillis();
+        roguelike.redrawGame = false;
     }
 
     public void renderSingleFrame() {
@@ -244,12 +258,14 @@ public class Render implements Runnable {
                         tGreen = 255;
                     }
                     pathColor = new Color(tRed, tGreen, tBlue).brighter();
+                    pathColor = GameColors.GREEN_PATH;
                 } else {
                     tRed += shimmer;
                     if(tRed > 255) {
                         tRed = 255;
                     }
                     pathColor = new Color(tRed, tGreen, tBlue).brighter();
+                    pathColor = GameColors.RED_PATH;
                 }
 
                 int y = t.getY();

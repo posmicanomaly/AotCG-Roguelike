@@ -24,6 +24,7 @@ public abstract class LevelFactory {
     static final int MIN_ROOM_SIZE = 3;
     // Setting PERIMETER_THICKNESS to 0 gives me walls of 1. Bad math somewhere.
     static final int PERIMETER_THICKNESS = 0;
+    static final boolean RANDOMIZE_COLORS = false;
 
     private static Tile[][] makeBlankMap(int height, int width) {
         return makeMapFilledWithType(height, width, Tile.Type.WALL);
@@ -93,31 +94,31 @@ public abstract class LevelFactory {
             case FLOOR:
                 symbol = ms.FLOOR;
                 if(randomizeColors) {
-                    color = ColorTools.varyColor(Colors.FLOOR, 0.8, 1.0, ColorTools.BaseColor.RGB);
-                    backgroundColor = ColorTools.varyColor(Colors.FLOOR_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
+                    color = ColorTools.varyColor(GameColors.FLOOR, 0.9, 1.0, ColorTools.BaseColor.RGB);
+                    backgroundColor = ColorTools.varyColor(GameColors.FLOOR_BG, 0.9, 1.0, ColorTools.BaseColor.RGB);
                 } else {
-                    color = Colors.FLOOR;
-                    backgroundColor = Colors.FLOOR_BG;
+                    color = GameColors.FLOOR;
+                    backgroundColor = GameColors.FLOOR_BG;
                 }
                 break;
             case WALL:
                 symbol = ms.WALL;
                 isBlocked = true;
-                color = Colors.WALL;
+                color = GameColors.WALL_DARK;
                 if(randomizeColors) {
-                    backgroundColor = ColorTools.varyColor(Colors.WALL_BG, 0.7, 1.0, ColorTools.BaseColor.RGB);
+                    backgroundColor = ColorTools.varyColor(GameColors.WALL_BG, 0.9, 1.0, ColorTools.BaseColor.RGB);
                 } else {
-                    backgroundColor = Colors.WALL_BG;
+                    backgroundColor = GameColors.WALL_BG;
                 }
                 transparent = false;
                 break;
             case WALL_SECRET:
                 symbol = ms.WALL_SECRET;
-                color = Colors.WALL;
+                color = GameColors.WALL;
                 if(randomizeColors) {
-                    backgroundColor = ColorTools.varyColor(Colors.WALL_BG, 0.7, 1.0, ColorTools.BaseColor.RGB);
+                    backgroundColor = ColorTools.varyColor(GameColors.WALL_BG, 0.9, 1.0, ColorTools.BaseColor.RGB);
                 } else {
-                    backgroundColor = Colors.WALL_BG;
+                    backgroundColor = GameColors.WALL_BG;
                 }
                 //
                 transparent = false;
@@ -132,36 +133,36 @@ public abstract class LevelFactory {
                 break;
             case WATER:
                 symbol = ms.WATER;
-                color = Colors.WATER;
-                backgroundColor = Colors.WATER_BG;
+                color = GameColors.WATER;
+                backgroundColor = GameColors.WATER_BG;
                 break;
             case CAVE_GRASS:
                 symbol = ms.CAVE_GRASS;
                 if(randomizeColors) {
-                    color = ColorTools.varyColor(Colors.CAVE_GRASS, 0.5, 1.0, ColorTools.BaseColor.RGB);
+                    color = ColorTools.varyColor(GameColors.CAVE_GRASS, 0.9, 1.0, ColorTools.BaseColor.RGB);
                 } else {
-                    color = Colors.CAVE_GRASS;
+                    color = GameColors.CAVE_GRASS;
                 }
-                backgroundColor = color.darker().darker().darker().darker();
+                backgroundColor = GameColors.CAVE_GRASS_BG;
                 transparent = false;
                 break;
             case LOW_GRASS:
                 symbol = ms.LOW_GRASS;
                 if(randomizeColors) {
-                    color = ColorTools.varyColor(Colors.CAVE_GRASS, 0.5, 1.0, ColorTools.BaseColor.RGB);
+                    color = ColorTools.varyColor(GameColors.CAVE_GRASS, 0.9, 1.0, ColorTools.BaseColor.RGB);
                 } else {
-                    color = Colors.CAVE_GRASS;
+                    color = GameColors.LOW_GRASS;
                 }
-                backgroundColor = color.darker().darker().darker().darker().darker();
+                backgroundColor = GameColors.LOW_GRASS_BG;
                 break;
             case DOOR:
                 symbol = ms.DOOR;
                 if(randomizeColors) {
-                    color = ColorTools.varyColor(Colors.DOOR, 0.5, 1.0, ColorTools.BaseColor.RGB);
-                    backgroundColor = ColorTools.varyColor(Colors.DOOR_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
+                    color = ColorTools.varyColor(GameColors.DOOR, 0.9, 1.0, ColorTools.BaseColor.RGB);
+                    backgroundColor = ColorTools.varyColor(GameColors.DOOR_BG, 0.9, 1.0, ColorTools.BaseColor.RGB);
                 } else {
-                    color = Colors.DOOR;
-                    backgroundColor = Colors.DOOR_BG;
+                    color = GameColors.DOOR;
+                    backgroundColor = GameColors.DOOR_BG;
                 }
                 transparent = false;
                 break;
@@ -169,34 +170,34 @@ public abstract class LevelFactory {
                 symbol = ms.STAIRS_UP;
                 color = Color.GREEN;
                 if(randomizeColors) {
-                    backgroundColor = ColorTools.varyColor(Colors.FLOOR_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
+                    backgroundColor = ColorTools.varyColor(GameColors.FLOOR_BG, 0.9, 1.0, ColorTools.BaseColor.RGB);
                 } else {
-                    backgroundColor = Colors.FLOOR_BG;
+                    backgroundColor = GameColors.FLOOR_BG;
                 }
                 break;
             case STAIRS_DOWN:
                 symbol = ms.STAIRS_DOWN;
                 color = Color.RED;
                 if(randomizeColors) {
-                    backgroundColor = ColorTools.varyColor(Colors.FLOOR_BG, 0.5, 1.0, ColorTools.BaseColor.RGB);
+                    backgroundColor = ColorTools.varyColor(GameColors.FLOOR_BG, 0.9, 1.0, ColorTools.BaseColor.RGB);
                 } else {
-                    backgroundColor = Colors.FLOOR_BG;
+                    backgroundColor = GameColors.FLOOR_BG;
                 }
                 break;
 
             // Exterior
-            case WORLD_GRASS:
-                symbol = ms.WORLD_GRASS;
-                if(randomizeColors) {
-                    color = ColorTools.varyColor(Colors.WORLD_GRASS, 0.7, 1.0, ColorTools.BaseColor.RGB);
-                } else {
-                    color = Colors.WORLD_GRASS;
-                }
-                backgroundColor = color.darker().darker();
-                break;
+//            case WORLD_GRASS:
+//                symbol = ms.WORLD_GRASS;
+//                if(randomizeColors) {
+//                    color = ColorTools.varyColor(GameColors.WORLD_GRASS, 0.9, 1.0, ColorTools.BaseColor.RGB);
+//                } else {
+//                    color = GameColors.WORLD_GRASS;
+//                }
+//                backgroundColor = color.darker().darker();
+//                break;
             case CAVE_OPENING:
                 symbol = ms.CAVE_OPENING;
-                color = Colors.CAVE_OPENING;
+                color = GameColors.CAVE_OPENING;
                 break;
             case FOREST:
                 symbol = ms.FOREST;
@@ -204,9 +205,9 @@ public abstract class LevelFactory {
                     symbol = ms.FOREST_ALT;
                 }
                 if(randomizeColors) {
-                    color = ColorTools.varyColor(Colors.FOREST, 0.7, 1.0, ColorTools.BaseColor.RGB);
+                    color = ColorTools.varyColor(GameColors.FOREST, 0.9, 1.0, ColorTools.BaseColor.RGB);
                 } else {
-                    color = Colors.FOREST;
+                    color = GameColors.FOREST;
                 }
                 backgroundColor = color.darker().darker();
                 transparent = false;
@@ -214,9 +215,9 @@ public abstract class LevelFactory {
             case MOUNTAIN:
                 symbol = ms.MOUNTAIN;
                 if(randomizeColors) {
-                    color = ColorTools.varyColor(Colors.MOUNTAIN, 0.9, 1.0, ColorTools.BaseColor.RGB);
+                    color = ColorTools.varyColor(GameColors.MOUNTAIN, 0.9, 1.0, ColorTools.BaseColor.RGB);
                 } else {
-                    color = Colors.MOUNTAIN;
+                    color = GameColors.MOUNTAIN;
                 }
                 backgroundColor = color.darker().darker().darker().darker();
                 transparent = false;
@@ -224,18 +225,18 @@ public abstract class LevelFactory {
             case SAND:
                 symbol = ms.SAND;
                 if(randomizeColors) {
-                    color = ColorTools.varyColor(Colors.SAND, 0.7, 0.8, ColorTools.BaseColor.RGB);
+                    color = ColorTools.varyColor(GameColors.SAND, 0.9, 1.0, ColorTools.BaseColor.RGB);
                 } else {
-                    color = Colors.SAND;
+                    color = GameColors.SAND;
                 }
                 backgroundColor = color.darker().darker();
                 break;
             case JUNGLE:
                 symbol = ms.JUNGLE;
                 if(randomizeColors) {
-                    color = ColorTools.varyColor(Colors.JUNGLE, 0.7, 1.0, ColorTools.BaseColor.RGB);
+                    color = ColorTools.varyColor(GameColors.JUNGLE, 0.9, 1.0, ColorTools.BaseColor.RGB);
                 } else {
-                    color = Colors.JUNGLE;
+                    color = GameColors.JUNGLE;
                 }
                 backgroundColor = color.darker().darker();
                 transparent = false;
@@ -243,36 +244,36 @@ public abstract class LevelFactory {
             case PLAINS:
                 symbol = ms.PLAINS;
                 if(randomizeColors) {
-                    color = ColorTools.varyColor(Colors.PLAINS, 0.7, 1.0, ColorTools.BaseColor.RGB);
+                    color = ColorTools.varyColor(GameColors.PLAINS, 0.9, 1.0, ColorTools.BaseColor.RGB);
                 } else {
-                    color = Colors.PLAINS;
+                    color = GameColors.PLAINS;
                 }
                 backgroundColor = color.darker().darker();
                 break;
             case BRUSH:
                 symbol = ms.BRUSH;
                 if(randomizeColors) {
-                    color = ColorTools.varyColor(Colors.BRUSH, 0.7, 1.0, ColorTools.BaseColor.RGB);
+                    color = ColorTools.varyColor(GameColors.BRUSH, 0.9, 1.0, ColorTools.BaseColor.RGB);
                 } else {
-                    color = Colors.BRUSH;
+                    color = GameColors.BRUSH;
                 }
                 backgroundColor = color.darker().darker();
                 break;
             case HILL:
                 symbol = ms.HILL;
                 if(randomizeColors) {
-                    color = ColorTools.varyColor(Colors.HILL, 0.9, 1.0, ColorTools.BaseColor.RGB);
+                    color = ColorTools.varyColor(GameColors.HILL, 0.9, 1.0, ColorTools.BaseColor.RGB);
                 } else {
-                    color = Colors.HILL;
+                    color = GameColors.HILL;
                 }
                 backgroundColor = color.darker().darker();
                 break;
             case TOWN:
                 symbol = ms.TOWN;
                 if(randomizeColors) {
-                    color = ColorTools.varyColor(Colors.TOWN, 0.9, 1.0, ColorTools.BaseColor.RGB);
+                    color = ColorTools.varyColor(GameColors.TOWN, 0.9, 1.0, ColorTools.BaseColor.RGB);
                 } else {
-                    color = Colors.TOWN;
+                    color = GameColors.TOWN;
                 }
                 //backgroundColor = color.darker().darker();
                 break;
@@ -306,7 +307,7 @@ public abstract class LevelFactory {
     }
 
     private static void processMap(Tile[][] level, boolean ignoreBuild) {
-        processMap(level, ignoreBuild, true);
+        processMap(level, ignoreBuild, RANDOMIZE_COLORS);
     }
 
     /**

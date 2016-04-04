@@ -1,9 +1,11 @@
 package posmicanomaly.AotCG.Component.Map;
 
 import posmicanomaly.AotCG.Component.Actor.Actor;
-import posmicanomaly.AotCG.Component.Colors;
+import posmicanomaly.AotCG.Component.GameColors;
 import posmicanomaly.AotCG.Factory.LevelFactory;
 import posmicanomaly.AotCG.Game.Roguelike;
+import posmicanomaly.libjsrte.Console.Colors.Colors;
+import posmicanomaly.libjsrte.Console.Colors.Db32;
 import posmicanomaly.libjsrte.Console.Symbol;
 import posmicanomaly.libjsrte.Util.ColorTools;
 
@@ -64,16 +66,27 @@ public class Level {
         for(Tile tile : waterTiles) {
             if (tile.getType() == Tile.Type.WATER) {
                 if (Roguelike.rng.nextInt(100) - 95 > 0) {
-                    tile.setBackgroundColor(ColorTools.varyColor(Colors.WATER_BG, 0.7, 1.0, ColorTools.BaseColor.RGB));
+                    //tile.setBackgroundColor(ColorTools.varyColor(GameColors.WATER_BG, 0.7, 1.0, ColorTools.BaseColor.RGB));
+                    tile.setBackgroundColor(Db32.DARKBLUE);
 
 
+                } else {
+                    //tile.setBackgroundColor(Db32.DARKBLUE);
                 }
                 if (Roguelike.rng.nextInt(100) - 95 > 0) {
-                    tile.setColor(ColorTools.varyColor(Colors.WATER, 0.7, 1.0, ColorTools.BaseColor.RGB));
+                    //tile.setColor(ColorTools.varyColor(GameColors.WATER, 0.7, 1.0, ColorTools.BaseColor.RGB));
+                    tile.setColor(Db32.BLUE);
                     if (tile.getSymbol() == Symbol.ALMOST_EQUAL_TO) {
                         tile.setSymbol('=');
                     } else {
                         tile.setSymbol(Symbol.ALMOST_EQUAL_TO);
+                    }
+                } else {
+                    //tile.setColor(Db32.BLUE);
+                    if (tile.getSymbol() == Symbol.ALMOST_EQUAL_TO) {
+                        //tile.setSymbol('=');
+                    } else {
+                        //tile.setSymbol(Symbol.ALMOST_EQUAL_TO);
                     }
                 }
             }

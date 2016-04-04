@@ -1,7 +1,7 @@
 package posmicanomaly.AotCG.Game.Gui.Component;
 
 import posmicanomaly.AotCG.Component.Actor.Actor;
-import posmicanomaly.AotCG.Component.Colors;
+import posmicanomaly.AotCG.Component.GameColors;
 import posmicanomaly.AotCG.Component.Map.Map;
 import posmicanomaly.AotCG.Component.Map.Tile;
 import posmicanomaly.AotCG.Game.Roguelike;
@@ -63,7 +63,7 @@ public class GameInformationConsole extends EnhancedConsole {
         row++;
         writeString(powerString, row, col);
         row++;
-        writeColoredString("S: Well", row, col, Colors.HEALTH_REMAINING);
+        writeColoredString("S: Well", row, col, GameColors.HEALTH_REMAINING);
         row++;
         row++;
         Tile playerTile = player.getTile();
@@ -121,7 +121,7 @@ public class GameInformationConsole extends EnhancedConsole {
 
     private void drawExpBar(int y, int x) {
         String expString = "EXP: " + player.getExperience() + "/" + player.getExperienceCap(player.getLevel());
-        drawProgressBar(y, x, barWidth, player.getExperience(), player.getExperienceCap(player.getLevel()), Colors.EXPERIENCE.darker(), Colors.EXPERIENCE, expString);
+        drawProgressBar(y, x, barWidth, player.getExperience(), player.getExperienceCap(player.getLevel()), GameColors.EXPERIENCE.darker(), GameColors.EXPERIENCE, expString);
     }
     private void drawHealthBar(int y, int x, Actor actor) {
         String healthString;
@@ -131,7 +131,7 @@ public class GameInformationConsole extends EnhancedConsole {
             healthString = actor.getName();
         }
 
-        drawProgressBar(y, x, barWidth, actor.getCurrentHp(), actor.getMaxHp(), Colors.HEALTH_DEFICIT, Colors.HEALTH_REMAINING, healthString);
+        drawProgressBar(y, x, barWidth, actor.getCurrentHp(), actor.getMaxHp(), GameColors.HEALTH_DEFICIT, GameColors.HEALTH_REMAINING, healthString);
     }
 
     private void drawProgressBar(int y, int x, int maxWidth, int currentValue, int maxValue, Color backgroundColor, Color foregroundColor, String barString) {
