@@ -31,6 +31,10 @@ public class Render implements Runnable {
         return roguelike;
     }
 
+    public Animation getAnimation() {
+        return animation;
+    }
+
 
     private class DebugTile {
         Tile t;

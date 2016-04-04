@@ -1,5 +1,6 @@
 package posmicanomaly.AotCG.Game.Render.Animation;
 
+import posmicanomaly.AotCG.Component.Actor.Actor;
 import posmicanomaly.AotCG.Component.Map.Tile;
 import posmicanomaly.AotCG.Factory.LevelFactory;
 import posmicanomaly.AotCG.Game.Render.Render;
@@ -17,20 +18,25 @@ public class Animation {
         this.render = render;
         this.roguelike = render.getRoguelike();
     }
-    public void doFlashPlayer(int duration) {
+
+    public void doFlashActor(Actor actor, int duration) {
         long time = roguelike.getWindow().getLastKeyEvent().getWhen();
-        Color playerColor = roguelike.getPlayer().getColor();
+        Color actorColor = actor.getColor();
         for(int i = 0; i < duration; i++){
             Color newColor = new Color(255 - i * 2, 255 - i * 2, 255 - i * 2);
-            roguelike.getPlayer().setColor(newColor);
+            actor.setColor(newColor);
 
             if(roguelike.getWindow().getLastKeyEvent().getWhen() != time) {
                 break;
             }
             doRenderWithSleep();
         }
-        roguelike.getPlayer().setColor(playerColor);
+        actor.setColor(actorColor);
         doRenderWithSleep();
+    }
+
+    public void doFlashPlayer(int duration) {
+       doFlashActor(roguelike.getPlayer(), duration);
     }
 
     public void doFlashVisibleTiles(int duration) {
@@ -92,4 +98,6 @@ public class Animation {
             LevelFactory.initTile(t);
         }
     }
+
+
 }

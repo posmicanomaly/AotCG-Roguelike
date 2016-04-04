@@ -306,7 +306,7 @@ public class Roguelike {
         if (runPlayerBot) {
             PlayerAIDecision playerAIDecision = makePlayerAIDecision();
             switch (playerAIDecision) {
-                case ACTUATETILE:
+                case ACTUATE_TILE:
                     turns++;
                     redrawGame = true;
                     process.calculateVision(player);
@@ -561,9 +561,9 @@ public class Roguelike {
         this.fpsTimerStart = fpsTimerStart;
     }
 
-    public enum PlayerAIDecision {RANDOMPATH, CONTINUEPATH, ACTUATETILE, USE_HEALTH_POTION, ERROR}
+    public enum PlayerAIDecision {RANDOM_PATH, CONTINUE_PATH, ACTUATE_TILE, USE_HEALTH_POTION, ERROR}
 
-    private enum PlayerAITask {USE_HEALTH_POTION, LOOT, KILL, EXPLORE, GO_DEEPER, GO_HIGHER, IDLE, CONTINUEPATH}
+    private enum PlayerAITask {USE_HEALTH_POTION, LOOT, KILL, EXPLORE, GO_DEEPER, GO_HIGHER, IDLE, CONTINUE_PATH}
 
     private boolean playerAICanPerformTask(PlayerAITask task) {
         Tile source = player.getTile();
@@ -598,7 +598,7 @@ public class Roguelike {
                 }
                 monsterInView = monsters.size() > 0;
                 return monsterInView;
-            case CONTINUEPATH:
+            case CONTINUE_PATH:
                 return player.getCurrentPath() != null;
             case EXPLORE:
                 return !isLevelExplored(map.getCurrentLevel());
@@ -634,10 +634,10 @@ public class Roguelike {
                 if(playerAICanPerformTask(PlayerAITask.LOOT)) {
                     if(source.hasItem() && source.getItem().getName().equals("Health Potion")) {
                         process.actuateTile(player);
-                        return PlayerAIDecision.ACTUATETILE;
+                        return PlayerAIDecision.ACTUATE_TILE;
                     }
                     else if(player.getCurrentPath() != null && player.getCurrentPath().get(player.getCurrentPath().size() - 1).hasItem()) {
-                        return PlayerAIDecision.CONTINUEPATH;
+                        return PlayerAIDecision.CONTINUE_PATH;
                     }
                     else {
                         Item closestItem = null;
@@ -691,10 +691,10 @@ public class Roguelike {
                     target = closestMonster.getTile();
                 }
                 break;
-            case CONTINUEPATH:
+            case CONTINUE_PATH:
                 //System.out.println("BOT: Continue path");
-                if(playerAICanPerformTask(PlayerAITask.CONTINUEPATH)) {
-                    return PlayerAIDecision.CONTINUEPATH;
+                if(playerAICanPerformTask(PlayerAITask.CONTINUE_PATH)) {
+                    return PlayerAIDecision.CONTINUE_PATH;
                 }
                 break;
             case EXPLORE:
@@ -812,7 +812,7 @@ public class Roguelike {
 
                         if (player.getTile().getType() == Tile.Type.CAVE_OPENING && !skipThisCave) {
                             process.actuateTile(player);
-                            return PlayerAIDecision.ACTUATETILE;
+                            return PlayerAIDecision.ACTUATE_TILE;
                         }
                         // Get a path to a cave
                         else {
@@ -833,7 +833,7 @@ public class Roguelike {
                     else {
                         if(player.getTile().getType() == Tile.Type.STAIRS_DOWN) {
                             process.actuateTile(player);
-                            return PlayerAIDecision.ACTUATETILE;
+                            return PlayerAIDecision.ACTUATE_TILE;
                         }
                         // get a path to a stairs down
                         else {
@@ -856,7 +856,7 @@ public class Roguelike {
                 if(playerAICanPerformTask(PlayerAITask.GO_HIGHER)) {
                     if(player.getTile().getType() == Tile.Type.STAIRS_UP) {
                         process.actuateTile(player);
-                        return PlayerAIDecision.ACTUATETILE;
+                        return PlayerAIDecision.ACTUATE_TILE;
                     }
                     // get a path to a stairs down
                     else {
@@ -900,7 +900,7 @@ public class Roguelike {
         } else {
             // Todo, simulate mouse click
             player.setCurrentPath(newPath);
-            return PlayerAIDecision.RANDOMPATH;
+            return PlayerAIDecision.RANDOM_PATH;
         }
         return PlayerAIDecision.ERROR;
     }
@@ -910,7 +910,7 @@ public class Roguelike {
         priorityList.add(PlayerAITask.USE_HEALTH_POTION);
         priorityList.add(PlayerAITask.KILL);
         priorityList.add(PlayerAITask.LOOT);
-        priorityList.add(PlayerAITask.CONTINUEPATH);
+        priorityList.add(PlayerAITask.CONTINUE_PATH);
         priorityList.add(PlayerAITask.GO_HIGHER);
         priorityList.add(PlayerAITask.GO_DEEPER);
         priorityList.add(PlayerAITask.EXPLORE);
@@ -1107,7 +1107,6 @@ public class Roguelike {
                                         case COMBAT:
                                         case BUMPED:
                                             recalculateFOV = true;
-                                            TEST_ANIMATION = true;
                                     }
                                     redrawGame = true;
                                     turns++;

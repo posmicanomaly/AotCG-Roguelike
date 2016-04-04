@@ -315,6 +315,7 @@ public class Process {
             combatMessage += firstAttacker.getName() + " hit " + secondAttacker.getName() + " for " + firstAttackerDamage;
             secondAttacker.setCurrentHp(secondAttacker.getCurrentHp() - firstAttackerDamage);
             firstAttacker.depleteEnergy((int) (1000 / firstAttacker.getSpeed()));
+            roguelike.getRender().getAnimation().doFlashActor(secondAttacker, 5);
         }
 
         // Check if secondAttacker was killed
@@ -329,6 +330,7 @@ public class Process {
                 combatMessage += ", " + secondAttacker.getName() + " hit " + firstAttacker.getName() + " for " + secondAttackerDamage;
                 firstAttacker.setCurrentHp(firstAttacker.getCurrentHp() - secondAttackerDamage);
                 secondAttacker.depleteEnergy((int) (1000 / secondAttacker.getSpeed()));
+                roguelike.getRender().getAnimation().doFlashActor(firstAttacker, 5);
 
                 // Check if firstAttacker was killed
                 if (firstAttacker.getCurrentHp() <= 0) {
