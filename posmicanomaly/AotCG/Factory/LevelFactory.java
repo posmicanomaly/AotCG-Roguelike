@@ -868,7 +868,7 @@ public abstract class LevelFactory {
                 paths.add(level.getAstar().getShortestPathMapGen(fl, closestFloodTile));
             }
         }
-        System.out.println("paths: " + paths.size());
+        //System.out.println("paths: " + paths.size());
         ArrayList<Tile> spath = null;
         for(ArrayList<Tile> p : paths) {
             if(spath == null) {
@@ -876,13 +876,13 @@ public abstract class LevelFactory {
             }
             else if(p.size() < spath.size()) {
                 spath = p;
-                System.out.println("set spath to p");
+                //System.out.println("set spath to p");
             }
             if(spath != null) {
-                System.out.println("spath: " + spath.size() + " p: " + p.size());
+                //System.out.println("spath: " + spath.size() + " p: " + p.size());
             }
         }
-        System.out.println("chosen spath: " + spath.size());
+        //System.out.println("chosen spath: " + spath.size());
         return spath;
     }
 

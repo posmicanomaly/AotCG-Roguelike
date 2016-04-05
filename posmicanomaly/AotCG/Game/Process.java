@@ -10,6 +10,7 @@ import posmicanomaly.AotCG.Component.Map.Tile;
 import posmicanomaly.AotCG.Factory.LevelFactory;
 import posmicanomaly.AotCG.Game.Input.Input;
 import posmicanomaly.AotCG.Game.Gui.Component.MessageConsole;
+import posmicanomaly.AotCG.Game.Render.Animation.Animation;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -315,11 +316,12 @@ public class Process {
             combatMessage += firstAttacker.getName() + " hit " + secondAttacker.getName() + " for " + firstAttackerDamage;
             secondAttacker.setCurrentHp(secondAttacker.getCurrentHp() - firstAttackerDamage);
             firstAttacker.depleteEnergy((int) (1000 / firstAttacker.getSpeed()));
-            roguelike.getRender().getAnimation().doFlashActor(secondAttacker, 5);
+            roguelike.getRender().getAnimation().doFlashActor(secondAttacker, Animation.DURATION_SHORT);
         }
 
         // Check if secondAttacker was killed
         if (secondAttacker.getCurrentHp() <= 0) {
+            roguelike.getRender().getAnimation().explodeTilesTest(secondAttacker, Animation.DURATION_MED);
             secondAttacker.setAlive(false);
         }
 
@@ -330,10 +332,11 @@ public class Process {
                 combatMessage += ", " + secondAttacker.getName() + " hit " + firstAttacker.getName() + " for " + secondAttackerDamage;
                 firstAttacker.setCurrentHp(firstAttacker.getCurrentHp() - secondAttackerDamage);
                 secondAttacker.depleteEnergy((int) (1000 / secondAttacker.getSpeed()));
-                roguelike.getRender().getAnimation().doFlashActor(firstAttacker, 5);
+                roguelike.getRender().getAnimation().doFlashActor(firstAttacker, Animation.DURATION_SHORT);
 
                 // Check if firstAttacker was killed
                 if (firstAttacker.getCurrentHp() <= 0) {
+                    roguelike.getRender().getAnimation().explodeTilesTest(firstAttacker, Animation.DURATION_MED);
                     firstAttacker.setAlive(false);
                 }
             }

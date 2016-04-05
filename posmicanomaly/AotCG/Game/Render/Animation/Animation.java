@@ -7,11 +7,16 @@ import posmicanomaly.AotCG.Game.Render.Render;
 import posmicanomaly.AotCG.Game.Roguelike;
 
 import java.awt.*;
+import java.util.ArrayList;
 
 /**
  * Created by jessepospisil on 4/4/16.
  */
 public class Animation {
+    public static int DURATION_VERY_LONG = 60;
+    public static int DURATION_LONG = 10;
+    public static int DURATION_MED = 5;
+    public static int DURATION_SHORT = 2;
     private Render render;
     private Roguelike roguelike;
     public Animation(Render render) {
@@ -20,6 +25,9 @@ public class Animation {
     }
 
     public void doFlashActor(Actor actor, int duration) {
+        if(!roguelike.getPlayer().getVisibleTiles().contains(actor.getTile())) {
+            return;
+        }
         long time = roguelike.getWindow().getLastKeyEvent().getWhen();
         Color actorColor = actor.getColor();
         for(int i = 0; i < duration; i++){
@@ -79,7 +87,58 @@ public class Animation {
         doRenderWithSleep();
     }
 
+    public void explodeTilesTest(Actor actor, int duration) {
+        Tile actorTile = actor.getTile();
+        long time = roguelike.getWindow().getLastKeyEvent().getWhen();
+        ArrayList<Tile> explodingTiles = new ArrayList<>();
+        for(Tile t : roguelike.getMap().getCurrentLevel().getNearbyTiles(actorTile.getY(), actorTile.getX(), true)) {
+
+                explodingTiles.add(t);
+                for(Tile c : roguelike.getMap().getCurrentLevel().getNearbyTiles(t.getY(), t.getX(), true)) {
+
+                        explodingTiles.add(c);
+
+                }
+
+        }
+        boolean inView = false;
+        for(Tile t : explodingTiles) {
+            if(roguelike.getPlayer().getVisibleTiles().contains(t)) {
+                inView = true;
+                break;
+            }
+        }
+        if(inView) {
+            for (int i = 0; i < duration; i++) {
+                for (Tile t : explodingTiles) {
+                    if (roguelike.getWindow().getLastKeyEvent().getWhen() != time) {
+                        break;
+                    }
+                    doStepJumble(t);
+                }
+                doRenderWithSleep();
+            }
+        }
+        for(Tile t : explodingTiles) {
+            if(t.isBlocked()) {
+                t.setType(Tile.Type.FLOOR);
+                LevelFactory.initTile(t);
+            }
+        }
+        for(Tile t : explodingTiles) {
+            if(t.isBlocked()) {
+                t.setType(Tile.Type.FLOOR);
+                LevelFactory.initTile(t);
+            }
+        }
+        resetPlayerVisibleTiles();
+        doRenderWithSleep();
+    }
+
     private void doStepJumble(Tile t) {
+        if(!roguelike.getPlayer().getVisibleTiles().contains(t)) {
+            return;
+        }
         t.setSymbol((char) Roguelike.rng.nextInt(255));
     }
 
