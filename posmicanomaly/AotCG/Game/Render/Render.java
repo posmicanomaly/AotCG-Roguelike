@@ -162,8 +162,8 @@ public class Render implements Runnable {
             }
 
             // Debug
-            showActorPaths();
-            showHighlightedDebugTiles();
+            //showActorPaths();
+            //showHighlightedDebugTiles();
 
             roguelike.getMapConsole().copyBufferTo(rootConsole, 0, roguelike.getGameInformationConsoleWidth());
 

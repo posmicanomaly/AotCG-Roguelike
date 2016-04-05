@@ -96,6 +96,30 @@ public class Level {
     public ArrayList<Tile> getNearbyTiles(int y, int x) {
         return getNearbyTiles(y, x, true);
     }
+    public ArrayList<Tile> getNearbyTiles(int y, int x, int radius) {
+        ArrayList<Tile> result = new ArrayList<>();
+        if(radius < 1) {
+            return result;
+        }
+        for(Tile t : getNearbyTiles(y, x, true)) {
+            result.add(t);
+        }
+        for(int i = 1; i < radius; i++) {
+            ArrayList<Tile> expand = new ArrayList<Tile>();
+            for(Tile t : result) {
+                for(Tile c : getNearbyTiles(t.getY(), t.getX(), true)) {
+                        expand.add(c);
+
+                }
+            }
+            for(Tile t : expand) {
+                if(!result.contains(t)) {
+                    result.add(t);
+                }
+            }
+        }
+        return result;
+    }
     public ArrayList<Tile> getNearbyTiles(int y, int x, boolean allowDiagonal) {
         ArrayList<Tile> result = new ArrayList<Tile>();
         if (!inBounds(y, x)) {

@@ -1264,10 +1264,8 @@ public class Roguelike {
                     //color = GameColors.WALL;
                 }
             }
+
             bgColor = tile.getBackgroundColor();
-            if(tile.getType() == Tile.Type.WALL) {
-                //bgColor = GameColors.WALL_BG;
-            }
         }
 
         // Tile is not visible, but has been explored by the player

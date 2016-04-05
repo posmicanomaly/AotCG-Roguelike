@@ -5,6 +5,7 @@ import posmicanomaly.AotCG.Component.Map.Tile;
 import posmicanomaly.AotCG.Factory.LevelFactory;
 import posmicanomaly.AotCG.Game.Render.Render;
 import posmicanomaly.AotCG.Game.Roguelike;
+import posmicanomaly.libjsrte.Console.Colors.Db32;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -91,14 +92,9 @@ public class Animation {
         Tile actorTile = actor.getTile();
         long time = roguelike.getWindow().getLastKeyEvent().getWhen();
         ArrayList<Tile> explodingTiles = new ArrayList<>();
-        for(Tile t : roguelike.getMap().getCurrentLevel().getNearbyTiles(actorTile.getY(), actorTile.getX(), true)) {
+        for(Tile t : roguelike.getMap().getCurrentLevel().getNearbyTiles(actorTile.getY(), actorTile.getX(), 1)) {
 
                 explodingTiles.add(t);
-                for(Tile c : roguelike.getMap().getCurrentLevel().getNearbyTiles(t.getY(), t.getX(), true)) {
-
-                        explodingTiles.add(c);
-
-                }
 
         }
         boolean inView = false;
@@ -120,16 +116,17 @@ public class Animation {
             }
         }
         for(Tile t : explodingTiles) {
-            if(t.isBlocked()) {
-                t.setType(Tile.Type.FLOOR);
-                LevelFactory.initTile(t);
+            switch(t.getType()) {
+                case WALL:
+                case WALL_SECRET:
+                case DOOR:
+                    t.setType(Tile.Type.FLOOR);
+                    break;
+                case CAVE_GRASS:
+                    t.setType(Tile.Type.LOW_GRASS);
+                    break;
             }
-        }
-        for(Tile t : explodingTiles) {
-            if(t.isBlocked()) {
-                t.setType(Tile.Type.FLOOR);
-                LevelFactory.initTile(t);
-            }
+            LevelFactory.initTile(t);
         }
         resetPlayerVisibleTiles();
         doRenderWithSleep();
@@ -140,6 +137,7 @@ public class Animation {
             return;
         }
         t.setSymbol((char) Roguelike.rng.nextInt(255));
+        t.setBackgroundColor(Db32.getRandomWarm());
     }
 
     private void doStepFlash(Tile t, int iteration) {
