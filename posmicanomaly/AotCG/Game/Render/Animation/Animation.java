@@ -18,6 +18,7 @@ public class Animation {
     public static int DURATION_LONG = 10;
     public static int DURATION_MED = 5;
     public static int DURATION_SHORT = 2;
+    public static long minTime = 1000/20;
     private Render render;
     private Roguelike roguelike;
     public Animation(Render render) {
@@ -65,9 +66,15 @@ public class Animation {
     }
 
     public void doRenderWithSleep() {
+        long startTime = System.currentTimeMillis();
         render.renderSingleFrame(Render.Reason.ANIMATION);
+        long endTime = System.currentTimeMillis();
+        long sleepTime = minTime - (endTime - startTime);
+        if(sleepTime < 0) {
+            sleepTime = 0;
+        }
         try {
-            Thread.sleep(17);
+            Thread.sleep(sleepTime);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -92,7 +99,7 @@ public class Animation {
         Tile actorTile = actor.getTile();
         long time = roguelike.getWindow().getLastKeyEvent().getWhen();
         ArrayList<Tile> explodingTiles = new ArrayList<>();
-        for(Tile t : roguelike.getMap().getCurrentLevel().getNearbyTiles(actorTile.getY(), actorTile.getX(), 1)) {
+        for(Tile t : roguelike.getMap().getCurrentLevel().getNearbyTiles(actorTile.getY(), actorTile.getX(), roguelike.rng.nextInt(10) + 1)) {
 
                 explodingTiles.add(t);
 

@@ -148,7 +148,7 @@ public class Render implements Runnable {
 
             // Lighting test
             if(roguelike.getMap().getCurrentDepth() > 0) {
-                applyLightingToMap();
+                //applyLightingToMap();
             }
 
             // water shimmer
