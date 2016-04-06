@@ -321,7 +321,9 @@ public class Process {
 
         // Check if secondAttacker was killed
         if (secondAttacker.getCurrentHp() <= 0) {
-            roguelike.getRender().getAnimation().explodeTilesTest(secondAttacker, Animation.DURATION_MED);
+            ExplosionHandler explosionHandler = new ExplosionHandler(roguelike);
+            explosionHandler.explodeTiles(secondAttacker.getTile(), 10);
+            //roguelike.getRender().getAnimation().explodeTilesTest(secondAttacker, Animation.DURATION_MED);
             secondAttacker.setAlive(false);
         }
 
@@ -336,7 +338,9 @@ public class Process {
 
                 // Check if firstAttacker was killed
                 if (firstAttacker.getCurrentHp() <= 0) {
-                    roguelike.getRender().getAnimation().explodeTilesTest(firstAttacker, Animation.DURATION_MED);
+                    ExplosionHandler explosionHandler = new ExplosionHandler(roguelike);
+                    explosionHandler.explodeTiles(firstAttacker.getTile(), 10);
+                    //roguelike.getRender().getAnimation().explodeTilesTest(firstAttacker, Animation.DURATION_MED);
                     firstAttacker.setAlive(false);
                 }
             }
